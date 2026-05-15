@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Check-in NB">
+  <meta name="theme-color" content="#080014">
+  <meta name="description" content="Sistema de credenciamento Nutrição Brasil">
+
+  <title>Check-in · Nutrição Brasil</title>
+
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png">
+  <link rel="apple-touch-icon" href="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Supabase JS via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- App root (preenchido pelo JS) -->
+  <div id="app"></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <svg id="toastIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastText"></span>
+  </div>
+
+  <!-- Modal mount -->
+  <div id="modal-mount"></div>
+
+  <!-- App logic (ES Module) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
