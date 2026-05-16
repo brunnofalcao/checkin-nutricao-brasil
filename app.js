@@ -990,6 +990,7 @@ function openSettings() {
           <button class="btn-modal ghost" id="btnAddOne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Adicionar manualmente</button>
           <button class="btn-modal ghost" id="btnEditEvent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar dados do evento</button>
           <button class="btn-modal ghost" id="btnResetCheckins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Resetar check-ins</button>
+          <button class="btn-modal ghost" id="btnClearAll" style="color:#ff6b6b;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>Limpar TODA a lista</button>
         </div>
       </div>
     </div>
@@ -1003,6 +1004,20 @@ function openSettings() {
     const { error } = await sb.from("participants").update({ checked: false, checked_at: null, checked_by: null, whatsapp_sent: false }).in("id", ids);
     if (error) { toast("Erro: " + error.message, "error"); return; }
     toast("Check-ins resetados");
+    closeModal();
+    await loadParticipants(state.currentEvent.id);
+    renderCheckinList();
+  });
+  $("btnClearAll").addEventListener("click", async () => {
+    const total = state.participants.length;
+    if (!total) { toast("Lista já está vazia"); closeModal(); return; }
+    if (!confirm(`⚠️ APAGAR todos os ${total} participantes deste evento?\n\nIsso vai deletar a lista inteira (incluindo check-ins, histórico e dados de WhatsApp).\n\nUse antes de reimportar uma lista do zero.\n\nEsta ação NÃO pode ser desfeita.`)) return;
+    const eventName = state.currentEvent.city || state.currentEvent.name;
+    const confirmText = prompt(`Para confirmar, digite o nome do evento exatamente:\n\n${eventName}`);
+    if (confirmText !== eventName) { toast("Confirmação incorreta. Nada foi apagado.", "error"); return; }
+    const { error } = await sb.from("participants").delete().eq("event_id", state.currentEvent.id);
+    if (error) { toast("Erro: " + error.message, "error"); return; }
+    toast(`${total} participantes apagados`);
     closeModal();
     await loadParticipants(state.currentEvent.id);
     renderCheckinList();
