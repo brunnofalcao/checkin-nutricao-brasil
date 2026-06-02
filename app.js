@@ -22,7 +22,8 @@ const state = {
   filter: "all",
   search: "",
   view: "loading",
-  realtimeChannels: []
+  realtimeChannels: [],
+  editOverride: false   // desbloqueio manual temporário (só sessão atual)
 };
 
 // =============================================================
@@ -75,6 +76,7 @@ function haptic(type = "light") {
 // =============================================================
 function isEditable(event) {
   if (!event) return false;
+  if (state.editOverride) return true;   // desbloqueio manual pelo admin
   if (event.status === "ativo") return true;
   const dateRef = event.event_end_date || event.event_date;
   if (!dateRef) return true;
@@ -705,10 +707,21 @@ function renderCheckinScreen() {
           </div>
         </div>
 
-        ${locked ? `
-          <div style="background:rgba(255,107,107,0.1);border-top:2px solid rgba(255,107,107,0.35);padding:10px 20px;font-size:12px;font-weight:600;color:#ff6b6b;display:flex;align-items:center;gap:8px;letter-spacing:0.01em;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Somente leitura — período de edição encerrado (7 dias após o evento)
+        ${state.editOverride ? `
+          <div style="background:rgba(255,200,0,0.1);border-top:2px solid rgba(255,200,0,0.4);padding:10px 20px;font-size:12px;font-weight:600;color:#ffc800;display:flex;align-items:center;justify-content:space-between;letter-spacing:0.01em;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 5-5 5 5 0 0 1 4.9 4"/></svg>
+              Modo edição temporária ativado
+            </div>
+            <button id="btnRelock" style="background:rgba(255,200,0,0.2);border:1px solid rgba(255,200,0,0.4);color:#ffc800;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;letter-spacing:0.02em;">Bloquear</button>
+          </div>
+        ` : locked ? `
+          <div style="background:rgba(255,107,107,0.1);border-top:2px solid rgba(255,107,107,0.35);padding:10px 20px;font-size:12px;font-weight:600;color:#ff6b6b;display:flex;align-items:center;justify-content:space-between;letter-spacing:0.01em;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Somente leitura — período de edição encerrado
+            </div>
+            ${isAdmin() ? `<button id="btnUnlock" style="background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.4);color:#ff6b6b;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;letter-spacing:0.02em;">Desbloquear</button>` : ''}
           </div>
         ` : ''}
 
@@ -742,6 +755,7 @@ function renderCheckinScreen() {
     subscribeToEvents();
     state.currentEvent = null;
     state.participants = [];
+    state.editOverride = false;   // resetar ao sair
     renderEvents();
   });
   $("btnDashboard").addEventListener("click", openDashboard);
@@ -773,6 +787,54 @@ function renderCheckinScreen() {
 
   initSwipe();
   renderCheckinList();
+
+  // Listeners do banner de bloqueio/desbloqueio
+  const btnUnlock = $("btnUnlock");
+  if (btnUnlock) {
+    btnUnlock.addEventListener("click", () => {
+      openModal(`
+        <div class="modal">
+          <div class="modal-handle"></div>
+          <div class="modal-header">
+            <div class="modal-title">🔓 Desbloquear edição</div>
+            <button class="modal-close" data-close>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.65;color:var(--ink-soft);">
+              <strong style="display:block;color:var(--ink);margin-bottom:6px;">Edição temporária</strong>
+              Isso vai habilitar check-ins e edições <strong>apenas nesta sessão</strong>.<br><br>
+              Ao sair do evento, o bloqueio volta automaticamente.<br><br>
+              Use apenas para correções pontuais.
+            </div>
+            <div class="btn-row">
+              <button class="btn-modal ghost" data-close>Cancelar</button>
+              <button class="btn-modal primary" id="btnConfirmUnlock">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 5-5 5 5 0 0 1 4.9 4"/></svg>
+                Desbloquear
+              </button>
+            </div>
+          </div>
+        </div>
+      `);
+      $("btnConfirmUnlock").addEventListener("click", () => {
+        state.editOverride = true;
+        closeModal();
+        renderCheckinScreen();
+        toast("Edição temporária ativada", "success");
+      });
+    });
+  }
+
+  const btnRelock = $("btnRelock");
+  if (btnRelock) {
+    btnRelock.addEventListener("click", () => {
+      state.editOverride = false;
+      renderCheckinScreen();
+      toast("Evento bloqueado novamente", "success");
+    });
+  }
 }
 
 function renderCheckinList() {
