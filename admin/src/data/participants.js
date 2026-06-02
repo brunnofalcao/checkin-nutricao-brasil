@@ -1,6 +1,22 @@
 import { supabase } from './supabase.js';
 
-// Busca paginada via RPC search_participants (multi-campo, rápida, respeita RLS).
+// Lista TODOS os participantes de um evento (até 2000 por evento, suficiente).
+// Filtro/busca são feitos client-side — mais rápido e robusto para 200-500 inscritos.
+export async function listAllParticipants(eventId) {
+  const { data, error } = await supabase
+    .from('participants')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('name', { ascending: true })
+    .limit(2000);
+  if (error) {
+    console.error('Erro ao buscar participantes:', error);
+    throw error;
+  }
+  return data ?? [];
+}
+
+// Busca paginada via RPC (mantido por compatibilidade, mas não usado na tela de detalhe).
 export async function searchParticipants(eventId, opts = {}) {
   const { query = '', onlyPending = false, limit = 50, offset = 0 } = opts;
   const { data, error } = await supabase.rpc('search_participants', {
@@ -14,7 +30,7 @@ export async function searchParticipants(eventId, opts = {}) {
   return data ?? [];
 }
 
-// Total de participantes do evento (pra paginação).
+// Total de participantes do evento.
 export async function countParticipants(eventId, onlyPending = false) {
   let q = supabase
     .from('participants')
