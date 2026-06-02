@@ -1,0 +1,126 @@
+:root {
+  /* ----- Tipografia ----- */
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ----- Cores (light mode, papel quente) ----- */
+  --bg: #f7f5f0;
+  --bg-2: #efece5;
+  --surface: #ffffff;
+  --surface-hover: #faf9f5;
+
+  --line: #e8e3d8;
+  --line-strong: #d4cfc0;
+  --line-focus: #6b4ce6;
+
+  --ink: #1a1610;
+  --ink-strong: #0a0805;
+  --ink-soft: #5c574a;
+  --ink-mute: #8c8472;
+  --ink-dim: #b3ab97;
+
+  --violet: #6b4ce6;
+  --violet-hover: #5a3dd1;
+  --violet-soft: #f0ecfc;
+  --violet-border: #d9d0f8;
+
+  --green: #15803d;
+  --green-soft: #e6f4ea;
+  --amber: #b45309;
+  --amber-soft: #fdf3df;
+  --red: #b91c1c;
+  --red-soft: #fce8e8;
+
+  /* ----- Escala ----- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 5px;
+  border: 2px solid var(--bg);
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+input,
+select,
+textarea {
+  background: none;
+  border: none;
+  outline: none;
+}
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum';
+}
+.muted {
+  color: var(--ink-mute);
+}
+.text-soft {
+  color: var(--ink-soft);
+}
