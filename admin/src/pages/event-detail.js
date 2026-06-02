@@ -294,14 +294,29 @@ export async function pageEventDetail(view, { params }) {
 
 function paymentPill(p) {
   const status = p.payment_status || 'paid';
-  const map = {
-    paid:      { cls: 'payment-paid',     label: 'Pago' },
-    partial:   { cls: 'payment-partial',  label: `Parcelando${p.installments_total > 1 ? ` ${p.installments_paid||1}/${p.installments_total}` : ''}` },
-    canceled:  { cls: 'payment-canceled', label: 'Cancelado' },
-    refunded:  { cls: 'payment-canceled', label: 'Reembolsado' }
-  };
-  const cfg = map[status] || map.paid;
-  return h('span', { class: `payment-pill ${cfg.cls}` }, cfg.label);
+  const total  = p.installments_total || 1;
+  const pagas  = p.installments_paid  || 1;
+
+  let label, cls;
+  if (status === 'paid') {
+    // Pago — mostrar se foi parcelado e quitou ou se foi à vista
+    label = total > 1 ? `Pago ${total}/${total}` : 'Pago';
+    cls   = 'payment-paid';
+  } else if (status === 'partial') {
+    label = `Parcelando ${pagas}/${total}`;
+    cls   = 'payment-partial';
+  } else if (status === 'canceled') {
+    label = 'Cancelado';
+    cls   = 'payment-canceled';
+  } else if (status === 'refunded') {
+    label = 'Reembolsado';
+    cls   = 'payment-canceled';
+  } else {
+    label = 'Pago';
+    cls   = 'payment-paid';
+  }
+
+  return h('span', { class: `payment-pill ${cls}` }, label);
 }
 
 function paymentLabel(status) {
