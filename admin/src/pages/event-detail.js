@@ -25,13 +25,11 @@ export async function pageEventDetail(view, { params }) {
     return;
   }
 
-  // Estado local
   let allParticipants = [];
-  let filter = 'todos';      // 'todos' | 'checkin' | 'pendentes'
+  let filter = 'todos';
   let query = '';
   let visibleCount = PAGE_SIZE;
 
-  // Carrega TODOS os participantes do evento de uma vez (client-side)
   try {
     allParticipants = await listAllParticipants(eventId);
   } catch (e) {
@@ -46,10 +44,9 @@ export async function pageEventDetail(view, { params }) {
 
   function getFiltered() {
     let list = allParticipants;
-    // Filtro por status
-    if (filter === 'checkin') list = list.filter(p => p.checked === true);
-    if (filter === 'pendentes') list = list.filter(p => p.checked === false);
-    // Filtro por busca
+    if (filter === 'checkin')      list = list.filter(p => p.checked === true);
+    if (filter === 'pendentes')    list = list.filter(p => p.checked === false);
+    if (filter === 'inadimplentes') list = list.filter(p => p.payment_status === 'canceled' || p.payment_status === 'refunded');
     if (query) {
       const q = query.toLowerCase().trim();
       const qDigits = q.replace(/\D/g, '');
@@ -66,9 +63,10 @@ export async function pageEventDetail(view, { params }) {
 
   function counts() {
     return {
-      todos: allParticipants.length,
-      checkin: allParticipants.filter(p => p.checked === true).length,
-      pendentes: allParticipants.filter(p => p.checked === false).length
+      todos:          allParticipants.length,
+      checkin:        allParticipants.filter(p => p.checked === true).length,
+      pendentes:      allParticipants.filter(p => p.checked === false).length,
+      inadimplentes:  allParticipants.filter(p => p.payment_status === 'canceled' || p.payment_status === 'refunded').length
     };
   }
 
@@ -113,7 +111,15 @@ export async function pageEventDetail(view, { params }) {
           h('div', { class: 'evd-stat-value mono', style: { color: c.pendentes > 0 ? 'var(--amber)' : 'var(--ink-strong)' } },
             String(c.pendentes)
           )
-        )
+        ),
+        c.inadimplentes > 0
+          ? h('div', {},
+              h('div', { class: 'evd-stat-label' }, 'Inadimplentes'),
+              h('div', { class: 'evd-stat-value mono', style: { color: 'var(--red, #ef4444)' } },
+                String(c.inadimplentes)
+              )
+            )
+          : null
       )
     );
   }
@@ -157,8 +163,6 @@ export async function pageEventDetail(view, { params }) {
     const container = document.getElementById('evd-table');
     if (!container) return;
 
-    const filtered = getFiltered();
-    const visible = filtered.slice(0, visibleCount);
     const c = counts();
 
     setContent(container,
@@ -172,10 +176,13 @@ export async function pageEventDetail(view, { params }) {
             oninput: (e) => { query = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }
           })
         ),
-        h('div', { style: { display: 'flex', gap: '4px', marginLeft: 'auto' } },
+        h('div', { style: { display: 'flex', gap: '4px', marginLeft: 'auto', flexWrap: 'wrap' } },
           tabBtn(`Todos · ${c.todos}`, filter === 'todos', () => { filter = 'todos'; visibleCount = PAGE_SIZE; updateBody(); }),
           tabBtn(`Check-in · ${c.checkin}`, filter === 'checkin', () => { filter = 'checkin'; visibleCount = PAGE_SIZE; updateBody(); }, 'green'),
-          tabBtn(`Pendentes · ${c.pendentes}`, filter === 'pendentes', () => { filter = 'pendentes'; visibleCount = PAGE_SIZE; updateBody(); }, 'amber')
+          tabBtn(`Pendentes · ${c.pendentes}`, filter === 'pendentes', () => { filter = 'pendentes'; visibleCount = PAGE_SIZE; updateBody(); }, 'amber'),
+          c.inadimplentes > 0
+            ? tabBtn(`Inadimplentes · ${c.inadimplentes}`, filter === 'inadimplentes', () => { filter = 'inadimplentes'; visibleCount = PAGE_SIZE; updateBody(); }, 'red')
+            : null
         )
       ),
       h('div', { id: 'evd-table-body' })
@@ -200,7 +207,9 @@ export async function pageEventDetail(view, { params }) {
               ? 'Nenhum check-in feito ainda.'
               : filter === 'pendentes'
                 ? 'Nenhum pendente — todos fizeram check-in!'
-                : 'Sem inscritos ainda.'
+                : filter === 'inadimplentes'
+                  ? 'Nenhuma inadimplência registrada.'
+                  : 'Sem inscritos ainda.'
         )
       );
       return;
@@ -209,9 +218,10 @@ export async function pageEventDetail(view, { params }) {
     setContent(body,
       h('table', { class: 'table' },
         h('thead', {}, h('tr', {},
-          h('th', { style: { width: '34%' } }, 'Inscrito'),
+          h('th', { style: { width: '32%' } }, 'Inscrito'),
           h('th', {}, 'Telefone'),
           h('th', {}, 'Lote'),
+          h('th', {}, 'Pagamento'),
           h('th', {}, 'Origem'),
           h('th', {}, 'Check-in')
         )),
@@ -232,13 +242,18 @@ export async function pageEventDetail(view, { params }) {
   }
 
   function rowFor(p) {
-    return h('tr', { onclick: () => openParticipant(p) },
+    const isCanceled = p.payment_status === 'canceled' || p.payment_status === 'refunded';
+    return h('tr', {
+        class: isCanceled ? 'row-payment-canceled' : '',
+        onclick: () => openParticipant(p)
+      },
       h('td', {},
-        h('div', { class: 'row-name' }, p.name || '—'),
+        h('div', { class: 'row-name', style: isCanceled ? { color: 'var(--ink-mute)', textDecoration: 'line-through' } : {} }, p.name || '—'),
         p.email ? h('div', { class: 'row-sub' }, p.email) : null
       ),
       h('td', { class: 'mono' }, p.phone || '—'),
       h('td', {}, p.lote || '—'),
+      h('td', {}, paymentPill(p)),
       h('td', {}, sourcePill(p.source)),
       h('td', {},
         p.checked
@@ -249,6 +264,10 @@ export async function pageEventDetail(view, { params }) {
   }
 
   function openParticipant(p) {
+    const installmentsLabel = p.installments_total > 1
+      ? `${p.installments_paid || 1}/${p.installments_total} parcelas pagas`
+      : 'À vista';
+
     openModal({
       title: p.name || 'Inscrito',
       body: h('div', {},
@@ -256,6 +275,8 @@ export async function pageEventDetail(view, { params }) {
         infoRow('Telefone', p.phone),
         infoRow('Código', p.code),
         infoRow('Lote', p.lote),
+        infoRow('Pagamento', paymentLabel(p.payment_status)),
+        infoRow('Parcelas', installmentsLabel),
         infoRow('Origem', p.source || 'manual'),
         infoRow('Check-in', p.checked ? `Sim · ${fmtRelative(p.checked_at)}` : 'Pendente'),
         infoRow('Hotmart transaction', p.hotmart_transaction_id),
@@ -269,17 +290,39 @@ export async function pageEventDetail(view, { params }) {
   render();
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function paymentPill(p) {
+  const status = p.payment_status || 'paid';
+  const map = {
+    paid:      { cls: 'payment-paid',     label: 'Pago' },
+    partial:   { cls: 'payment-partial',  label: `Parcelando${p.installments_total > 1 ? ` ${p.installments_paid||1}/${p.installments_total}` : ''}` },
+    canceled:  { cls: 'payment-canceled', label: 'Cancelado' },
+    refunded:  { cls: 'payment-canceled', label: 'Reembolsado' }
+  };
+  const cfg = map[status] || map.paid;
+  return h('span', { class: `payment-pill ${cfg.cls}` }, cfg.label);
+}
+
+function paymentLabel(status) {
+  return { paid: 'Pago', partial: 'Parcelando', canceled: 'Cancelado', refunded: 'Reembolsado' }[status] || 'Pago';
+}
+
 function tabBtn(label, active, onClick, accent) {
   const colorActive = accent === 'green'
     ? 'var(--green)'
     : accent === 'amber'
       ? 'var(--amber)'
-      : 'var(--ink-strong)';
+      : accent === 'red'
+        ? 'var(--red, #ef4444)'
+        : 'var(--ink-strong)';
   const bgActive = accent === 'green'
     ? 'var(--green-soft)'
     : accent === 'amber'
       ? 'var(--amber-soft)'
-      : 'var(--bg-2)';
+      : accent === 'red'
+        ? 'rgba(239,68,68,0.1)'
+        : 'var(--bg-2)';
   return h('button', {
     class: 'btn',
     style: {
@@ -296,9 +339,9 @@ function tabBtn(label, active, onClick, accent) {
 function sourcePill(source) {
   const map = {
     hotmart: { cls: 'hotmart', label: 'Hotmart' },
-    import: { cls: 'import', label: 'CSV' },
-    manual: { cls: 'manual', label: 'Manual' },
-    api: { cls: 'api', label: 'API' }
+    import:  { cls: 'import',  label: 'CSV' },
+    manual:  { cls: 'manual',  label: 'Manual' },
+    api:     { cls: 'api',     label: 'API' }
   };
   const cfg = map[source] || map.manual;
   return h('span', { class: `source-pill ${cfg.cls}` }, cfg.label);
