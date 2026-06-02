@@ -78,6 +78,7 @@ function isEditable(event) {
   if (!event) return false;
   if (state.editOverride) return true;   // desbloqueio manual pelo admin
   if (event.status === "ativo") return true;
+  if (event.status === "embreve") return false; // futuro: bloqueado até abrir
   const dateRef = event.event_end_date || event.event_date;
   if (!dateRef) return true;
   const now = Date.now();
@@ -399,7 +400,7 @@ function renderEvents() {
   const userRole = admin ? "Admin" : "Operadora";
   const userInitials = admin ? "BF" : "CR";
 
-  const visible = admin ? state.events : state.events.filter(e => e.status === "ativo" || e.status === "encerrado");
+  const visible = state.events; // todos os eventos visíveis para todos (operadora acessa em modo leitura)
   const ativo = visible.filter(e => e.status === "ativo");
   const embreve = visible.filter(e => e.status === "embreve");
   const encerrado = visible.filter(e => e.status === "encerrado");
@@ -554,8 +555,35 @@ function renderEvents() {
         `);
         $("btnConfirmOpen").addEventListener("click", () => { closeModal(); openCheckin(ev); });
 
-      } else if (ev?.status === "embreve" && admin) {
-        openEventEditor(ev);
+      } else if (ev?.status === "embreve") {
+        // Qualquer usuário pode visualizar eventos futuros (consulta rápida)
+        openModal(`
+          <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+              <div class="modal-title">Evento não iniciado</div>
+              <button class="modal-close" data-close>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.65;color:var(--ink-soft);">
+                <strong style="display:block;color:var(--ink);margin-bottom:6px;">Somente visualização</strong>
+                Este evento ainda não aconteceu.<br><br>
+                Você pode <strong>buscar participantes</strong> e verificar inscrições, mas check-ins estão bloqueados até o evento ser iniciado.<br><br>
+                ${admin ? 'Para habilitar check-in, use o botão Desbloquear dentro do evento ou mude o status para Ativo.' : 'Entre em contato com o admin para habilitar check-ins.'}
+              </div>
+              <div class="btn-row">
+                <button class="btn-modal ghost" data-close>Cancelar</button>
+                <button class="btn-modal primary" id="btnConfirmOpen">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Visualizar lista
+                </button>
+              </div>
+            </div>
+          </div>
+        `);
+        $("btnConfirmOpen").addEventListener("click", () => { closeModal(); openCheckin(ev); });
       }
     });
   });
@@ -714,6 +742,14 @@ function renderCheckinScreen() {
               Modo edição temporária ativado
             </div>
             <button id="btnRelock" style="background:rgba(255,200,0,0.2);border:1px solid rgba(255,200,0,0.4);color:#ffc800;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;letter-spacing:0.02em;">Bloquear</button>
+          </div>
+        ` : e.status === 'embreve' ? `
+          <div style="background:rgba(107,45,139,0.15);border-top:2px solid rgba(107,45,139,0.4);padding:10px 20px;font-size:12px;font-weight:600;color:#a78bfa;display:flex;align-items:center;justify-content:space-between;letter-spacing:0.01em;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Evento não iniciado — somente visualização
+            </div>
+            ${isAdmin() ? `<button id="btnUnlock" style="background:rgba(107,45,139,0.2);border:1px solid rgba(107,45,139,0.5);color:#a78bfa;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;letter-spacing:0.02em;">Desbloquear</button>` : ''}
           </div>
         ` : locked ? `
           <div style="background:rgba(255,107,107,0.1);border-top:2px solid rgba(255,107,107,0.35);padding:10px 20px;font-size:12px;font-weight:600;color:#ff6b6b;display:flex;align-items:center;justify-content:space-between;letter-spacing:0.01em;">
