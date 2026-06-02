@@ -33,7 +33,8 @@ const NAV = [
 ];
 
 // Em construção (telas que ainda não foram implementadas).
-const STUB_PATHS = ['/pessoas', '/disparos', '/templates', '/certificados', '/etiquetas', '/configuracoes'];
+// /certificados foi REMOVIDO - agora tem implementação real.
+const STUB_PATHS = ['/pessoas', '/disparos', '/templates', '/etiquetas', '/configuracoes'];
 
 export async function renderShell(rootEl) {
   const profile = await getProfile();
