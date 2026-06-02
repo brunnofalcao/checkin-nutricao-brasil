@@ -1,3 +1,4 @@
+import { pageEventCertificates } from './event-certificates.js';
 import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { getEvent, updateEvent } from '../data/events.js';
@@ -128,7 +129,7 @@ export async function pageEventDetail(view, { params }) {
       h('button', { class: 'btn btn-secondary', onclick: stub('Disparar mensagem') },
         icons.send(), 'Disparar mensagem'
       ),
-      h('button', { class: 'btn btn-secondary', onclick: stub('Certificado') },
+      h('button', { class: 'btn btn-secondary', onclick: () => pageEventCertificates(view, event, () => render()) },
         icons.award(), 'Certificado'
       ),
       h('button', { class: 'btn btn-secondary', onclick: stub('Etiquetas') },
