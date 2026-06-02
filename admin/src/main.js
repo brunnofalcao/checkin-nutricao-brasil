@@ -5,6 +5,7 @@ import { route, start } from './core/router.js';
 import { pageHome } from './pages/home.js';
 import { pageEvents } from './pages/events.js';
 import { pageEventDetail } from './pages/event-detail.js';
+import { pageCertificates } from './pages/certificates.js';
 import { h, setContent } from './core/dom.js';
 import { toast } from './ui/toast.js';
 
@@ -31,6 +32,8 @@ async function bootstrap() {
   route('/', pageHome);
   route('/eventos', pageEvents);
   route('/eventos/:id', pageEventDetail);
+  route('/certificados', pageCertificates);
+  route('/certificados/:id', pageCertificates);
 
   start(view);
 }
