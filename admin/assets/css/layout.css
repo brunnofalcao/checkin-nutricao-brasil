@@ -62,10 +62,17 @@
   color: var(--ink-strong);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 1px var(--line);
 }
-.nav-item svg {
+.nav-item > span:first-child {
   width: 17px;
   height: 17px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-item > span:first-child svg {
+  width: 17px;
+  height: 17px;
 }
 .nav-item .badge {
   margin-left: auto;
@@ -90,6 +97,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 .user-avatar {
   width: 30px;
@@ -101,25 +109,49 @@
   color: white;
   font-weight: 700;
   font-size: 11px;
+  flex-shrink: 0;
 }
 .user-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .user-role {
   font-size: 11px;
   color: var(--ink-mute);
 }
+
+/* ===== Logout button (FIX: tamanho controlado) ===== */
 .signout-btn {
-  margin-left: auto;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--ink-mute);
-  padding: 4px;
   border-radius: var(--r-sm);
+  transition: background 0.12s, color 0.12s;
+}
+.signout-btn svg,
+.signout-btn > span {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
 }
 .signout-btn:hover {
   background: var(--bg-2);
   color: var(--ink);
+}
+
+/* ===== Defesa geral: SVGs dentro de botões sem tamanho explícito ===== */
+.btn > span:not(.badge) svg,
+.icon-btn > span svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* ===== Main ===== */
