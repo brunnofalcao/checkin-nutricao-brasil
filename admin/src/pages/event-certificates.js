@@ -350,13 +350,17 @@ export async function pageEventCertificates(view, event, onBack) {
       h('td', {}, statusBadge(p)),
       h('td', {},
         h('div', { class: 'cert-row-actions' },
-          // Gerar / Ver PDF
+          // Abrir PDF (quando existe)
           hasPdf
             ? h('a', { class: 'btn-icon', href: p.certificate_url, target: '_blank', title: 'Abrir PDF' }, icons.check())
-            : h('button', {
-                class: 'btn-icon', title: 'Gerar PDF',
-                onclick: (e) => handleGenerate(p, e.currentTarget)
-              }, icons.plus()),
+            : null,
+          // Gerar (sem PDF) ou Regenerar (já tem — usa template atualizado)
+          h('button', {
+            class: 'btn-icon',
+            title: hasPdf ? 'Regenerar com novo template' : 'Gerar PDF',
+            style: hasPdf ? { color: 'var(--amber)' } : {},
+            onclick: (e) => handleGenerate(p, e.currentTarget)
+          }, icons.plus()),
 
           // Copiar link
           h('button', {
