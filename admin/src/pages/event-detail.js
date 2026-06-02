@@ -1,13 +1,13 @@
 import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { getEvent, updateEvent } from '../data/events.js';
-import { searchParticipants, countParticipants } from '../data/participants.js';
+import { listAllParticipants } from '../data/participants.js';
 import { fmtDate, fmtRelative, debounce } from '../core/utils.js';
 import { toast } from '../ui/toast.js';
 import { openModal } from '../ui/modal.js';
 import { navigate } from '../core/router.js';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 100;
 
 export async function pageEventDetail(view, { params }) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
@@ -24,27 +24,60 @@ export async function pageEventDetail(view, { params }) {
     return;
   }
 
+  // Estado local
+  let allParticipants = [];
+  let filter = 'todos';      // 'todos' | 'checkin' | 'pendentes'
   let query = '';
-  let onlyPending = false;
-  let offset = 0;
-  let total = 0;
-  let participants = [];
+  let visibleCount = PAGE_SIZE;
 
-  async function loadParticipants() {
-    [participants, total] = await Promise.all([
-      searchParticipants(eventId, { query, onlyPending, limit: PAGE_SIZE, offset }),
-      countParticipants(eventId, onlyPending)
-    ]);
-    renderTable();
+  // Carrega TODOS os participantes do evento de uma vez (client-side)
+  try {
+    allParticipants = await listAllParticipants(eventId);
+  } catch (e) {
+    setContent(view, h('div', { class: 'empty' },
+      h('div', { class: 'empty-icon' }, icons.alert()),
+      h('div', { class: 'empty-title' }, 'Erro ao carregar inscritos'),
+      h('div', { class: 'empty-body' }, e.message || 'Tente recarregar a página.'),
+      h('button', { class: 'btn btn-secondary', onclick: () => location.reload() }, 'Recarregar')
+    ));
+    return;
+  }
+
+  function getFiltered() {
+    let list = allParticipants;
+    // Filtro por status
+    if (filter === 'checkin') list = list.filter(p => p.checked === true);
+    if (filter === 'pendentes') list = list.filter(p => p.checked === false);
+    // Filtro por busca
+    if (query) {
+      const q = query.toLowerCase().trim();
+      const qDigits = q.replace(/\D/g, '');
+      list = list.filter(p => {
+        if ((p.name || '').toLowerCase().includes(q)) return true;
+        if ((p.email || '').toLowerCase().includes(q)) return true;
+        if ((p.code || '').toLowerCase().includes(q)) return true;
+        if (qDigits && (p.phone || '').replace(/\D/g, '').includes(qDigits)) return true;
+        return false;
+      });
+    }
+    return list;
+  }
+
+  function counts() {
+    return {
+      todos: allParticipants.length,
+      checkin: allParticipants.filter(p => p.checked === true).length,
+      pendentes: allParticipants.filter(p => p.checked === false).length
+    };
   }
 
   function header() {
+    const c = counts();
+    const pct = c.todos > 0 ? Math.round((c.checkin / c.todos) * 100) : 0;
+    const isEncerrado = event.status === 'encerrado';
     const days = event.date_start
       ? Math.ceil((new Date(event.date_start) - Date.now()) / 86400000)
       : null;
-    const inscritos = event.total_inscritos || 0;
-    const checkins = event.total_checkins || 0;
-    const pctCheckin = inscritos > 0 ? Math.round((checkins / inscritos) * 100) : 0;
 
     return h('div', { class: 'evd-head' },
       h('div', {},
@@ -56,23 +89,28 @@ export async function pageEventDetail(view, { params }) {
         h('div', { class: 'evd-title' }, event.name || event.slug),
         h('div', { class: 'page-sub' },
           [
-            event.location,
+            event.location || 'A confirmar',
             event.date_start ? fmtDate(event.date_start) : null,
-            days !== null && days > 0 ? `em ${days} dia${days !== 1 ? 's' : ''}` : null,
-            event.status === 'encerrado' ? 'encerrado' : null
+            isEncerrado ? 'encerrado' : (days !== null && days > 0 ? `em ${days} dia${days !== 1 ? 's' : ''}` : null)
           ].filter(Boolean).join(' · ')
         )
       ),
       h('div', { class: 'evd-stats' },
         h('div', {},
           h('div', { class: 'evd-stat-label' }, 'Inscritos'),
-          h('div', { class: 'evd-stat-value mono' }, String(inscritos))
+          h('div', { class: 'evd-stat-value mono' }, String(c.todos))
         ),
         h('div', {},
           h('div', { class: 'evd-stat-label' }, 'Check-in'),
-          h('div', { class: 'evd-stat-value mono' },
-            String(checkins),
-            inscritos > 0 ? h('small', {}, ` · ${pctCheckin}%`) : null
+          h('div', { class: 'evd-stat-value mono', style: { color: c.checkin > 0 ? 'var(--green)' : 'var(--ink-strong)' } },
+            String(c.checkin),
+            c.todos > 0 ? h('small', {}, ` · ${pct}%`) : null
+          )
+        ),
+        h('div', {},
+          h('div', { class: 'evd-stat-label' }, 'Pendentes'),
+          h('div', { class: 'evd-stat-value mono', style: { color: c.pendentes > 0 ? 'var(--amber)' : 'var(--ink-strong)' } },
+            String(c.pendentes)
           )
         )
       )
@@ -109,25 +147,18 @@ export async function pageEventDetail(view, { params }) {
     );
   }
 
-  function tableEl() {
-    return h('div', { class: 'table-card', id: 'evd-table' });
-  }
-
   function render() {
-    setContent(view, header(), actions(), tableEl());
+    setContent(view, header(), actions(), h('div', { class: 'table-card', id: 'evd-table' }));
     renderTable();
-    loadParticipants();
   }
-
-  const handleSearch = debounce((v) => {
-    query = v.trim();
-    offset = 0;
-    loadParticipants();
-  }, 250);
 
   function renderTable() {
     const container = document.getElementById('evd-table');
     if (!container) return;
+
+    const filtered = getFiltered();
+    const visible = filtered.slice(0, visibleCount);
+    const c = counts();
 
     setContent(container,
       h('div', { class: 'table-toolbar' },
@@ -137,49 +168,65 @@ export async function pageEventDetail(view, { params }) {
             type: 'text',
             placeholder: 'Buscar por nome, email, telefone ou código...',
             value: query,
-            oninput: (e) => handleSearch(e.target.value)
+            oninput: (e) => { query = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }
           })
         ),
         h('div', { style: { display: 'flex', gap: '4px', marginLeft: 'auto' } },
-          tabBtn(`Todos · ${event.total_inscritos || 0}`, !onlyPending, () => { onlyPending = false; offset = 0; loadParticipants(); }),
-          tabBtn(`Pendentes`, onlyPending, () => { onlyPending = true; offset = 0; loadParticipants(); })
+          tabBtn(`Todos · ${c.todos}`, filter === 'todos', () => { filter = 'todos'; visibleCount = PAGE_SIZE; updateBody(); }),
+          tabBtn(`Check-in · ${c.checkin}`, filter === 'checkin', () => { filter = 'checkin'; visibleCount = PAGE_SIZE; updateBody(); }, 'green'),
+          tabBtn(`Pendentes · ${c.pendentes}`, filter === 'pendentes', () => { filter = 'pendentes'; visibleCount = PAGE_SIZE; updateBody(); }, 'amber')
         )
       ),
-
-      participants.length === 0
-        ? h('div', { class: 'loading-row' }, query ? 'Nenhum resultado para essa busca.' : 'Sem inscritos ainda.')
-        : h('table', { class: 'table' },
-            h('thead', {}, h('tr', {},
-              h('th', { style: { width: '34%' } }, 'Inscrito'),
-              h('th', {}, 'Telefone'),
-              h('th', {}, 'Lote'),
-              h('th', {}, 'Origem'),
-              h('th', {}, 'Check-in')
-            )),
-            h('tbody', {}, ...participants.map(rowFor))
-          ),
-
-      total > PAGE_SIZE ? pagerEl() : null
+      h('div', { id: 'evd-table-body' })
     );
+
+    updateBody();
   }
 
-  function pagerEl() {
-    const start = offset + 1;
-    const end = Math.min(offset + participants.length, total);
-    return h('div', { class: 'table-pager' },
-      h('span', {}, `${start}–${end} de ${total}`),
-      h('div', { class: 'pager-actions' },
-        h('button', {
-          class: 'btn btn-ghost',
-          disabled: offset === 0,
-          onclick: () => { offset = Math.max(0, offset - PAGE_SIZE); loadParticipants(); }
-        }, icons.arrowLeft(), 'Anterior'),
-        h('button', {
-          class: 'btn btn-ghost',
-          disabled: offset + PAGE_SIZE >= total,
-          onclick: () => { offset += PAGE_SIZE; loadParticipants(); }
-        }, 'Próxima', icons.arrowRight())
-      )
+  function updateBody() {
+    const body = document.getElementById('evd-table-body');
+    if (!body) return;
+
+    const filtered = getFiltered();
+    const visible = filtered.slice(0, visibleCount);
+
+    if (filtered.length === 0) {
+      setContent(body,
+        h('div', { class: 'loading-row' },
+          query
+            ? `Nenhum resultado para "${query}".`
+            : filter === 'checkin'
+              ? 'Nenhum check-in feito ainda.'
+              : filter === 'pendentes'
+                ? 'Nenhum pendente — todos fizeram check-in!'
+                : 'Sem inscritos ainda.'
+        )
+      );
+      return;
+    }
+
+    setContent(body,
+      h('table', { class: 'table' },
+        h('thead', {}, h('tr', {},
+          h('th', { style: { width: '34%' } }, 'Inscrito'),
+          h('th', {}, 'Telefone'),
+          h('th', {}, 'Lote'),
+          h('th', {}, 'Origem'),
+          h('th', {}, 'Check-in')
+        )),
+        h('tbody', {}, ...visible.map(rowFor))
+      ),
+      filtered.length > visibleCount
+        ? h('div', { class: 'table-pager' },
+            h('span', {}, `Mostrando ${visible.length} de ${filtered.length}`),
+            h('button', {
+              class: 'btn btn-ghost',
+              onclick: () => { visibleCount += PAGE_SIZE; updateBody(); }
+            }, 'Carregar mais')
+          )
+        : h('div', { class: 'table-pager' },
+            h('span', {}, `${filtered.length} ${filtered.length === 1 ? 'inscrito' : 'inscritos'}`)
+          )
     );
   }
 
@@ -221,15 +268,25 @@ export async function pageEventDetail(view, { params }) {
   render();
 }
 
-function tabBtn(label, active, onClick) {
+function tabBtn(label, active, onClick, accent) {
+  const colorActive = accent === 'green'
+    ? 'var(--green)'
+    : accent === 'amber'
+      ? 'var(--amber)'
+      : 'var(--ink-strong)';
+  const bgActive = accent === 'green'
+    ? 'var(--green-soft)'
+    : accent === 'amber'
+      ? 'var(--amber-soft)'
+      : 'var(--bg-2)';
   return h('button', {
     class: 'btn',
     style: {
       padding: '6px 12px',
       height: 'auto',
       fontSize: '12px',
-      background: active ? 'var(--bg-2)' : 'transparent',
-      color: active ? 'var(--ink-strong)' : 'var(--ink-soft)'
+      background: active ? bgActive : 'transparent',
+      color: active ? colorActive : 'var(--ink-soft)'
     },
     onclick: onClick
   }, label);
@@ -281,6 +338,14 @@ function openEditModal(event, onSave) {
           h('input', { class: 'input', name: 'date_end', type: 'datetime-local', value: toLocalInput(event.date_end) })
         ),
         h('div', { class: 'field' },
+          h('label', {}, 'Status'),
+          h('select', { class: 'input', name: 'status' },
+            ['embreve', 'ativo', 'encerrado'].map(s =>
+              h('option', { value: s, selected: event.status === s ? 'selected' : null }, statusLabel(s))
+            )
+          )
+        ),
+        h('div', { class: 'field' },
           h('label', {}, 'ID do produto Hotmart'),
           h('input', { class: 'input', name: 'hotmart_product_id', value: event.hotmart_product_id || '', placeholder: 'Ex: 2384751' })
         ),
@@ -303,6 +368,7 @@ function openEditModal(event, onSave) {
             location: get('location'),
             date_start: get('date_start') ? new Date(get('date_start')).toISOString() : null,
             date_end: get('date_end') ? new Date(get('date_end')).toISOString() : null,
+            status: get('status'),
             hotmart_product_id: get('hotmart_product_id'),
             certificate_hours: get('certificate_hours') ? Number(get('certificate_hours')) : null
           };
@@ -316,6 +382,10 @@ function openEditModal(event, onSave) {
       }
     ]
   });
+}
+
+function statusLabel(s) {
+  return { embreve: 'Em breve', ativo: 'Em vendas', encerrado: 'Encerrado' }[s] || s;
 }
 
 function toLocalInput(iso) {
