@@ -1,6 +1,7 @@
 // =============================================================
 // Sistema de Check-in · Nutrição Brasil
 // app.js — Lógica completa (vanilla JS + Supabase)
+// v2.1 — bloqueio de edição fora da janela de 7 dias
 // =============================================================
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY, NB_LOGO } from "./config.js";
@@ -64,6 +65,23 @@ function haptic(type = "light") {
   if (type === "light") navigator.vibrate(8);
   else if (type === "success") navigator.vibrate([12, 40, 18]);
   else if (type === "error") navigator.vibrate([30, 50, 30]);
+}
+
+// =============================================================
+// JANELA DE EDIÇÃO
+// Evento ativo → sempre editável.
+// Evento encerrado → editável só dentro de 7 dias antes ou após a data.
+// Fora desse período → somente leitura (visualização permitida).
+// =============================================================
+function isEditable(event) {
+  if (!event) return false;
+  if (event.status === "ativo") return true;
+  const dateRef = event.event_end_date || event.event_date;
+  if (!dateRef) return true;
+  const now = Date.now();
+  const ev = new Date(dateRef + "T00:00:00").getTime();
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  return Math.abs(now - ev) <= WEEK;
 }
 
 let toastTimer;
@@ -180,6 +198,14 @@ async function loadParticipants(eventId) {
 async function toggleCheckIn(participantId) {
   const p = state.participants.find(x => x.id === participantId);
   if (!p) return;
+
+  // Bloquear se fora da janela de edição
+  if (!isEditable(state.currentEvent)) {
+    toast("Período de edição encerrado — apenas visualização", "error");
+    haptic("error");
+    return;
+  }
+
   const newChecked = !p.checked;
   const patch = {
     checked: newChecked,
@@ -380,8 +406,9 @@ function renderEvents() {
     const db = fmtDateBlock(e.event_date);
     const pct = e.total_inscritos ? Math.round((e.total_checkins / e.total_inscritos) * 100) : 0;
     const showStats = (e.total_inscritos || 0) > 0;
+    const locked = e.status === "encerrado" && !isEditable(e);
     return `
-      <div class="event-card ${e.status === 'ativo' ? 'active-event' : ''} ${e.status === 'encerrado' ? 'encerrado' : ''}" data-event-id="${e.id}">
+      <div class="event-card ${e.status === 'ativo' ? 'active-event' : ''} ${e.status === 'encerrado' ? 'encerrado' : ''} ${locked ? 'locked' : ''}" data-event-id="${e.id}">
         <div class="event-body">
           <div class="event-date-block">
             <div class="event-date-month">${db.month}</div>
@@ -400,9 +427,13 @@ function renderEvents() {
             ` : ''}
           </div>
           <div class="event-status">
-            ${e.status === 'ativo' ? '<span class="status-pill ativo">AO VIVO</span>' :
-              e.status === 'embreve' ? '<span class="status-pill embreve">Em breve</span>' :
-              '<span class="status-pill encerrado">Encerrado</span>'}
+            ${e.status === 'ativo'
+              ? '<span class="status-pill ativo">AO VIVO</span>'
+              : e.status === 'embreve'
+                ? '<span class="status-pill embreve">Em breve</span>'
+                : locked
+                  ? '<span class="status-pill encerrado">🔒 Encerrado</span>'
+                  : '<span class="status-pill encerrado">Encerrado</span>'}
             ${admin ? `
               <div class="event-admin-actions">
                 <button class="event-action-btn" data-edit="${e.id}" title="Editar">
@@ -480,9 +511,50 @@ function renderEvents() {
       }
       const id = c.dataset.eventId;
       const ev = state.events.find(x => x.id === id);
-      if (ev?.status === "ativo") openCheckin(ev);
-      else if (ev?.status === "encerrado" && admin) openCheckin(ev);
-      else if (ev?.status === "embreve" && admin) openEventEditor(ev);
+
+      if (ev?.status === "ativo") {
+        openCheckin(ev);
+
+      } else if (ev?.status === "encerrado") {
+        // Operadora só acessa se ainda dentro da janela de 7 dias
+        if (!admin && !isEditable(ev)) return;
+
+        const editable = isEditable(ev);
+        openModal(`
+          <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+              <div class="modal-title">${editable ? 'Evento encerrado' : '🔒 Somente leitura'}</div>
+              <button class="modal-close" data-close>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.65;color:var(--ink-soft);">
+                ${editable
+                  ? `<strong style="display:block;color:var(--ink);margin-bottom:6px;">Dentro do período de edição</strong>
+                     Este evento está encerrado, mas ainda dentro dos 7 dias após a realização.<br>
+                     Você pode ajustar check-ins normalmente.`
+                  : `<strong style="display:block;color:var(--ink);margin-bottom:6px;">Período de edição encerrado</strong>
+                     Já passaram mais de 7 dias do evento.<br><br>
+                     Os dados estão disponíveis para <strong>visualização</strong>, mas check-ins <strong>não podem ser alterados</strong>.<br><br>
+                     Para habilitar edição temporária, o admin pode reativar o evento nas configurações.`}
+              </div>
+              <div class="btn-row">
+                <button class="btn-modal ghost" data-close>Cancelar</button>
+                <button class="btn-modal primary" id="btnConfirmOpen">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  ${editable ? 'Abrir' : 'Visualizar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        `);
+        $("btnConfirmOpen").addEventListener("click", () => { closeModal(); openCheckin(ev); });
+
+      } else if (ev?.status === "embreve" && admin) {
+        openEventEditor(ev);
+      }
     });
   });
 
@@ -607,6 +679,7 @@ function renderCheckinScreen() {
   const e = state.currentEvent;
   const d = new Date(e.event_date + "T00:00:00");
   const dateDisplay = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  const locked = e.status === "encerrado" && !isEditable(e);
 
   $("app").innerHTML = `
     <div class="container">
@@ -631,6 +704,14 @@ function renderCheckinScreen() {
             <button class="search-clear ${state.search ? 'show' : ''}" id="searchClear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></button>
           </div>
         </div>
+
+        ${locked ? `
+          <div style="background:rgba(255,107,107,0.1);border-top:2px solid rgba(255,107,107,0.35);padding:10px 20px;font-size:12px;font-weight:600;color:#ff6b6b;display:flex;align-items:center;gap:8px;letter-spacing:0.01em;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Somente leitura — período de edição encerrado (7 dias após o evento)
+          </div>
+        ` : ''}
+
         <div class="stats">
           <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0</div></div>
           <div class="stat success"><div class="stat-label">Check-in</div><div class="stat-value" id="statChecked">0</div></div>
@@ -810,8 +891,17 @@ function onSwipeEnd() {
     } else {
       if (dx < -80) {
         document.querySelectorAll(".row.swiped").forEach(r => { if (r !== row) r.classList.remove("swiped"); });
-        if (dx < -180) { row.classList.remove("swiped"); toggleCheckIn(row.dataset.id); }
-        else row.classList.add("swiped");
+        if (dx < -180) {
+          row.classList.remove("swiped");
+          if (isEditable(state.currentEvent)) {
+            toggleCheckIn(row.dataset.id);
+          } else {
+            toast("Período de edição encerrado — apenas visualização", "error");
+            haptic("error");
+          }
+        } else {
+          row.classList.add("swiped");
+        }
       }
     }
   }
@@ -821,7 +911,15 @@ function onListClick(e) {
   const action = e.target.closest(".row-action");
   if (action) {
     const row = action.closest(".row");
-    if (row) { row.classList.remove("swiped"); toggleCheckIn(row.dataset.id); }
+    if (row) {
+      row.classList.remove("swiped");
+      if (isEditable(state.currentEvent)) {
+        toggleCheckIn(row.dataset.id);
+      } else {
+        toast("Período de edição encerrado — apenas visualização", "error");
+        haptic("error");
+      }
+    }
     return;
   }
   const swipedRow = e.target.closest(".row.swiped");
