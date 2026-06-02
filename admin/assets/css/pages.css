@@ -341,3 +341,104 @@
   color: var(--ink-strong);
   cursor: default;
 }
+
+/* ===== Certificados — toggle de visibilidade ===== */
+.slot-toggle {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--violet-soft);
+  color: var(--violet);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.slot-toggle.off {
+  background: var(--bg-2);
+  color: var(--ink-dim);
+}
+.slot-config.hidden-slot {
+  opacity: 0.55;
+}
+.cert-slot.hidden-ghost {
+  background: rgba(0, 0, 0, 0.06);
+  border: 2px dashed #aaa;
+  color: #aaa;
+  cursor: grab;
+  opacity: 0.6;
+  font-size: 12px !important;
+}
+.dot-off {
+  background: var(--ink-dim) !important;
+}
+
+/* ===== Certificados — tela do evento (estilo Sympla) ===== */
+.cert-warn {
+  background: var(--amber-soft);
+  color: var(--amber);
+  border: 1px solid #f6d860;
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.cert-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.cert-bulk-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.table-cert td {
+  vertical-align: middle;
+  padding: 10px 12px;
+}
+.cert-row-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  color: var(--ink-mute);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  text-decoration: none;
+}
+.btn-icon:hover {
+  background: var(--bg-2);
+  color: var(--violet);
+}
+.btn-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.status-cert-sent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 500;
+}
+.status-cert-sent::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
