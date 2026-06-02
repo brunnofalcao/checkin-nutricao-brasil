@@ -442,3 +442,49 @@
   background: var(--green);
   flex-shrink: 0;
 }
+
+/* ===== Certificados — progresso bulk + ajustes ===== */
+.cert-progress-bar {
+  background: var(--violet-soft);
+  color: var(--violet);
+  border-radius: var(--r-sm);
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.btn-icon-off {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ===== Payment status pills ===== */
+.payment-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.payment-pill.payment-paid {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.payment-pill.payment-partial {
+  background: #fef9c3;
+  color: #a16207;
+}
+.payment-pill.payment-canceled {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Linha de inadimplente na tabela */
+.row-payment-canceled {
+  background: rgba(239, 68, 68, 0.03);
+}
+.row-payment-canceled:hover {
+  background: rgba(239, 68, 68, 0.07) !important;
+}
