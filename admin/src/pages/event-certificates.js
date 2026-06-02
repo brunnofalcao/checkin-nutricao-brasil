@@ -6,24 +6,24 @@ import { toast } from '../ui/toast.js';
 import { navigate } from '../core/router.js';
 import { fmtDate, fmtRelative } from '../core/utils.js';
 
-// Chamada pelo botão "Certificado" dentro da tela de detalhe do evento.
-// Substitui o conteúdo do view (sem mudar a rota).
+const { SUPABASE_URL, SUPABASE_ANON } = window.__ENV;
+
 export async function pageEventCertificates(view, event, onBack) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
 
   const hasTemplate = !!(event.certificate_template_url && event.certificate_layout);
 
-  // Pega só quem fez check-in
   let all = [];
   try {
     const raw = await listAllParticipants(event.id);
     all = raw.filter(p => p.checked === true);
   } catch (e) {
-    toast.danger('Erro ao carregar participantes: ' + e.message);
+    toast.danger('Erro ao carregar: ' + e.message);
     return;
   }
 
   let query = '';
+  let generating = false; // bloqueia duplo-clique no bulk
 
   function getFiltered() {
     if (!query) return all;
@@ -37,34 +37,202 @@ export async function pageEventCertificates(view, event, onBack) {
   }
 
   function certStatus(p) {
-    if (!p.certificate_url) return 'pendente';
     if (p.certificate_sent_at) return 'enviado';
-    return 'gerado';
+    if (p.certificate_url)     return 'gerado';
+    return 'pendente';
   }
 
   function statusBadge(p) {
     const s = certStatus(p);
-    if (s === 'pendente') return h('span', { class: 'status done' }, 'Pendente');
-    if (s === 'gerado')   return h('span', { class: 'status live' }, 'PDF pronto');
-    // enviado
-    return h('span', { class: 'status-cert-sent' },
-      'Enviado · ' + fmtRelative(p.certificate_sent_at)
+    if (s === 'enviado')
+      return h('span', { class: 'status-cert-sent' }, 'Enviado · ' + fmtRelative(p.certificate_sent_at));
+    if (s === 'gerado')
+      return h('span', { class: 'status live' }, 'PDF pronto');
+    return h('span', { class: 'status done' }, 'Pendente');
+  }
+
+  function counts() {
+    return {
+      pendente: all.filter(p => !p.certificate_url).length,
+      gerado:   all.filter(p => p.certificate_url && !p.certificate_sent_at).length,
+      enviado:  all.filter(p => p.certificate_sent_at).length
+    };
+  }
+
+  async function callFn(path, body) {
+    const { supabase: sb } = await import('../data/supabase.js');
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || JSON.stringify(j));
+    return j;
+  }
+
+  async function refreshParticipant(id) {
+    const { supabase: sb } = await import('../data/supabase.js');
+    const { data } = await sb
+      .from('participants')
+      .select('id, certificate_url, certificate_sent_at')
+      .eq('id', id)
+      .single();
+    if (data) {
+      const idx = all.findIndex(p => p.id === id);
+      if (idx !== -1) Object.assign(all[idx], data);
+    }
+    renderTable();
+  }
+
+  async function refreshAll() {
+    const { supabase: sb } = await import('../data/supabase.js');
+    const ids = all.map(p => p.id);
+    const { data } = await sb
+      .from('participants')
+      .select('id, certificate_url, certificate_sent_at')
+      .in('id', ids);
+    if (data) {
+      data.forEach(d => {
+        const idx = all.findIndex(p => p.id === d.id);
+        if (idx !== -1) Object.assign(all[idx], d);
+      });
+    }
+    renderTable();
+  }
+
+  // ── Handlers individuais ─────────────────────────────────────────
+  async function handleGenerate(p, btn) {
+    if (!hasTemplate) { toast.danger('Configure o template primeiro.'); return; }
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const r = await callFn('certificate-generate', { participant_id: p.id });
+      toast.success('PDF gerado.');
+      await refreshParticipant(p.id);
+    } catch (e) {
+      toast.danger('Erro: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function handleSendWhatsApp(p, btn) {
+    if (!p.certificate_url) {
+      toast.danger('Gera o PDF primeiro.'); return;
+    }
+    btn.disabled = true;
+    try {
+      await callFn('certificate-dispatch', { participant_id: p.id, channels: ['whatsapp'] });
+      toast.success('WhatsApp enviado para ' + p.name);
+      await refreshParticipant(p.id);
+    } catch (e) {
+      toast.danger('Erro WhatsApp: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function handleSendEmail(p) {
+    if (!p.certificate_url) { toast.danger('Gera o PDF primeiro.'); return; }
+    if (!p.email)            { toast.danger('Participante sem email cadastrado.'); return; }
+
+    const eventName = event.name || 'Nutrição Brasil';
+    const subject   = encodeURIComponent(`Seu certificado — ${eventName}`);
+    const body      = encodeURIComponent(
+      `Olá, ${p.name || ''}!\n\n` +
+      `Seu certificado de participação no ${eventName} está pronto.\n\n` +
+      `Baixe aqui: ${p.certificate_url}\n\n` +
+      `Nutrição Brasil`
     );
+
+    // Abre o cliente de email do usuário com tudo preenchido
+    window.open(`mailto:${p.email}?subject=${subject}&body=${body}`);
+    toast.success('Cliente de email aberto. Confira e clique Enviar.');
   }
 
-  function counters() {
-    const pendente = all.filter(p => !p.certificate_url).length;
-    const gerado   = all.filter(p => p.certificate_url && !p.certificate_sent_at).length;
-    const enviado  = all.filter(p => p.certificate_sent_at).length;
-    return { pendente, gerado, enviado };
+  function handleCopyLink(p) {
+    if (!p.certificate_url) { toast.danger('PDF ainda não gerado.'); return; }
+    navigator.clipboard.writeText(p.certificate_url)
+      .then(() => toast.success('Link copiado!'))
+      .catch(() => toast.danger('Não foi possível copiar.'));
   }
 
+  // ── Handlers bulk ─────────────────────────────────────────────────
+  async function handleBulkGenerate() {
+    if (!hasTemplate) { toast.danger('Configure o template primeiro.'); return; }
+    const sem = all.filter(p => !p.certificate_url);
+    if (sem.length === 0) { toast.success('Todos os PDFs já foram gerados.'); return; }
+    if (!confirm(`Gerar ${sem.length} PDFs? Isso pode levar alguns minutos.`)) return;
+
+    generating = true;
+    renderTopBtns(true);
+
+    let done = 0;
+    for (const p of sem) {
+      try {
+        await callFn('certificate-generate', { participant_id: p.id });
+        done++;
+        // Atualiza só esse participante na lista
+        const idx = all.findIndex(x => x.id === p.id);
+        if (idx !== -1) {
+          // Puxa a URL atualizada
+          const { supabase: sb } = await import('../data/supabase.js');
+          const { data } = await sb.from('participants').select('id, certificate_url').eq('id', p.id).single();
+          if (data) Object.assign(all[idx], data);
+        }
+        renderTable();
+        updateBulkProgress(`Gerando PDFs... ${done}/${sem.length}`);
+      } catch (e) {
+        console.error('Erro pra', p.name, e.message);
+      }
+    }
+    generating = false;
+    renderTopBtns(false);
+    toast.success(`${done} PDFs gerados.`);
+  }
+
+  async function handleBulkWhatsApp() {
+    const com_pdf = all.filter(p => p.certificate_url);
+    if (com_pdf.length === 0) { toast.danger('Gera os PDFs primeiro.'); return; }
+    if (!confirm(`Enviar WhatsApp para ${com_pdf.length} pessoas?`)) return;
+
+    generating = true;
+    renderTopBtns(true);
+
+    let lastId = null, totalSent = 0, round = 0;
+    while (true) {
+      round++;
+      try {
+        const r = await callFn('certificate-dispatch', {
+          event_id: event.id,
+          channels: ['whatsapp'],
+          last_id: lastId
+        });
+        totalSent += r.sent || 0;
+        lastId = r.last_id;
+        updateBulkProgress(`Enviando WhatsApp... ${totalSent} enviados`);
+        await refreshAll();
+        if (r.done || round > 20) break;
+      } catch (e) {
+        toast.danger('Erro no disparo: ' + e.message);
+        break;
+      }
+    }
+    generating = false;
+    renderTopBtns(false);
+    toast.success(`WhatsApp enviado para ${totalSent} pessoas.`);
+  }
+
+  // ── Render ───────────────────────────────────────────────────────
   function render() {
-    const c = counters();
-    const filtered = getFiltered();
-
+    const c = counts();
     setContent(view,
-      // Cabeçalho
       h('div', { class: 'evd-head', style: { marginBottom: '24px' } },
         h('div', {},
           h('button', {
@@ -75,61 +243,71 @@ export async function pageEventCertificates(view, event, onBack) {
           h('div', { class: 'evd-title' }, 'Certificados — ' + (event.name || event.slug)),
           h('div', { class: 'page-sub' },
             `${all.length} participantes com check-in · ` +
-            `${c.pendente} pendentes · ${c.gerado} PDFs prontos · ${c.enviado} enviados`
+            `${c.pendente} sem PDF · ${c.gerado} PDFs prontos · ${c.enviado} enviados`
           )
         ),
         h('div', { style: { display: 'flex', gap: '8px', flexShrink: '0' } },
           h('button', {
             class: 'btn btn-ghost',
             onclick: () => navigate(`/certificados/${event.id}`)
-          }, hasTemplate ? 'Editar template' : 'Configurar template')
+          }, hasTemplate ? 'Editar template' : '⚠ Configurar template')
         )
       ),
 
-      // Aviso se não tem template
       !hasTemplate ? h('div', { class: 'cert-warn' },
         h('b', {}, 'Template não configurado. '),
-        'Você precisa configurar o template visual antes de gerar os certificados. ',
-        h('a', {
-          href: '#',
-          onclick: (e) => { e.preventDefault(); navigate(`/certificados/${event.id}`); }
-        }, 'Configurar agora →')
+        'Configure o template visual antes de gerar os certificados. ',
+        h('a', { href: '#', onclick: (e) => { e.preventDefault(); navigate(`/certificados/${event.id}`); } }, 'Configurar →')
       ) : null,
 
-      // Barra de ações bulk
-      h('div', { class: 'cert-bulk-bar' },
-        h('div', { class: 'toolbar-search', style: { flex: '1', maxWidth: '400px' } },
-          icons.search(),
-          h('input', {
-            type: 'text',
-            placeholder: 'Buscar por nome ou email...',
-            value: query,
-            oninput: (e) => { query = e.target.value; renderTable(); }
-          })
-        ),
-        h('div', { class: 'cert-bulk-actions' },
-          h('button', {
-            class: 'btn btn-secondary',
-            disabled: !hasTemplate || null,
-            onclick: () => handleBulkGenerate()
-          }, 'Gerar todos os PDFs'),
-          h('button', {
-            class: 'btn btn-secondary',
-            disabled: !hasTemplate || null,
-            onclick: () => handleBulkWhatsApp()
-          }, icons.send(), 'WhatsApp para todos'),
-          h('button', {
-            class: 'btn btn-secondary',
-            onclick: () => handleBulkDownload()
-          }, 'Baixar todos')
-        )
-      ),
+      // Barra de progresso bulk (inicialmente vazia)
+      h('div', { id: 'cert-progress', style: { display: 'none' } }),
+
+      // Botões bulk
+      h('div', { class: 'cert-bulk-bar', id: 'cert-bulk-bar' }),
 
       // Tabela
       h('div', { class: 'table-card', id: 'cert-table-wrap' })
     );
 
+    renderTopBtns(false);
     renderTable();
+  }
+
+  function renderTopBtns(disabled) {
+    const bar = document.getElementById('cert-bulk-bar');
+    if (!bar) return;
+    setContent(bar,
+      h('div', { class: 'toolbar-search', style: { flex: '1', maxWidth: '400px' } },
+        icons.search(),
+        h('input', {
+          type: 'text',
+          placeholder: 'Buscar por nome ou email...',
+          value: query,
+          oninput: (e) => { query = e.target.value; renderTable(); }
+        })
+      ),
+      h('div', { class: 'cert-bulk-actions' },
+        h('button', {
+          class: 'btn btn-secondary',
+          disabled: disabled || !hasTemplate || null,
+          onclick: handleBulkGenerate
+        }, 'Gerar todos os PDFs'),
+        h('button', {
+          class: 'btn btn-primary',
+          disabled: disabled || null,
+          onclick: handleBulkWhatsApp
+        }, icons.send(), 'WhatsApp para todos')
+      )
+    );
+  }
+
+  function updateBulkProgress(msg) {
+    const el = document.getElementById('cert-progress');
+    if (!el) return;
+    el.style.display = 'block';
+    el.textContent = msg;
+    el.className = 'cert-progress-bar';
   }
 
   function renderTable() {
@@ -138,8 +316,8 @@ export async function pageEventCertificates(view, event, onBack) {
     const filtered = getFiltered();
 
     if (filtered.length === 0) {
-      setContent(wrap, h('div', { class: 'empty' },
-        h('div', { class: 'empty-title' }, query ? `Nenhum resultado para "${query}"` : 'Nenhum check-in registrado neste evento.'),
+      setContent(wrap, h('div', { class: 'loading-row' },
+        query ? `Nenhum resultado para "${query}".` : 'Nenhum participante com check-in.'
       ));
       return;
     }
@@ -147,11 +325,10 @@ export async function pageEventCertificates(view, event, onBack) {
     setContent(wrap,
       h('table', { class: 'table table-cert' },
         h('thead', {}, h('tr', {},
-          h('th', { style: { width: '28%' } }, 'Participante'),
+          h('th', { style: { width: '26%' } }, 'Participante'),
           h('th', {}, 'Email'),
-          h('th', {}, 'Telefone'),
           h('th', {}, 'Status'),
-          h('th', { style: { width: '160px', textAlign: 'right' } }, 'Ações')
+          h('th', { style: { width: '170px', textAlign: 'right' } }, 'Ações')
         )),
         h('tbody', {}, ...filtered.map(rowFor))
       ),
@@ -162,84 +339,48 @@ export async function pageEventCertificates(view, event, onBack) {
   }
 
   function rowFor(p) {
-    const s = certStatus(p);
+    const hasPdf = !!p.certificate_url;
+
     return h('tr', {},
       h('td', {},
-        h('div', { class: 'row-name' }, p.name || '—')
+        h('div', { class: 'row-name' }, p.name || '—'),
+        h('div', { class: 'row-sub' }, p.phone || '—')
       ),
       h('td', { class: 'mono', style: { fontSize: '12px' } }, p.email || '—'),
-      h('td', { class: 'mono', style: { fontSize: '12px' } }, p.phone || '—'),
       h('td', {}, statusBadge(p)),
-      h('td', { style: { textAlign: 'right' } },
+      h('td', {},
         h('div', { class: 'cert-row-actions' },
-          // Baixar (só se PDF existe)
-          p.certificate_url ? h('a', {
-            class: 'btn-icon',
-            href: p.certificate_url,
-            target: '_blank',
-            title: 'Baixar PDF'
-          }, icons.check()) : h('button', {
-            class: 'btn-icon',
-            title: 'Gerar PDF',
-            onclick: () => handleGenerate(p)
-          }, icons.plus()),
-          // WhatsApp
+          // Gerar / Ver PDF
+          hasPdf
+            ? h('a', { class: 'btn-icon', href: p.certificate_url, target: '_blank', title: 'Abrir PDF' }, icons.check())
+            : h('button', {
+                class: 'btn-icon', title: 'Gerar PDF',
+                onclick: (e) => handleGenerate(p, e.currentTarget)
+              }, icons.plus()),
+
+          // Copiar link
+          h('button', {
+            class: 'btn-icon' + (hasPdf ? '' : ' btn-icon-off'),
+            title: hasPdf ? 'Copiar link do PDF' : 'Gere o PDF primeiro',
+            onclick: () => handleCopyLink(p)
+          }, icons.info()),
+
+          // WhatsApp individual
           h('button', {
             class: 'btn-icon',
             title: 'Enviar por WhatsApp',
-            onclick: () => handleWhatsApp(p)
+            onclick: (e) => handleSendWhatsApp(p, e.currentTarget)
           }, icons.send()),
-          // Reenviar (só se já enviou)
-          p.certificate_sent_at ? h('button', {
+
+          // Email individual
+          h('button', {
             class: 'btn-icon',
-            title: 'Reenviar',
-            onclick: () => handleWhatsApp(p)
-          }, icons.check()) : null
+            title: 'Enviar por email',
+            onclick: () => handleSendEmail(p)
+          }, icons.message())
         )
       )
     );
-  }
-
-  // ---- HANDLERS INDIVIDUAIS ----
-  async function handleGenerate(p) {
-    toast.info('Gerando PDF — em construção (próxima entrega)');
-    // TODO: chamar Edge Function certificate-generate
-    // const res = await fetch(`${SUPABASE_URL}/functions/v1/certificate-generate`, {
-    //   method: 'POST',
-    //   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ participant_id: p.id })
-    // });
-  }
-
-  async function handleWhatsApp(p) {
-    if (!p.certificate_url) {
-      toast.danger('Gera o PDF primeiro antes de enviar.');
-      return;
-    }
-    toast.info('Disparo WhatsApp — em construção (próxima entrega)');
-    // TODO: chamar whatsapp-broadcast individual
-  }
-
-  // ---- HANDLERS EM MASSA ----
-  async function handleBulkGenerate() {
-    const sem_pdf = all.filter(p => !p.certificate_url);
-    if (sem_pdf.length === 0) { toast.success('Todos os PDFs já foram gerados.'); return; }
-    toast.info(`Gerando ${sem_pdf.length} PDFs — em construção (próxima entrega)`);
-    // TODO: loop chamando certificate-generate
-  }
-
-  async function handleBulkWhatsApp() {
-    const com_pdf = all.filter(p => p.certificate_url);
-    if (com_pdf.length === 0) { toast.danger('Nenhum PDF gerado ainda. Gera os PDFs primeiro.'); return; }
-    toast.info(`Enviando WhatsApp para ${com_pdf.length} pessoas — em construção (próxima entrega)`);
-    // TODO: chamar whatsapp-broadcast
-  }
-
-  async function handleBulkDownload() {
-    const com_pdf = all.filter(p => p.certificate_url);
-    if (com_pdf.length === 0) { toast.danger('Nenhum PDF gerado ainda.'); return; }
-    toast.info('Download em lote — em construção. Por enquanto, baixe individualmente.');
-    // TODO: gerar ZIP com todos os PDFs via Edge Function
   }
 
   render();
