@@ -121,7 +121,7 @@ async function pageEditor(view, eventId) {
             templateUrl ? h('button', {
               class: 'btn btn-ghost',
               onclick: () => { previewMode = !previewMode; render(); }
-            }, icons.eye(), previewMode ? 'Sair do preview' : 'Pré-visualizar') : null,
+            }, previewMode ? 'Sair do preview' : 'Pré-visualizar') : null,
             templateUrl ? h('button', {
               class: 'btn btn-primary',
               onclick: handleSave
