@@ -15,6 +15,7 @@ const NAV = [
     label: 'Comunicação',
     items: [
       { path: '/disparos', icon: 'send', label: 'Disparos' },
+      { path: '/divulgacao', icon: 'send', label: 'Divulgação' },
       { path: '/templates', icon: 'message', label: 'Templates WhatsApp' }
     ]
   },
@@ -31,7 +32,6 @@ const NAV = [
   }
 ];
 // Em construção (telas que ainda não foram implementadas).
-// /certificados, /disparos e /templates REMOVIDOS - têm implementação real.
 const STUB_PATHS = ['/pessoas', '/etiquetas', '/configuracoes'];
 export async function renderShell(rootEl) {
   const profile = await getProfile();
