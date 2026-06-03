@@ -94,23 +94,25 @@ export async function pageDisparos(view) {
           h('div', { class: 'page-sub' }, 'Combine filtros pra montar o público e dispare um template aprovado. A contagem atualiza conforme você filtra.')
         )
       ),
+      // ── Box de teste — largura cheia, no topo ──
+      h('div', { class: 'test-banner' },
+        h('div', { class: 'test-banner-icon' }, '🧪'),
+        h('div', { class: 'test-banner-main' },
+          h('div', { class: 'test-banner-title' }, 'Enviar teste para um número'),
+          h('div', { class: 'test-banner-sub' }, 'Manda na hora pra 1 número só — veja como a mensagem chega antes do disparo em massa.'),
+          h('div', { class: 'test-banner-row' },
+            h('input', { id: 't-phone', class: 'test-input', placeholder: 'DDD + número (ex: 61998318817)' }),
+            h('select', { id: 't-template', class: 'test-select' },
+              h('option', { value: '' }, 'Escolha o template…'),
+              ...templates.map(t => h('option', { value: t.id }, t.name))
+            ),
+            h('button', { class: 'btn btn-primary', id: 't-send', onclick: doTest }, icons.send(), 'Enviar teste')
+          )
+        )
+      ),
       h('div', { class: 'disp-grid' },
         // Coluna 1 — público + mensagem
         h('div', { class: 'card-block' },
-          // ── Bloco de teste (fora do fluxo de envio em massa) ──
-          h('div', { class: 'test-box' },
-            h('div', { class: 'test-box-title' }, '🧪 Enviar teste para um número'),
-            h('div', { class: 'test-box-row' },
-              h('input', { id: 't-phone', class: 'test-input', placeholder: 'DDD + número (ex: 61998318817)' }),
-              h('select', { id: 't-template' },
-                h('option', { value: '' }, 'Escolha o template…'),
-                ...templates.map(t => h('option', { value: t.id }, t.name))
-              )
-            ),
-            h('button', { class: 'btn btn-ghost btn-sm', id: 't-send', onclick: doTest }, 'Enviar teste agora'),
-            h('div', { class: 'row-sub', style: { marginTop: '6px' } },
-              'Manda na hora pra 1 número só. Útil pra ver como a mensagem chega antes do disparo em massa.')
-          ),
           h('h3', {}, '1. Público'),
           field('Evento', selectEl('f-event',
             events.map(e => ({ v: e.id, t: e.name || e.slug || e.id })),
