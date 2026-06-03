@@ -15,7 +15,6 @@ const STATUS_LABEL = {
 export async function pageTemplates(view) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
 
-  // ── callFn no mesmo padrão do event-certificates ──
   async function callFn(path, body) {
     const { supabase: sb } = await import('../data/supabase.js');
     const { data: { session } } = await sb.auth.getSession();
@@ -44,8 +43,8 @@ export async function pageTemplates(view) {
     return;
   }
 
-  // ── Modal de criação (estado local) ──
-  let varMapping = []; // ['nome','evento']
+  let varMapping = [];
+  let buttons = []; // [{ text, url }]
   const VAR_LABEL = { nome: 'Primeiro nome', evento: 'Nome do evento' };
   const VAR_SAMPLE = { nome: 'Maria', evento: 'Nutrição Brasil Brasília' };
 
@@ -79,6 +78,7 @@ export async function pageTemplates(view) {
 
   function cardFor(t) {
     const st = STATUS_LABEL[t.status] || STATUS_LABEL.PENDING;
+    const btns = t.buttons || [];
     return h('div', { class: 'tpl-card' },
       h('div', { class: 'tpl-card-main' },
         h('div', { class: 'tpl-card-head' },
@@ -88,20 +88,19 @@ export async function pageTemplates(view) {
         h('div', { class: 'row-sub', style: { textTransform: 'uppercase', letterSpacing: '.04em', margin: '2px 0 8px' } },
           `${t.category} · ${t.language}`),
         h('div', { class: 'tpl-card-body' }, t.body_text),
+        btns.length
+          ? h('div', { class: 'tpl-card-btns' },
+              ...btns.map(b => h('span', { class: 'tpl-btn-chip' }, icons.info(), b.text)))
+          : null,
         (t.status === 'REJECTED' && t.rejected_reason)
           ? h('div', { class: 'tpl-card-error' }, 'Motivo: ' + t.rejected_reason) : null
       ),
       h('div', {},
-        h('button', {
-          class: 'btn-icon',
-          title: 'Excluir',
-          onclick: () => doDelete(t)
-        }, icons.info())
+        h('button', { class: 'btn-icon', title: 'Excluir', onclick: () => doDelete(t) }, icons.info())
       )
     );
   }
 
-  // ── Ações ──
   async function doSync() {
     toast.info ? toast.info('Sincronizando…') : toast.success('Sincronizando…');
     try {
@@ -122,9 +121,9 @@ export async function pageTemplates(view) {
     } catch (e) { toast.danger('Erro: ' + e.message); }
   }
 
-  // ── Modal ──
   function openModal() {
     varMapping = [];
+    buttons = [];
     const backdrop = h('div', { class: 'modal-backdrop', id: 'tpl-modal' },
       h('div', { class: 'modal' },
         h('div', { class: 'modal-head' },
@@ -150,7 +149,15 @@ export async function pageTemplates(view) {
           ),
           h('div', { id: 'f-samples' }),
           field('Rodapé (opcional)',
-            h('input', { id: 'f-footer', placeholder: 'Science Play' }))
+            h('input', { id: 'f-footer', placeholder: 'Science Play' })),
+          // ── Seção de botões ──
+          h('div', { class: 'btn-section' },
+            h('div', { class: 'btn-section-head' },
+              h('span', {}, 'Botões de link (até 2)'),
+              h('button', { type: 'button', class: 'btn-chip', id: 'add-btn', onclick: addButton }, '+ Adicionar botão')
+            ),
+            h('div', { id: 'f-buttons' })
+          )
         ),
         h('div', { class: 'modal-foot' },
           h('button', { class: 'btn btn-ghost', onclick: closeModal }, 'Cancelar'),
@@ -191,6 +198,41 @@ export async function pageTemplates(view) {
     );
   }
 
+  // ── Botões de link ──
+  function addButton() {
+    if (buttons.length >= 2) { toast.danger('Máximo de 2 botões.'); return; }
+    buttons.push({ text: '', url: '' });
+    renderButtons();
+  }
+
+  function renderButtons() {
+    const box = document.getElementById('f-buttons');
+    if (!box) return;
+    const addBtn = document.getElementById('add-btn');
+    if (addBtn) addBtn.style.display = buttons.length >= 2 ? 'none' : '';
+    setContent(box,
+      ...buttons.map((b, i) =>
+        h('div', { class: 'btn-row' },
+          h('div', { class: 'btn-row-fields' },
+            h('input', {
+              class: 'btn-row-text', placeholder: 'Texto do botão (ex: Ver local)', value: b.text,
+              maxlength: '25',
+              oninput: (e) => { buttons[i].text = e.target.value; }
+            }),
+            h('input', {
+              class: 'btn-row-url', placeholder: 'https://...', value: b.url,
+              oninput: (e) => { buttons[i].url = e.target.value; }
+            })
+          ),
+          h('button', {
+            type: 'button', class: 'btn-icon', title: 'Remover',
+            onclick: () => { buttons.splice(i, 1); renderButtons(); }
+          }, icons.info())
+        )
+      )
+    );
+  }
+
   function closeModal() {
     const m = document.getElementById('tpl-modal');
     if (m) m.remove();
@@ -203,15 +245,20 @@ export async function pageTemplates(view) {
     const body_text = document.getElementById('f-body').value.trim();
     const footer_text = document.getElementById('f-footer').value.trim() || null;
     const var_samples = [...document.querySelectorAll('#f-samples .f-sample')].map(i => i.value);
+    const cleanButtons = buttons.filter(b => b.text.trim() && b.url.trim());
 
     if (!name || !body_text) { toast.danger('Nome e mensagem são obrigatórios.'); return; }
+    for (const b of cleanButtons) {
+      if (!/^https?:\/\//i.test(b.url)) { toast.danger(`URL do botão "${b.text}" precisa começar com http:// ou https://`); return; }
+    }
 
     const btn = document.getElementById('f-save');
     btn.disabled = true; btn.textContent = 'Enviando…';
     try {
       await callFn('whatsapp-templates', {
         action: 'create', name, language: 'pt_BR', category,
-        body_text, header_text, footer_text, var_samples, var_mapping: varMapping
+        body_text, header_text, footer_text, var_samples, var_mapping: varMapping,
+        buttons: cleanButtons
       });
       toast.success('Template enviado! A Meta analisa em até 24-48h.');
       closeModal();
