@@ -2,7 +2,6 @@ import { h, setContent } from '../core/dom.js';
 import { icons } from './icons.js';
 import { signOut, getProfile } from '../data/auth.js';
 import { navigate } from '../core/router.js';
-
 const NAV = [
   {
     label: 'Operação',
@@ -31,14 +30,11 @@ const NAV = [
     items: [{ path: '/configuracoes', icon: 'settings', label: 'Configurações' }]
   }
 ];
-
 // Em construção (telas que ainda não foram implementadas).
-// /certificados foi REMOVIDO - agora tem implementação real.
-const STUB_PATHS = ['/pessoas', '/disparos', '/templates', '/etiquetas', '/configuracoes'];
-
+// /certificados, /disparos e /templates REMOVIDOS - têm implementação real.
+const STUB_PATHS = ['/pessoas', '/etiquetas', '/configuracoes'];
 export async function renderShell(rootEl) {
   const profile = await getProfile();
-
   const app = h(
     'div',
     { class: 'app' },
@@ -50,11 +46,9 @@ export async function renderShell(rootEl) {
       h('div', { class: 'content', id: 'view' })
     )
   );
-
   setContent(rootEl, app);
   return document.getElementById('view');
 }
-
 function renderSidebar(profile) {
   const sidebar = h(
     'aside',
@@ -96,7 +90,6 @@ function renderSidebar(profile) {
   );
   return sidebar;
 }
-
 function renderNavGroup(group) {
   return h(
     'div',
@@ -124,7 +117,6 @@ function renderNavGroup(group) {
     })
   );
 }
-
 function renderTopbar() {
   return h(
     'header',
@@ -132,7 +124,6 @@ function renderTopbar() {
     h('div', { class: 'topbar-crumb' }, h('strong', {}, 'Painel Nutrição Brasil'))
   );
 }
-
 function initials(email) {
   if (!email) return '?';
   const name = email.split('@')[0];
