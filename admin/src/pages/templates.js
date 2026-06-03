@@ -44,7 +44,8 @@ export async function pageTemplates(view) {
   }
 
   let varMapping = [];
-  let buttons = []; // [{ text, url }]
+  let buttons = [];
+  const expanded = new Set(); // ids expandidos
   const VAR_LABEL = { nome: 'Primeiro nome', evento: 'Nome do evento' };
   const VAR_SAMPLE = { nome: 'Maria', evento: 'Nutrição Brasil Brasília' };
 
@@ -57,8 +58,8 @@ export async function pageTemplates(view) {
             'Crie mensagens, envie pra aprovação da Meta e acompanhe o status. Templates aprovados ficam disponíveis em Disparos.')
         ),
         h('div', { style: { display: 'flex', gap: '8px', flexShrink: '0' } },
-          h('button', { class: 'btn btn-ghost', onclick: doSync }, 'Sincronizar status'),
-          h('button', { class: 'btn btn-primary', onclick: openModal }, icons.plus(), 'Novo template')
+          h('button', { class: 'btn btn-ghost', onclick: doSync }, 'Sincronizar com a Meta'),
+          h('button', { class: 'btn btn-primary', onclick: () => openModal() }, icons.plus(), 'Novo template')
         )
       ),
       h('div', { class: 'table-card', id: 'tpl-list' })
@@ -78,41 +79,52 @@ export async function pageTemplates(view) {
 
   function cardFor(t) {
     const st = STATUS_LABEL[t.status] || STATUS_LABEL.PENDING;
+    const isOpen = expanded.has(t.id);
     const btns = t.buttons || [];
-    return h('div', { class: 'tpl-card' },
-      h('div', { class: 'tpl-card-main' },
-        h('div', { class: 'tpl-card-head' },
-          h('span', { class: 'tpl-card-name' }, t.name),
-          h('span', { class: st.cls }, st.txt)
-        ),
-        h('div', { class: 'row-sub', style: { textTransform: 'uppercase', letterSpacing: '.04em', margin: '2px 0 8px' } },
-          `${t.category} · ${t.language}`),
-        h('div', { class: 'tpl-card-body' }, t.body_text),
-        btns.length
-          ? h('div', { class: 'tpl-card-btns' },
-              ...btns.map(b => h('span', { class: 'tpl-btn-chip' }, icons.info(), b.text)))
-          : null,
-        (t.status === 'REJECTED' && t.rejected_reason)
-          ? h('div', { class: 'tpl-card-error' }, 'Motivo: ' + t.rejected_reason) : null
-      ),
-      h('div', {},
-        h('button', { class: 'btn-icon', title: 'Excluir', onclick: () => doDelete(t) }, icons.info())
-      )
+
+    const head = h('div', { class: 'tpl-row-head', onclick: () => toggle(t.id) },
+      h('span', { class: 'tpl-caret' + (isOpen ? ' open' : '') }, '▸'),
+      h('span', { class: 'tpl-card-name' }, t.name),
+      h('span', { class: st.cls }, st.txt),
+      h('span', { class: 'row-sub', style: { marginLeft: 'auto', textTransform: 'uppercase', letterSpacing: '.04em', fontSize: '11px' } },
+        `${t.category} · ${t.language}`)
     );
+
+    const detail = isOpen ? h('div', { class: 'tpl-row-detail' },
+      t.header_text ? h('div', { class: 'tpl-detail-header' }, t.header_text) : null,
+      h('div', { class: 'tpl-card-body' }, t.body_text),
+      t.footer_text ? h('div', { class: 'tpl-detail-footer' }, t.footer_text) : null,
+      btns.length
+        ? h('div', { class: 'tpl-card-btns' }, ...btns.map(b => h('span', { class: 'tpl-btn-chip' }, icons.info(), b.text)))
+        : null,
+      (t.status === 'REJECTED' && t.rejected_reason)
+        ? h('div', { class: 'tpl-card-error' }, 'Motivo: ' + t.rejected_reason) : null,
+      h('div', { class: 'tpl-actions' },
+        h('button', { class: 'btn btn-ghost btn-sm', onclick: () => duplicate(t) }, 'Duplicar'),
+        h('button', { class: 'btn btn-ghost btn-sm tpl-del', onclick: () => doDelete(t) }, 'Excluir')
+      )
+    ) : null;
+
+    return h('div', { class: 'tpl-card' + (isOpen ? ' open' : '') }, head, detail);
+  }
+
+  function toggle(id) {
+    if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
+    renderList();
   }
 
   async function doSync() {
-    toast.info ? toast.info('Sincronizando…') : toast.success('Sincronizando…');
+    toast.info ? toast.info('Sincronizando com a Meta…') : toast.success('Sincronizando…');
     try {
       const r = await callFn('whatsapp-templates', { action: 'sync' });
-      toast.success(`${r.updated} template(s) atualizado(s).`);
+      toast.success(`${r.updated} template(s) sincronizado(s).`);
       templates = await loadTemplates();
       renderList();
     } catch (e) { toast.danger('Erro: ' + e.message); }
   }
 
   async function doDelete(t) {
-    if (!confirm(`Excluir o template "${t.name}"?`)) return;
+    if (!confirm(`Excluir o template "${t.name}"? Isso remove na Meta também.`)) return;
     try {
       await callFn('whatsapp-templates', { action: 'delete', id: t.id, name: t.name });
       toast.success('Excluído.');
@@ -121,36 +133,48 @@ export async function pageTemplates(view) {
     } catch (e) { toast.danger('Erro: ' + e.message); }
   }
 
-  function openModal() {
-    varMapping = [];
-    buttons = [];
+  // Duplicar: abre o modal já preenchido com o conteúdo, nome sugerido com sufixo
+  function duplicate(t) {
+    openModal({
+      name: (t.name + '_copia').slice(0, 60),
+      category: t.category,
+      header_text: t.header_text || '',
+      body_text: t.body_text || '',
+      footer_text: t.footer_text || '',
+      var_mapping: [...(t.var_mapping || [])],
+      buttons: (t.buttons || []).map(b => ({ ...b }))
+    });
+  }
+
+  function openModal(prefill) {
+    varMapping = prefill ? [...(prefill.var_mapping || [])] : [];
+    buttons = prefill ? prefill.buttons.map(b => ({ ...b })) : [];
     const backdrop = h('div', { class: 'modal-backdrop', id: 'tpl-modal' },
       h('div', { class: 'modal' },
         h('div', { class: 'modal-head' },
-          h('h2', {}, 'Novo template'),
+          h('h2', {}, prefill ? 'Duplicar template' : 'Novo template'),
           h('button', { class: 'modal-close', onclick: closeModal }, '×')
         ),
         h('div', { class: 'modal-body' },
           field('Nome interno (minúsculas, números e _)',
-            h('input', { id: 'f-name', placeholder: 'nb_lembrete_evento' })),
+            h('input', { id: 'f-name', value: prefill?.name || '', placeholder: 'nb_lembrete_evento' })),
           field('Categoria',
             h('select', { id: 'f-category' },
-              h('option', { value: 'UTILITY' }, 'Utilidade — lembrete, aviso (barato, aprova rápido)'),
-              h('option', { value: 'MARKETING' }, 'Marketing — promoção, upsell (aprova mais devagar)')
+              optionEl('UTILITY', 'Utilidade — lembrete, aviso (barato, aprova rápido)', prefill?.category),
+              optionEl('MARKETING', 'Marketing — promoção, upsell (aprova mais devagar)', prefill?.category)
             )),
           field('Cabeçalho (opcional)',
-            h('input', { id: 'f-header', placeholder: 'Nutrição Brasil Brasília 2026' })),
+            h('input', { id: 'f-header', value: prefill?.header_text || '', placeholder: 'Nutrição Brasil Brasília 2026' })),
           field('Mensagem',
-            h('textarea', { id: 'f-body', rows: '5',
-              placeholder: 'Olá {{1}}! Faltam poucos dias para o {{2}}. Te esperamos lá.' })),
+            h('textarea', { id: 'f-body', rows: '5', placeholder: 'Olá {{1}}! Faltam poucos dias para o {{2}}.' },
+              prefill?.body_text || '')),
           h('div', { class: 'var-buttons' },
             h('button', { type: 'button', class: 'btn-chip', onclick: () => insertVar('nome') }, '+ Primeiro nome'),
             h('button', { type: 'button', class: 'btn-chip', onclick: () => insertVar('evento') }, '+ Nome do evento')
           ),
           h('div', { id: 'f-samples' }),
           field('Rodapé (opcional)',
-            h('input', { id: 'f-footer', placeholder: 'Science Play' })),
-          // ── Seção de botões ──
+            h('input', { id: 'f-footer', value: prefill?.footer_text || '', placeholder: 'Science Play' })),
           h('div', { class: 'btn-section' },
             h('div', { class: 'btn-section-head' },
               h('span', {}, 'Botões de link (até 2)'),
@@ -166,8 +190,13 @@ export async function pageTemplates(view) {
       )
     );
     document.body.appendChild(backdrop);
+    if (varMapping.length) rebuildSamples();
+    if (buttons.length) renderButtons();
   }
 
+  function optionEl(val, label, current) {
+    return h('option', { value: val, selected: val === current || null }, label);
+  }
   function field(label, control) {
     return h('label', { class: 'field' }, h('span', {}, label), control);
   }
@@ -184,6 +213,7 @@ export async function pageTemplates(view) {
 
   function rebuildSamples() {
     const box = document.getElementById('f-samples');
+    if (!box) return;
     if (!varMapping.length) { setContent(box); return; }
     setContent(box,
       h('div', { class: 'samples-box' },
@@ -198,7 +228,6 @@ export async function pageTemplates(view) {
     );
   }
 
-  // ── Botões de link ──
   function addButton() {
     if (buttons.length >= 2) { toast.danger('Máximo de 2 botões.'); return; }
     buttons.push({ text: '', url: '' });
@@ -214,20 +243,13 @@ export async function pageTemplates(view) {
       ...buttons.map((b, i) =>
         h('div', { class: 'btn-row' },
           h('div', { class: 'btn-row-fields' },
-            h('input', {
-              class: 'btn-row-text', placeholder: 'Texto do botão (ex: Ver local)', value: b.text,
-              maxlength: '25',
-              oninput: (e) => { buttons[i].text = e.target.value; }
-            }),
-            h('input', {
-              class: 'btn-row-url', placeholder: 'https://...', value: b.url,
-              oninput: (e) => { buttons[i].url = e.target.value; }
-            })
+            h('input', { class: 'btn-row-text', placeholder: 'Texto do botão (ex: Ver local)', value: b.text, maxlength: '25',
+              oninput: (e) => { buttons[i].text = e.target.value; } }),
+            h('input', { class: 'btn-row-url', placeholder: 'https://...', value: b.url,
+              oninput: (e) => { buttons[i].url = e.target.value; } })
           ),
-          h('button', {
-            type: 'button', class: 'btn-icon', title: 'Remover',
-            onclick: () => { buttons.splice(i, 1); renderButtons(); }
-          }, icons.info())
+          h('button', { type: 'button', class: 'btn-icon', title: 'Remover',
+            onclick: () => { buttons.splice(i, 1); renderButtons(); } }, icons.info())
         )
       )
     );
@@ -257,8 +279,7 @@ export async function pageTemplates(view) {
     try {
       await callFn('whatsapp-templates', {
         action: 'create', name, language: 'pt_BR', category,
-        body_text, header_text, footer_text, var_samples, var_mapping: varMapping,
-        buttons: cleanButtons
+        body_text, header_text, footer_text, var_samples, var_mapping: varMapping, buttons: cleanButtons
       });
       toast.success('Template enviado! A Meta analisa em até 24-48h.');
       closeModal();
