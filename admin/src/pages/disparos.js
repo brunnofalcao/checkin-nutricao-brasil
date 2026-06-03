@@ -188,11 +188,16 @@ export async function pageDisparos(view) {
     const body = (t.body_text || '')
       .replace(/\{\{1\}\}/g, t.var_mapping?.[0] === 'nome' ? 'Maria' : '{{1}}')
       .replace(/\{\{2\}\}/g, t.var_mapping?.[1] === 'evento' ? evName : '{{2}}');
+    const btns = t.buttons || [];
     setContent(box,
       h('div', { class: 'wa-bubble' },
         t.header_text ? h('div', { class: 'wa-header' }, t.header_text) : null,
         h('div', { class: 'wa-body' }, body),
-        t.footer_text ? h('div', { class: 'wa-footer' }, t.footer_text) : null
+        t.footer_text ? h('div', { class: 'wa-footer' }, t.footer_text) : null,
+        btns.length
+          ? h('div', { class: 'wa-btns' },
+              ...btns.map(b => h('div', { class: 'wa-btn' }, icons.info(), b.text)))
+          : null
       )
     );
   }
