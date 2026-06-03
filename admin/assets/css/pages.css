@@ -573,6 +573,18 @@
 }
 @media (max-width: 980px) { .disp-grid { grid-template-columns: 1fr; } }
 
+/* Box de Público rola por dentro quando passa da tela; histórico acompanha */
+.disp-grid > .card-block {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+.disp-grid > .card-block::-webkit-scrollbar { width: 8px; }
+.disp-grid > .card-block::-webkit-scrollbar-thumb {
+  background: var(--line-strong, #d8d8e0);
+  border-radius: 100px;
+}
+.disp-grid > .card-block::-webkit-scrollbar-track { background: transparent; }
+
 .card-block {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -662,7 +674,17 @@
   transition: all 0.15s;
 }
 .chip-check:hover { background: var(--violet-soft); border-color: transparent; }
-.chip-check input { accent-color: var(--violet); margin: 0; cursor: pointer; }
+.chip-check input[type="checkbox"] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  accent-color: var(--violet);
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
 .chip-check:has(input:checked) {
   background: var(--violet-soft);
   border-color: var(--violet);
