@@ -867,3 +867,77 @@
 }
 .wa-btn:first-child { border-top: none; }
 .wa-btn svg { width: 15px; height: 15px; }
+
+/* ===== Templates: cards recolhíveis ===== */
+.tpl-card { border-bottom: 1px solid var(--line); }
+.tpl-card:last-child { border-bottom: none; }
+.tpl-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.tpl-row-head:hover { background: var(--bg-2); }
+.tpl-caret {
+  color: var(--ink-mute);
+  font-size: 12px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.tpl-caret.open { transform: rotate(90deg); }
+.tpl-row-detail {
+  padding: 0 18px 18px 40px;
+  animation: tplFade 0.15s ease;
+}
+@keyframes tplFade { from { opacity: 0; } to { opacity: 1; } }
+.tpl-detail-header { font-weight: 700; font-size: 13px; color: var(--ink-strong); margin-bottom: 6px; }
+.tpl-detail-footer { font-size: 12px; color: var(--ink-mute); margin-top: 6px; }
+.tpl-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.btn-sm { padding: 5px 12px; font-size: 13px; height: auto; }
+.tpl-del { color: #c0392b; }
+.tpl-del:hover { background: rgba(239, 68, 68, 0.08); }
+
+/* ===== Bloco de teste de número único ===== */
+.test-box {
+  background: var(--bg-2);
+  border: 1px dashed var(--line-strong, var(--line));
+  border-radius: var(--r-sm);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.test-box-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-strong);
+  margin-bottom: 10px;
+}
+.test-box-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.test-box-row .test-input { flex: 1; }
+.test-box-row input,
+.test-box-row select {
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface);
+  box-sizing: border-box;
+}
+.test-box-row input:focus,
+.test-box-row select:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
