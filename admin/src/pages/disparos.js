@@ -97,6 +97,20 @@ export async function pageDisparos(view) {
       h('div', { class: 'disp-grid' },
         // Coluna 1 — público + mensagem
         h('div', { class: 'card-block' },
+          // ── Bloco de teste (fora do fluxo de envio em massa) ──
+          h('div', { class: 'test-box' },
+            h('div', { class: 'test-box-title' }, '🧪 Enviar teste para um número'),
+            h('div', { class: 'test-box-row' },
+              h('input', { id: 't-phone', class: 'test-input', placeholder: 'DDD + número (ex: 61998318817)' }),
+              h('select', { id: 't-template' },
+                h('option', { value: '' }, 'Escolha o template…'),
+                ...templates.map(t => h('option', { value: t.id }, t.name))
+              )
+            ),
+            h('button', { class: 'btn btn-ghost btn-sm', id: 't-send', onclick: doTest }, 'Enviar teste agora'),
+            h('div', { class: 'row-sub', style: { marginTop: '6px' } },
+              'Manda na hora pra 1 número só. Útil pra ver como a mensagem chega antes do disparo em massa.')
+          ),
           h('h3', {}, '1. Público'),
           field('Evento', selectEl('f-event',
             events.map(e => ({ v: e.id, t: e.name || e.slug || e.id })),
@@ -241,6 +255,26 @@ export async function pageDisparos(view) {
       toast.danger('Erro: ' + e.message);
     } finally {
       btn.disabled = false; btn.innerHTML = ''; btn.append(icons.send(), document.createTextNode('Disparar'));
+    }
+  }
+
+  async function doTest() {
+    const phone = document.getElementById('t-phone').value.trim();
+    const tplId = document.getElementById('t-template').value;
+    if (!phone) { toast.danger('Digite um número.'); return; }
+    if (!tplId) { toast.danger('Escolha um template.'); return; }
+    const evName = evById(state.eventId)?.name || 'Nutrição Brasil';
+    const btn = document.getElementById('t-send');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    try {
+      await callFn('whatsapp-broadcast', {
+        test_phone: phone, template_id: tplId, event_label: evName, test_name: 'Teste'
+      });
+      toast.success('Teste enviado! Confira o WhatsApp do número.');
+    } catch (e) {
+      toast.danger('Erro: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Enviar teste agora';
     }
   }
 
