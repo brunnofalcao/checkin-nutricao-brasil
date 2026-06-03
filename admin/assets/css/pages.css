@@ -492,62 +492,131 @@
   background: rgba(239, 68, 68, 0.06) !important;
 }
 
-/* ============================================================
-   ===== Disparos + Templates WhatsApp =====
-   ============================================================ */
 
-/* Grid de duas colunas */
-.disp-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* ════════════════════════════════════════════════════════════
+   WHATSAPP · DISPAROS & TEMPLATES
+   Acabamento refinado — espaçamento respirado, transições suaves,
+   hierarquia tipográfica clara. Usa os tokens do painel.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Banner de teste (topo, largura cheia) ───────────────────── */
+.test-banner {
+  display: flex;
   gap: 16px;
-  align-items: start;
-}
-@media (max-width: 900px) {
-  .disp-grid { grid-template-columns: 1fr; }
-}
-
-.card-block {
-  background: var(--surface);
+  align-items: flex-start;
+  background:
+    linear-gradient(135deg, var(--violet-soft) 0%, transparent 60%),
+    var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  padding: 22px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
 }
-.card-block h3 {
-  margin: 0 0 16px;
+.test-banner-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.test-banner-main { flex: 1; min-width: 0; }
+.test-banner-title {
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 700;
   color: var(--ink-strong);
   letter-spacing: -0.015em;
+  margin-bottom: 2px;
 }
+.test-banner-sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.test-banner-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.test-banner-row .test-input {
+  flex: 1;
+  min-width: 200px;
+}
+.test-banner-row .test-input,
+.test-banner-row .test-select {
+  height: 40px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--ink-strong);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.test-banner-row .test-select { min-width: 200px; cursor: pointer; }
+.test-banner-row .test-input:focus,
+.test-banner-row .test-select:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+.test-banner-row .btn { height: 40px; }
 
-/* Campos de formulário */
-.field {
-  display: block;
-  margin-bottom: 16px;
+/* ── Grid Público + Histórico ────────────────────────────────── */
+.disp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
 }
+@media (max-width: 980px) { .disp-grid { grid-template-columns: 1fr; } }
+
+.card-block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 24px;
+}
+.card-block h3 {
+  margin: 0 0 18px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-strong);
+  letter-spacing: -0.01em;
+}
+.card-block h3 + .field { margin-top: 0; }
+.card-block h3:not(:first-child) { margin-top: 28px; }
+
+/* ── Campos ──────────────────────────────────────────────────── */
+.field { display: block; margin-bottom: 16px; }
 .field > span {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 6px;
-  color: var(--ink-strong);
+  letter-spacing: 0.01em;
+  margin-bottom: 7px;
+  color: var(--ink-soft);
 }
 .field input,
 .field select,
 .field textarea {
   width: 100%;
-  padding: 10px 12px;
+  height: 42px;
+  padding: 0 13px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   font-size: 14px;
   font-family: inherit;
   background: var(--bg-2);
-  transition: border-color 0.15s, box-shadow 0.15s;
-  box-sizing: border-box;
   color: var(--ink-strong);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  box-sizing: border-box;
 }
+.field textarea { height: auto; padding: 11px 13px; line-height: 1.5; resize: vertical; }
+.field select { cursor: pointer; }
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
@@ -556,55 +625,44 @@
   box-shadow: 0 0 0 3px var(--violet-soft);
   background: var(--surface);
 }
-.field textarea { resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: var(--ink-dim); }
 
-/* Chips de inserir variável */
-.var-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: -6px 0 16px;
-}
+/* ── Chips de inserir variável ───────────────────────────────── */
+.var-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 18px; }
 .btn-chip {
   background: var(--violet-soft);
   color: var(--violet);
   border: none;
-  padding: 6px 12px;
+  padding: 7px 13px;
   font-size: 13px;
   font-weight: 600;
   border-radius: var(--r-pill);
   cursor: pointer;
   font-family: inherit;
+  transition: filter 0.12s, transform 0.08s;
 }
 .btn-chip:hover { filter: brightness(0.96); }
+.btn-chip:active { transform: scale(0.97); }
 
-/* Chips de região (checkbox) */
-.chip-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+/* ── Chips de região ─────────────────────────────────────────── */
+.chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip-check {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
-  padding: 7px 14px;
+  padding: 8px 15px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   user-select: none;
-  transition: all 0.15s;
   color: var(--ink-soft);
+  transition: all 0.15s;
 }
-.chip-check:hover { background: var(--violet-soft); }
-.chip-check input {
-  accent-color: var(--violet);
-  margin: 0;
-  cursor: pointer;
-}
+.chip-check:hover { background: var(--violet-soft); border-color: transparent; }
+.chip-check input { accent-color: var(--violet); margin: 0; cursor: pointer; }
 .chip-check:has(input:checked) {
   background: var(--violet-soft);
   border-color: var(--violet);
@@ -612,123 +670,186 @@
   font-weight: 600;
 }
 
-/* Pílula de contagem */
+/* ── Pílula de contagem ──────────────────────────────────────── */
 .count-pill {
   display: inline-block;
   background: var(--violet-soft);
   color: var(--violet);
   font-weight: 700;
   font-size: 13px;
-  padding: 6px 14px;
+  padding: 7px 15px;
   border-radius: var(--r-pill);
+  margin-top: 4px;
 }
 
-/* Prévia estilo WhatsApp */
+/* ── Prévia estilo WhatsApp ──────────────────────────────────── */
 .preview-box {
-  background: #e5ddd5;
-  border-radius: 12px;
-  padding: 14px;
-  margin: 8px 0 16px;
-  min-height: 70px;
+  background: #e7ded5;
+  background-image: radial-gradient(rgba(0,0,0,0.018) 1px, transparent 1px);
+  background-size: 16px 16px;
+  border-radius: var(--r-sm);
+  padding: 16px;
+  margin: 10px 0 18px;
+  min-height: 76px;
 }
 .wa-bubble {
   background: #fff;
-  border-radius: 8px;
-  padding: 10px 12px;
-  max-width: 92%;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  border-radius: 9px;
+  padding: 9px 11px 7px;
+  max-width: 88%;
+  box-shadow: 0 1px 1.5px rgba(0,0,0,0.12);
+  position: relative;
 }
-.wa-header {
-  font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 4px;
-  color: #111;
+.wa-bubble::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -7px;
+  border: 7px solid transparent;
+  border-top-color: #fff;
+  border-right: none;
 }
-.wa-body {
-  font-size: 14px;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  color: #111;
-}
-.wa-footer {
-  font-size: 12px;
-  color: #888;
-  margin-top: 6px;
-}
-
-/* Cards de template */
-.tpl-card {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 18px;
-  border-bottom: 1px solid var(--line);
-}
-.tpl-card:last-child { border-bottom: none; }
-.tpl-card-head {
+.wa-header { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #111b21; }
+.wa-body { font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: #111b21; }
+.wa-footer { font-size: 12px; color: #8696a0; margin-top: 6px; }
+.wa-btns { margin: 8px -11px -7px; border-top: 1px solid #e9edef; }
+.wa-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 6px;
+  color: #027eb5;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px;
+  border-top: 1px solid #e9edef;
 }
-.tpl-card-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink-strong);
-}
-.tpl-card-body {
-  font-size: 13px;
-  color: var(--ink-soft);
-  line-height: 1.5;
-  white-space: pre-wrap;
-}
-.tpl-card-error {
-  font-size: 12px;
-  color: #c0392b;
-  margin-top: 6px;
-}
+.wa-btn:first-child { border-top: none; }
+.wa-btn svg { width: 15px; height: 15px; }
 
-/* Status danger (faltava no painel) */
-.status.danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-}
+/* ── Botão de disparar full ──────────────────────────────────── */
+#b-send { width: 100%; height: 44px; margin-top: 4px; }
 
-/* Histórico + barra de progresso */
+/* ── Histórico ───────────────────────────────────────────────── */
 .hist-item {
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
-  padding: 14px 16px;
+  padding: 15px 16px;
   margin-bottom: 12px;
+  transition: border-color 0.15s;
 }
-.hist-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+.hist-item:last-child { margin-bottom: 0; }
+.hist-item:hover { border-color: var(--line-strong); }
+.hist-head { display: flex; justify-content: space-between; align-items: center; }
 .progress {
   height: 6px;
   background: var(--bg-2);
   border-radius: var(--r-pill);
   overflow: hidden;
+  margin-top: 4px;
 }
 .progress-bar {
   height: 100%;
-  background: var(--violet);
+  background: linear-gradient(90deg, var(--violet), color-mix(in srgb, var(--violet) 75%, #fff));
   border-radius: var(--r-pill);
-  transition: width 0.4s ease;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Modal de criação de template */
+/* ════════════════════════════════════════════════════════════
+   TEMPLATES · cards recolhíveis
+   ════════════════════════════════════════════════════════════ */
+.tpl-card { border-bottom: 1px solid var(--line); }
+.tpl-card:last-child { border-bottom: none; }
+
+.tpl-row-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 17px 20px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.tpl-row-head:hover { background: var(--bg-2); }
+.tpl-caret {
+  color: var(--ink-dim);
+  font-size: 11px;
+  transition: transform 0.18s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.tpl-caret.open { transform: rotate(90deg); }
+.tpl-card-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-strong);
+  letter-spacing: -0.01em;
+}
+
+.tpl-row-detail {
+  padding: 4px 20px 20px 42px;
+  overflow: hidden;
+  animation: tplExpand 0.22s ease;
+}
+@keyframes tplExpand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tpl-detail-header { font-weight: 700; font-size: 13px; color: var(--ink-strong); margin-bottom: 6px; }
+.tpl-card-body {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.tpl-detail-footer { font-size: 12px; color: var(--ink-mute); margin-top: 8px; }
+
+.tpl-card-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.tpl-btn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--violet);
+  background: var(--violet-soft);
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+}
+.tpl-btn-chip svg { width: 12px; height: 12px; }
+.tpl-card-error {
+  font-size: 12px;
+  color: #c0392b;
+  margin-top: 10px;
+  padding: 8px 11px;
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: var(--r-sm);
+}
+
+.tpl-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.btn-sm { padding: 6px 14px; font-size: 13px; height: auto; }
+.tpl-del { color: #c0392b; }
+.tpl-del:hover { background: rgba(239, 68, 68, 0.08); }
+
+/* ── Modal ───────────────────────────────────────────────────── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 16, 40, 0.45);
+  background: rgba(20, 16, 40, 0.4);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  animation: modalFade 0.18s ease;
 }
+@keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
 .modal {
   background: var(--surface);
   border-radius: var(--r-lg);
@@ -736,21 +857,21 @@
   max-width: 540px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  animation: modalRise 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalRise {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .modal-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 22px 24px;
   border-bottom: 1px solid var(--line);
 }
-.modal-head h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 18px;
-  color: var(--ink-strong);
-}
+.modal-head h2 { margin: 0; font-family: var(--font-display); font-size: 18px; color: var(--ink-strong); letter-spacing: -0.015em; }
 .modal-close {
   background: none;
   border: none;
@@ -758,7 +879,11 @@
   line-height: 1;
   cursor: pointer;
   color: var(--ink-mute);
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  transition: background 0.12s, color 0.12s;
 }
+.modal-close:hover { background: var(--bg-2); color: var(--ink-strong); }
 .modal-body { padding: 24px; }
 .modal-foot {
   display: flex;
@@ -770,49 +895,22 @@
 .samples-box {
   background: var(--bg-2);
   border-radius: var(--r-sm);
-  padding: 14px;
-  margin-bottom: 16px;
+  padding: 16px;
+  margin-bottom: 18px;
 }
-.samples-box > strong {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 10px;
-  color: var(--ink-strong);
-}
+.samples-box > strong { display: block; font-size: 12px; font-weight: 600; margin-bottom: 12px; color: var(--ink-soft); }
 
-/* ===== Botões de link nos templates ===== */
-.btn-section {
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-}
-.btn-section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.btn-section-head > span {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-strong);
-}
-.btn-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.btn-row-fields {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+/* ── Seção de botões no form ─────────────────────────────────── */
+.btn-section { margin-top: 4px; padding-top: 18px; border-top: 1px solid var(--line); }
+.btn-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.btn-section-head > span { font-size: 13px; font-weight: 600; color: var(--ink-strong); }
+.btn-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.btn-row-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 .btn-row-text,
 .btn-row-url {
   width: 100%;
-  padding: 8px 10px;
+  height: 38px;
+  padding: 0 11px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   font-size: 13px;
@@ -828,116 +926,5 @@
   background: var(--surface);
 }
 
-/* Chips de botão no card do template */
-.tpl-card-btns {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-.tpl-btn-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--violet);
-  background: var(--violet-soft);
-  padding: 4px 10px;
-  border-radius: var(--r-pill);
-}
-.tpl-btn-chip svg { width: 12px; height: 12px; }
-
-/* Botões na prévia estilo WhatsApp */
-.wa-btns {
-  margin-top: 8px;
-  border-top: 1px solid #e5e5e5;
-  padding-top: 4px;
-}
-.wa-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #00a5f4;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px;
-  border-top: 1px solid #f0f0f0;
-}
-.wa-btn:first-child { border-top: none; }
-.wa-btn svg { width: 15px; height: 15px; }
-
-/* ===== Templates: cards recolhíveis ===== */
-.tpl-card { border-bottom: 1px solid var(--line); }
-.tpl-card:last-child { border-bottom: none; }
-.tpl-row-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 18px;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-.tpl-row-head:hover { background: var(--bg-2); }
-.tpl-caret {
-  color: var(--ink-mute);
-  font-size: 12px;
-  transition: transform 0.15s;
-  display: inline-block;
-}
-.tpl-caret.open { transform: rotate(90deg); }
-.tpl-row-detail {
-  padding: 0 18px 18px 40px;
-  animation: tplFade 0.15s ease;
-}
-@keyframes tplFade { from { opacity: 0; } to { opacity: 1; } }
-.tpl-detail-header { font-weight: 700; font-size: 13px; color: var(--ink-strong); margin-bottom: 6px; }
-.tpl-detail-footer { font-size: 12px; color: var(--ink-mute); margin-top: 6px; }
-.tpl-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-.btn-sm { padding: 5px 12px; font-size: 13px; height: auto; }
-.tpl-del { color: #c0392b; }
-.tpl-del:hover { background: rgba(239, 68, 68, 0.08); }
-
-/* ===== Bloco de teste de número único ===== */
-.test-box {
-  background: var(--bg-2);
-  border: 1px dashed var(--line-strong, var(--line));
-  border-radius: var(--r-sm);
-  padding: 16px;
-  margin-bottom: 20px;
-}
-.test-box-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-strong);
-  margin-bottom: 10px;
-}
-.test-box-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.test-box-row .test-input { flex: 1; }
-.test-box-row input,
-.test-box-row select {
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-  font-size: 13px;
-  font-family: inherit;
-  background: var(--surface);
-  box-sizing: border-box;
-}
-.test-box-row input:focus,
-.test-box-row select:focus {
-  outline: none;
-  border-color: var(--violet);
-  box-shadow: 0 0 0 3px var(--violet-soft);
-}
+/* Status danger (reprovado) */
+.status.danger { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
