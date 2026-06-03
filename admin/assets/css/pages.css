@@ -779,3 +779,91 @@
   margin-bottom: 10px;
   color: var(--ink-strong);
 }
+
+/* ===== Botões de link nos templates ===== */
+.btn-section {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.btn-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.btn-section-head > span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+.btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.btn-row-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.btn-row-text,
+.btn-row-url {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--bg-2);
+  box-sizing: border-box;
+}
+.btn-row-text:focus,
+.btn-row-url:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+  background: var(--surface);
+}
+
+/* Chips de botão no card do template */
+.tpl-card-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.tpl-btn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--violet);
+  background: var(--violet-soft);
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+}
+.tpl-btn-chip svg { width: 12px; height: 12px; }
+
+/* Botões na prévia estilo WhatsApp */
+.wa-btns {
+  margin-top: 8px;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 4px;
+}
+.wa-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #00a5f4;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+.wa-btn:first-child { border-top: none; }
+.wa-btn svg { width: 15px; height: 15px; }
