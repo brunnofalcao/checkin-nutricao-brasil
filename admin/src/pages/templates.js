@@ -1,0 +1,227 @@
+import { h, setContent } from '../core/dom.js';
+import { icons } from '../ui/icons.js';
+import { toast } from '../ui/toast.js';
+
+const { SUPABASE_URL } = window.__ENV;
+
+const STATUS_LABEL = {
+  APPROVED: { txt: 'Aprovado',   cls: 'status live' },
+  PENDING:  { txt: 'Em análise', cls: 'status done' },
+  REJECTED: { txt: 'Reprovado',  cls: 'status danger' },
+  PAUSED:   { txt: 'Pausado',    cls: 'status done' },
+  DISABLED: { txt: 'Desativado', cls: 'status done' }
+};
+
+export async function pageTemplates(view) {
+  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+
+  // ── callFn no mesmo padrão do event-certificates ──
+  async function callFn(path, body) {
+    const { supabase: sb } = await import('../data/supabase.js');
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify(body)
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || JSON.stringify(j));
+    return j;
+  }
+
+  async function loadTemplates() {
+    const { supabase: sb } = await import('../data/supabase.js');
+    const { data, error } = await sb.from('wa_templates').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+
+  let templates = [];
+  try {
+    templates = await loadTemplates();
+  } catch (e) {
+    toast.danger('Erro ao carregar: ' + e.message);
+    return;
+  }
+
+  // ── Modal de criação (estado local) ──
+  let varMapping = []; // ['nome','evento']
+  const VAR_LABEL = { nome: 'Primeiro nome', evento: 'Nome do evento' };
+  const VAR_SAMPLE = { nome: 'Maria', evento: 'Nutrição Brasil Brasília' };
+
+  function render() {
+    setContent(view,
+      h('div', { class: 'evd-head', style: { marginBottom: '24px' } },
+        h('div', {},
+          h('div', { class: 'evd-title' }, 'Templates de WhatsApp'),
+          h('div', { class: 'page-sub' },
+            'Crie mensagens, envie pra aprovação da Meta e acompanhe o status. Templates aprovados ficam disponíveis em Disparos.')
+        ),
+        h('div', { style: { display: 'flex', gap: '8px', flexShrink: '0' } },
+          h('button', { class: 'btn btn-ghost', onclick: doSync }, 'Sincronizar status'),
+          h('button', { class: 'btn btn-primary', onclick: openModal }, icons.plus(), 'Novo template')
+        )
+      ),
+      h('div', { class: 'table-card', id: 'tpl-list' })
+    );
+    renderList();
+  }
+
+  function renderList() {
+    const wrap = document.getElementById('tpl-list');
+    if (!wrap) return;
+    if (!templates.length) {
+      setContent(wrap, h('div', { class: 'loading-row' }, 'Nenhum template ainda. Crie o primeiro.'));
+      return;
+    }
+    setContent(wrap, ...templates.map(cardFor));
+  }
+
+  function cardFor(t) {
+    const st = STATUS_LABEL[t.status] || STATUS_LABEL.PENDING;
+    return h('div', { class: 'tpl-card' },
+      h('div', { class: 'tpl-card-main' },
+        h('div', { class: 'tpl-card-head' },
+          h('span', { class: 'tpl-card-name' }, t.name),
+          h('span', { class: st.cls }, st.txt)
+        ),
+        h('div', { class: 'row-sub', style: { textTransform: 'uppercase', letterSpacing: '.04em', margin: '2px 0 8px' } },
+          `${t.category} · ${t.language}`),
+        h('div', { class: 'tpl-card-body' }, t.body_text),
+        (t.status === 'REJECTED' && t.rejected_reason)
+          ? h('div', { class: 'tpl-card-error' }, 'Motivo: ' + t.rejected_reason) : null
+      ),
+      h('div', {},
+        h('button', {
+          class: 'btn-icon',
+          title: 'Excluir',
+          onclick: () => doDelete(t)
+        }, icons.info())
+      )
+    );
+  }
+
+  // ── Ações ──
+  async function doSync() {
+    toast.info ? toast.info('Sincronizando…') : toast.success('Sincronizando…');
+    try {
+      const r = await callFn('whatsapp-templates', { action: 'sync' });
+      toast.success(`${r.updated} template(s) atualizado(s).`);
+      templates = await loadTemplates();
+      renderList();
+    } catch (e) { toast.danger('Erro: ' + e.message); }
+  }
+
+  async function doDelete(t) {
+    if (!confirm(`Excluir o template "${t.name}"?`)) return;
+    try {
+      await callFn('whatsapp-templates', { action: 'delete', id: t.id, name: t.name });
+      toast.success('Excluído.');
+      templates = await loadTemplates();
+      renderList();
+    } catch (e) { toast.danger('Erro: ' + e.message); }
+  }
+
+  // ── Modal ──
+  function openModal() {
+    varMapping = [];
+    const backdrop = h('div', { class: 'modal-backdrop', id: 'tpl-modal' },
+      h('div', { class: 'modal' },
+        h('div', { class: 'modal-head' },
+          h('h2', {}, 'Novo template'),
+          h('button', { class: 'modal-close', onclick: closeModal }, '×')
+        ),
+        h('div', { class: 'modal-body' },
+          field('Nome interno (minúsculas, números e _)',
+            h('input', { id: 'f-name', placeholder: 'nb_lembrete_evento' })),
+          field('Categoria',
+            h('select', { id: 'f-category' },
+              h('option', { value: 'UTILITY' }, 'Utilidade — lembrete, aviso (barato, aprova rápido)'),
+              h('option', { value: 'MARKETING' }, 'Marketing — promoção, upsell (aprova mais devagar)')
+            )),
+          field('Cabeçalho (opcional)',
+            h('input', { id: 'f-header', placeholder: 'Nutrição Brasil Brasília 2026' })),
+          field('Mensagem',
+            h('textarea', { id: 'f-body', rows: '5',
+              placeholder: 'Olá {{1}}! Faltam poucos dias para o {{2}}. Te esperamos lá.' })),
+          h('div', { class: 'var-buttons' },
+            h('button', { type: 'button', class: 'btn-chip', onclick: () => insertVar('nome') }, '+ Primeiro nome'),
+            h('button', { type: 'button', class: 'btn-chip', onclick: () => insertVar('evento') }, '+ Nome do evento')
+          ),
+          h('div', { id: 'f-samples' }),
+          field('Rodapé (opcional)',
+            h('input', { id: 'f-footer', placeholder: 'Science Play' }))
+        ),
+        h('div', { class: 'modal-foot' },
+          h('button', { class: 'btn btn-ghost', onclick: closeModal }, 'Cancelar'),
+          h('button', { class: 'btn btn-primary', id: 'f-save', onclick: doSave }, 'Enviar para aprovação')
+        )
+      )
+    );
+    document.body.appendChild(backdrop);
+  }
+
+  function field(label, control) {
+    return h('label', { class: 'field' }, h('span', {}, label), control);
+  }
+
+  function insertVar(v) {
+    const body = document.getElementById('f-body');
+    varMapping.push(v);
+    const idx = varMapping.length;
+    const pos = body.selectionStart ?? body.value.length;
+    body.value = body.value.slice(0, pos) + `{{${idx}}}` + body.value.slice(pos);
+    rebuildSamples();
+    body.focus();
+  }
+
+  function rebuildSamples() {
+    const box = document.getElementById('f-samples');
+    if (!varMapping.length) { setContent(box); return; }
+    setContent(box,
+      h('div', { class: 'samples-box' },
+        h('strong', {}, 'Exemplos (exigido pela Meta):'),
+        ...varMapping.map((v, i) =>
+          h('label', { class: 'field' },
+            h('span', {}, `{{${i + 1}}} — ${VAR_LABEL[v] || v}`),
+            h('input', { class: 'f-sample', value: VAR_SAMPLE[v] || '' })
+          )
+        )
+      )
+    );
+  }
+
+  function closeModal() {
+    const m = document.getElementById('tpl-modal');
+    if (m) m.remove();
+  }
+
+  async function doSave() {
+    const name = document.getElementById('f-name').value.trim();
+    const category = document.getElementById('f-category').value;
+    const header_text = document.getElementById('f-header').value.trim() || null;
+    const body_text = document.getElementById('f-body').value.trim();
+    const footer_text = document.getElementById('f-footer').value.trim() || null;
+    const var_samples = [...document.querySelectorAll('#f-samples .f-sample')].map(i => i.value);
+
+    if (!name || !body_text) { toast.danger('Nome e mensagem são obrigatórios.'); return; }
+
+    const btn = document.getElementById('f-save');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    try {
+      await callFn('whatsapp-templates', {
+        action: 'create', name, language: 'pt_BR', category,
+        body_text, header_text, footer_text, var_samples, var_mapping: varMapping
+      });
+      toast.success('Template enviado! A Meta analisa em até 24-48h.');
+      closeModal();
+      templates = await loadTemplates();
+      renderList();
+    } catch (e) {
+      toast.danger('Erro: ' + e.message);
+      btn.disabled = false; btn.textContent = 'Enviar para aprovação';
+    }
+  }
+
+  render();
+}
