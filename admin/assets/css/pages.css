@@ -491,3 +491,291 @@
 .row-payment-canceled:hover {
   background: rgba(239, 68, 68, 0.06) !important;
 }
+
+/* ============================================================
+   ===== Disparos + Templates WhatsApp =====
+   ============================================================ */
+
+/* Grid de duas colunas */
+.disp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .disp-grid { grid-template-columns: 1fr; }
+}
+
+.card-block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 22px;
+}
+.card-block h3 {
+  margin: 0 0 16px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-strong);
+  letter-spacing: -0.015em;
+}
+
+/* Campos de formulário */
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+.field > span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--ink-strong);
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg-2);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  color: var(--ink-strong);
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+  background: var(--surface);
+}
+.field textarea { resize: vertical; }
+
+/* Chips de inserir variável */
+.var-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: -6px 0 16px;
+}
+.btn-chip {
+  background: var(--violet-soft);
+  color: var(--violet);
+  border: none;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-chip:hover { filter: brightness(0.96); }
+
+/* Chips de região (checkbox) */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  color: var(--ink-soft);
+}
+.chip-check:hover { background: var(--violet-soft); }
+.chip-check input {
+  accent-color: var(--violet);
+  margin: 0;
+  cursor: pointer;
+}
+.chip-check:has(input:checked) {
+  background: var(--violet-soft);
+  border-color: var(--violet);
+  color: var(--violet);
+  font-weight: 600;
+}
+
+/* Pílula de contagem */
+.count-pill {
+  display: inline-block;
+  background: var(--violet-soft);
+  color: var(--violet);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+}
+
+/* Prévia estilo WhatsApp */
+.preview-box {
+  background: #e5ddd5;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 8px 0 16px;
+  min-height: 70px;
+}
+.wa-bubble {
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  max-width: 92%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.wa-header {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #111;
+}
+.wa-body {
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: #111;
+}
+.wa-footer {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+}
+
+/* Cards de template */
+.tpl-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.tpl-card:last-child { border-bottom: none; }
+.tpl-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tpl-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+.tpl-card-body {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.tpl-card-error {
+  font-size: 12px;
+  color: #c0392b;
+  margin-top: 6px;
+}
+
+/* Status danger (faltava no painel) */
+.status.danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Histórico + barra de progresso */
+.hist-item {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.hist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.progress {
+  height: 6px;
+  background: var(--bg-2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--violet);
+  border-radius: var(--r-pill);
+  transition: width 0.4s ease;
+}
+
+/* Modal de criação de template */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+}
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink-strong);
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-mute);
+}
+.modal-body { padding: 24px; }
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+}
+.samples-box {
+  background: var(--bg-2);
+  border-radius: var(--r-sm);
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.samples-box > strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--ink-strong);
+}
