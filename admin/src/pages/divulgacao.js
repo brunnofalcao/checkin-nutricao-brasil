@@ -177,12 +177,12 @@ export async function pageDivulgacao(view) {
             h('div', { class: 'row-sub' }, 'Selecione um template para ver a prévia.')),
 
           h('button', { class: 'btn btn-primary', id: 'd-prepare', style: { width: '100%' }, disabled: true, onclick: prepare },
-            'Preparar lotes')
+            'Disparar agora')
         ),
         // Coluna 2 — lotes + progresso
         h('div', { class: 'card-block' },
-          h('h3', {}, 'Lotes'),
-          h('div', { id: 'batches' }, h('div', { class: 'row-sub' }, 'Suba a lista e prepare os lotes pra disparar.'))
+          h('h3', {}, 'Progresso'),
+          h('div', { id: 'batches' }, h('div', { class: 'row-sub' }, 'Suba a lista e dispare pra acompanhar o progresso aqui.'))
         )
       )
     );
@@ -266,98 +266,105 @@ export async function pageDivulgacao(view) {
     if (btn) btn.disabled = !(state.contacts.length && state.templateId);
   }
 
-  // ── Preparar lotes: cria campanha no banco e divide a lista ──
+  // ── Disparar em background: grava a fila e liga a campanha ──
   async function prepare() {
     const t = tplById(state.templateId);
     if (!t || !state.contacts.length) return;
     const evName = evById(state.eventId)?.name || state.eventId;
-    const nBatches = Math.ceil(state.contacts.length / BATCH_SIZE);
+
+    if (!confirm(`Disparar para ${state.contacts.length} contatos?\n\nO envio roda automaticamente no servidor (~250/min). Você pode fechar esta aba — o progresso continua.`)) return;
 
     const btn = document.getElementById('d-prepare');
-    btn.disabled = true; btn.textContent = 'Preparando…';
+    btn.disabled = true; btn.textContent = 'Preparando envio…';
     try {
       const { supabase: sb } = await import('../data/supabase.js');
+
+      // 1. Cria a campanha
       const { data: camp, error } = await sb.from('wa_div_campaigns').insert({
         event_id: state.eventId, event_label: evName,
         template_id: t.id, template_name: t.name,
         list_size: state.contacts.length, batch_size: BATCH_SIZE,
-        total_batches: nBatches, status: 'ready'
+        total_batches: Math.ceil(state.contacts.length / BATCH_SIZE),
+        status: 'sending', auto_status: 'idle'
       }).select().single();
       if (error) throw error;
-
       state.campaign = camp;
-      state.batches = [];
-      for (let i = 0; i < nBatches; i++) {
-        state.batches.push({
-          n: i + 1,
-          contacts: state.contacts.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE),
-          status: 'ready'
-        });
+
+      // 2. Grava a fila em blocos (insert de muitos de uma vez)
+      btn.textContent = 'Gravando lista…';
+      const CHUNK = 500;
+      for (let i = 0; i < state.contacts.length; i += CHUNK) {
+        const slice = state.contacts.slice(i, i + CHUNK).map(c => ({
+          campaign_id: camp.id, phone: c.phone, name: c.name || '', status: 'pending'
+        }));
+        const { error: qErr } = await sb.from('wa_div_queue').insert(slice);
+        if (qErr) throw qErr;
       }
-      toast.success(`${nBatches} lote(s) prontos. Dispare um por vez.`);
-      renderBatches();
+
+      // 3. Liga a campanha — o cron começa a processar no próximo minuto
+      await sb.from('wa_div_campaigns').update({ auto_status: 'running' }).eq('id', camp.id);
+
+      toast.success('Disparo iniciado! Rodando no servidor — pode fechar a aba.');
+      startProgress(camp.id);
     } catch (e) {
       toast.danger('Erro: ' + e.message);
-    } finally {
-      btn.disabled = false; btn.textContent = 'Preparar lotes';
+      btn.disabled = false; btn.textContent = 'Disparar agora';
     }
   }
 
-  function renderBatches() {
-    const box = document.getElementById('batches');
-    if (!box) return;
-    if (!state.batches.length) {
-      setContent(box, h('div', { class: 'row-sub' }, 'Suba a lista e prepare os lotes pra disparar.'));
-      return;
+  // ── Progresso ao vivo via Realtime ──
+  async function startProgress(campaignId) {
+    const { supabase: sb } = await import('../data/supabase.js');
+
+    async function refresh() {
+      const { data } = await sb.from('wa_div_campaigns').select('*').eq('id', campaignId).single();
+      if (data) { state.campaign = data; renderProgress(); }
     }
+    await refresh();
+
+    // Atualiza ao vivo quando a campanha muda
+    sb.channel('div-progress-' + campaignId)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'wa_div_campaigns', filter: `id=eq.${campaignId}` },
+        (payload) => { state.campaign = payload.new; renderProgress(); })
+      .subscribe();
+
+    // Fallback: atualiza a cada 15s também (caso o realtime perca algo)
+    if (state._poll) clearInterval(state._poll);
+    state._poll = setInterval(refresh, 15000);
+  }
+
+  function renderProgress() {
+    const box = document.getElementById('batches');
+    if (!box || !state.campaign) return;
+    const c = state.campaign;
+    const total = c.list_size || 0;
+    const done = (c.sent || 0) + (c.failed || 0);
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const finished = c.auto_status === 'done';
+
+    if (finished && state._poll) { clearInterval(state._poll); state._poll = null; }
+
     setContent(box,
       h('div', { class: 'batch-head' },
-        h('strong', {}, state.campaign.template_name),
-        h('span', { class: 'row-sub' }, ` · ${state.campaign.event_label}`)),
-      ...state.batches.map(batchRow),
-      h('div', { class: 'batch-note row-sub' },
-        'Recomendado: dispare 1 lote, espere ~20min, dispare o próximo. Protege a entrega e a saúde do número.')
-    );
-  }
-
-  function batchRow(b) {
-    const statusTxt = { ready: 'Pronto', sending: 'Enviando…', done: 'Concluído', failed: 'Falhou' }[b.status] || b.status;
-    const cls = b.status === 'done' ? 'status live' : b.status === 'sending' ? 'status done' : 'status done';
-    return h('div', { class: 'batch-row', 'data-n': b.n },
-      h('div', { class: 'batch-info' },
-        h('span', { class: 'batch-num' }, `Lote ${b.n}`),
-        h('span', { class: 'row-sub' }, `${b.contacts.length} contatos`)
+        h('strong', {}, c.template_name),
+        h('span', { class: 'row-sub' }, ` · ${c.event_label}`)),
+      h('div', { class: 'prog-wrap' },
+        h('div', { class: 'prog-bar' }, h('div', { class: 'prog-fill', style: { width: pct + '%' } })),
+        h('div', { class: 'prog-stats' },
+          h('span', {}, `${done} de ${total}`),
+          h('span', {}, `${pct}%`))
       ),
-      h('div', { class: 'batch-action' },
-        b.status === 'done'
-          ? h('span', { class: cls }, statusTxt)
-          : h('button', {
-              class: 'btn btn-primary btn-sm',
-              disabled: b.status === 'sending' || null,
-              onclick: (e) => fireBatch(b, e.currentTarget)
-            }, b.status === 'sending' ? 'Enviando…' : `Disparar lote ${b.n}`)
-      )
+      h('div', { class: 'prog-detail' },
+        h('span', { class: 'status live' }, `${c.sent || 0} enviados`),
+        (c.failed ? h('span', { class: 'status danger' }, `${c.failed} falharam`) : null)
+      ),
+      finished
+        ? h('div', { class: 'batch-note row-sub', style: { background: 'var(--green-soft)' } },
+            '✓ Disparo concluído. A lista foi apagada do servidor.')
+        : h('div', { class: 'batch-note row-sub' },
+            'Rodando no servidor (~250/min). Pode fechar a aba — o envio continua sozinho.')
     );
-  }
-
-  async function fireBatch(b, btn) {
-    if (!confirm(`Disparar o lote ${b.n} (${b.contacts.length} contatos) agora?`)) return;
-    b.status = 'sending';
-    btn.disabled = true; btn.textContent = 'Enviando…';
-    try {
-      const r = await callFn('whatsapp-divulgacao', {
-        campaign_id: state.campaign.id,
-        batch_number: b.n,
-        contacts: b.contacts
-      });
-      b.status = 'done';
-      toast.success(`Lote ${b.n}: ${r.sent} enviados, ${r.failed} falharam` + (r.skipped ? `, ${r.skipped} já recebidos` : ''));
-      renderBatches();
-    } catch (e) {
-      b.status = 'ready';
-      toast.danger('Erro no lote ' + b.n + ': ' + e.message);
-      renderBatches();
-    }
   }
 
   render();
