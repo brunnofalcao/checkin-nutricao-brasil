@@ -1112,3 +1112,30 @@
   margin-bottom: 12px;
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
 }
+
+/* ════════════════════════════════════════════════════════════
+   DIVULGAÇÃO · barra de progresso (disparo background)
+   ════════════════════════════════════════════════════════════ */
+.prog-wrap { margin: 8px 0 14px; }
+.prog-bar {
+  height: 10px;
+  background: var(--bg-2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.prog-fill {
+  height: 100%;
+  background: var(--green, #1ea54c);
+  border-radius: var(--r-pill);
+  transition: width 0.5s ease;
+}
+.prog-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.prog-detail { display: flex; gap: 8px; margin-bottom: 4px; }
