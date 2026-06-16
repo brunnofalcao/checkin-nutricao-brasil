@@ -49,6 +49,25 @@ export async function pageTemplates(view) {
   const VAR_LABEL = { nome: 'Primeiro nome', evento: 'Nome do evento' };
   const VAR_SAMPLE = { nome: 'Maria', evento: 'Nutrição Brasil Brasília' };
 
+  // Estado dos filtros da lista
+  const filters = { q: '', category: '', status: '', sort: 'recent' };
+
+  function getFiltered() {
+    let list = templates.slice();
+    if (filters.q) {
+      const q = filters.q.toLowerCase();
+      list = list.filter(t =>
+        (t.name || '').toLowerCase().includes(q) ||
+        (t.body_text || '').toLowerCase().includes(q));
+    }
+    if (filters.category) list = list.filter(t => t.category === filters.category);
+    if (filters.status) list = list.filter(t => t.status === filters.status);
+    if (filters.sort === 'az') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    else if (filters.sort === 'za') list.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+    else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // recent
+    return list;
+  }
+
   function render() {
     setContent(view,
       h('div', { class: 'evd-head', style: { marginBottom: '24px' } },
@@ -60,6 +79,32 @@ export async function pageTemplates(view) {
         h('div', { style: { display: 'flex', gap: '8px', flexShrink: '0' } },
           h('button', { class: 'btn btn-ghost', onclick: doSync }, 'Sincronizar com a Meta'),
           h('button', { class: 'btn btn-primary', onclick: () => openModal() }, icons.plus(), 'Novo template')
+        )
+      ),
+      h('div', { class: 'tpl-filters' },
+        h('div', { class: 'tpl-search' },
+          icons.search ? icons.search() : null,
+          h('input', {
+            type: 'text', id: 'tpl-q', placeholder: 'Buscar por nome ou texto da mensagem…',
+            value: filters.q,
+            oninput: (e) => { filters.q = e.target.value; renderList(); }
+          })
+        ),
+        h('select', { class: 'tpl-filter-sel', onchange: (e) => { filters.category = e.target.value; renderList(); } },
+          h('option', { value: '' }, 'Todas as categorias'),
+          h('option', { value: 'MARKETING' }, 'Marketing'),
+          h('option', { value: 'UTILITY' }, 'Utilidade')
+        ),
+        h('select', { class: 'tpl-filter-sel', onchange: (e) => { filters.status = e.target.value; renderList(); } },
+          h('option', { value: '' }, 'Todos os status'),
+          h('option', { value: 'APPROVED' }, 'Aprovado'),
+          h('option', { value: 'PENDING' }, 'Em análise'),
+          h('option', { value: 'REJECTED' }, 'Reprovado')
+        ),
+        h('select', { class: 'tpl-filter-sel', onchange: (e) => { filters.sort = e.target.value; renderList(); } },
+          h('option', { value: 'recent' }, 'Mais recentes'),
+          h('option', { value: 'az' }, 'Nome A–Z'),
+          h('option', { value: 'za' }, 'Nome Z–A')
         )
       ),
       h('div', { class: 'table-card', id: 'tpl-list' })
@@ -74,7 +119,15 @@ export async function pageTemplates(view) {
       setContent(wrap, h('div', { class: 'loading-row' }, 'Nenhum template ainda. Crie o primeiro.'));
       return;
     }
-    setContent(wrap, ...templates.map(cardFor));
+    const list = getFiltered();
+    if (!list.length) {
+      setContent(wrap, h('div', { class: 'loading-row' }, 'Nenhum template encontrado com esses filtros.'));
+      return;
+    }
+    setContent(wrap,
+      h('div', { class: 'tpl-count' }, `${list.length} de ${templates.length} template(s)`),
+      ...list.map(cardFor)
+    );
   }
 
   function cardFor(t) {
