@@ -6,6 +6,15 @@ import { listEvents } from '../data/events.js';
 const { SUPABASE_URL } = window.__ENV;
 const BATCH_SIZE = 500;
 
+const CSV_EXEMPLO = `nome,telefone
+Maria Silva,5561999998888
+João Souza,5511988887777
+Ana Paula Costa,5547988776655
+Carlos Eduardo Lima,5521977665544
+Fernanda Oliveira,5562966554433`;
+
+const GPT_PROMPT = `Use o arquivo csvexemplo.csv como padrão de formato. Pegue a lista de participantes que estou subindo e gere um novo CSV no mesmo formato: apenas as colunas "nome" e "telefone". Formate todos os telefones como 55 + DDD + número, só dígitos, sem espaços, parênteses ou traços (exemplo: 5561999998888). Remova linhas sem telefone válido e remova telefones duplicados. Me devolva o arquivo CSV pronto para download.`;
+
 export async function pageDivulgacao(view) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
 
@@ -100,6 +109,34 @@ export async function pageDivulgacao(view) {
     return null;
   }
 
+  function openHelp() {
+    const backdrop = h('div', { class: 'modal-backdrop', id: 'help-modal' },
+      h('div', { class: 'modal' },
+        h('div', { class: 'modal-head' },
+          h('h2', {}, 'Como preparar a lista'),
+          h('button', { class: 'modal-close', onclick: () => document.getElementById('help-modal')?.remove() }, '×')
+        ),
+        h('div', { class: 'modal-body' },
+          h('p', { class: 'help-p' }, 'A tela precisa de um CSV com as colunas ', h('strong', {}, 'nome'), ' e ', h('strong', {}, 'telefone'), '. O telefone no formato 55 + DDD + número (ex: 5561999998888).'),
+          h('p', { class: 'help-p' }, 'Você não precisa formatar na mão. Pegue a lista crua que exportou (do RD Station, por exemplo), suba no ChatGPT junto com o ', h('strong', {}, 'csvexemplo.csv'), ' (botão de download ao lado), e use o comando abaixo:'),
+          h('div', { class: 'help-prompt', id: 'help-prompt-text' }, GPT_PROMPT),
+          h('button', { class: 'btn btn-ghost btn-sm', onclick: copyPrompt }, 'Copiar comando'),
+          h('p', { class: 'help-p', style: { marginTop: '16px' } }, 'O GPT devolve um CSV limpo e pronto. É só subir aqui. Se a lista não tiver nomes, pode subir só o telefone — a mensagem usa uma saudação genérica nesses casos.')
+        ),
+        h('div', { class: 'modal-foot' },
+          h('button', { class: 'btn btn-primary', onclick: () => document.getElementById('help-modal')?.remove() }, 'Entendi')
+        )
+      )
+    );
+    document.body.appendChild(backdrop);
+  }
+
+  function copyPrompt() {
+    navigator.clipboard.writeText(GPT_PROMPT)
+      .then(() => toast.success('Comando copiado! Cole no ChatGPT.'))
+      .catch(() => toast.danger('Não foi possível copiar.'));
+  }
+
   function render() {
     setContent(view,
       h('div', { class: 'evd-head', style: { marginBottom: '24px' } },
@@ -117,6 +154,14 @@ export async function pageDivulgacao(view) {
             h('div', { class: 'upload-drop-title' }, 'Arraste um CSV ou clique para escolher'),
             h('div', { class: 'upload-drop-sub' }, 'Colunas aceitas: nome e telefone (ou só telefone). Separador vírgula ou ponto-e-vírgula.'),
             h('input', { type: 'file', id: 'csv-input', accept: '.csv,text/csv', style: { display: 'none' } })
+          ),
+          h('div', { class: 'csv-help-row' },
+            h('a', {
+              class: 'csv-help-link',
+              href: 'data:text/csv;charset=utf-8,' + encodeURIComponent(CSV_EXEMPLO),
+              download: 'csvexemplo.csv'
+            }, '⬇ Baixar CSV de exemplo'),
+            h('button', { class: 'csv-help-link', onclick: openHelp }, '❓ Como preparar a lista')
           ),
           h('div', { id: 'list-summary' }),
 
