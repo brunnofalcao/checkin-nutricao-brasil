@@ -188,9 +188,67 @@ export async function pageDivulgacao(view) {
     );
     setupUpload();
     renderPreview();
+    loadHistory();
   }
 
-  function field(label, control) { return h('label', { class: 'field' }, h('span', {}, label), control); }
+  // ── Histórico de campanhas (carrega do banco, mostra na coluna direita) ──
+  async function loadHistory() {
+    const box = document.getElementById('batches');
+    if (!box) return;
+    try {
+      const { supabase: sb } = await import('../data/supabase.js');
+      const { data } = await sb.from('wa_div_campaigns')
+        .select('*').order('created_at', { ascending: false }).limit(20);
+      renderHistory(data || []);
+    } catch (e) {
+      // silencioso — histórico é secundário
+    }
+  }
+
+  function renderHistory(camps) {
+    const box = document.getElementById('batches');
+    if (!box) return;
+    if (!camps.length) {
+      setContent(box, h('div', { class: 'row-sub' }, 'Nenhuma campanha ainda. Suba uma lista e dispare.'));
+      return;
+    }
+    setContent(box, ...camps.map(histRow));
+  }
+
+  function histRow(c) {
+    const total = c.list_size || 0;
+    const done = (c.sent || 0) + (c.failed || 0);
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const running = c.auto_status === 'running';
+    const finished = c.auto_status === 'done' || c.status === 'done';
+
+    const statusBadge = running
+      ? h('span', { class: 'status live' }, 'Enviando')
+      : finished
+        ? h('span', { class: 'status done' }, 'Concluído')
+        : h('span', { class: 'status done' }, c.status || '—');
+
+    const when = c.created_at ? new Date(c.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+
+    return h('div', { class: 'hist-row', onclick: () => running ? watchCampaign(c.id) : null, style: running ? { cursor: 'pointer' } : {} },
+      h('div', { class: 'hist-top' },
+        h('strong', { class: 'hist-name' }, c.template_name || '—'),
+        statusBadge
+      ),
+      h('div', { class: 'hist-meta' }, `${c.event_label || ''} · ${when}`),
+      h('div', { class: 'prog-bar', style: { marginTop: '8px' } },
+        h('div', { class: 'prog-fill', style: { width: pct + '%' } })),
+      h('div', { class: 'prog-stats' },
+        h('span', {}, `${c.sent || 0} enviados${c.failed ? ` · ${c.failed} falhas` : ''}`),
+        h('span', {}, `${done}/${total}`))
+    );
+  }
+
+  // Acompanha uma campanha em andamento ao vivo
+  async function watchCampaign(campaignId) {
+    state.campaign = { id: campaignId };
+    startProgress(campaignId);
+  }
   function selectEl(id, opts, current, onChange) {
     return h('select', { id, onchange: (e) => onChange(e.target.value) },
       ...opts.map(o => h('option', { value: o.v, selected: o.v === current || null }, o.t)));
@@ -363,7 +421,9 @@ export async function pageDivulgacao(view) {
         ? h('div', { class: 'batch-note row-sub', style: { background: 'var(--green-soft)' } },
             '✓ Disparo concluído. A lista foi apagada do servidor.')
         : h('div', { class: 'batch-note row-sub' },
-            'Rodando no servidor (~250/min). Pode fechar a aba — o envio continua sozinho.')
+            'Rodando no servidor (~250/min). Pode fechar a aba — o envio continua sozinho.'),
+      h('button', { class: 'btn btn-ghost btn-sm', style: { marginTop: '12px' }, onclick: loadHistory },
+        '← Ver todas as campanhas')
     );
   }
 
