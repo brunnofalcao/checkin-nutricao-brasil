@@ -1019,3 +1019,96 @@
   border-radius: var(--r-sm);
   line-height: 1.5;
 }
+
+/* ════════════════════════════════════════════════════════════
+   TEMPLATES · barra de filtros + DIVULGAÇÃO · ajuda CSV
+   ════════════════════════════════════════════════════════════ */
+
+/* Barra de filtros dos templates */
+.tpl-filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.tpl-search {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 0 12px;
+  height: 40px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.tpl-search:focus-within {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+.tpl-search svg { width: 15px; height: 15px; color: var(--ink-mute); flex-shrink: 0; }
+.tpl-search input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink-strong);
+}
+.tpl-filter-sel {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--ink-strong);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.tpl-filter-sel:focus { outline: none; border-color: var(--violet); }
+.tpl-count {
+  font-size: 12px;
+  color: var(--ink-mute);
+  padding: 12px 18px 4px;
+}
+
+/* Botões de ajuda do CSV na Divulgação */
+.csv-help-row {
+  display: flex;
+  gap: 16px;
+  margin: 10px 0 16px;
+  flex-wrap: wrap;
+}
+.csv-help-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--violet);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: opacity 0.12s;
+}
+.csv-help-link:hover { opacity: 0.7; }
+
+/* Modal de ajuda */
+.help-p { font-size: 14px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 14px; }
+.help-prompt {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-strong);
+  margin-bottom: 12px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
