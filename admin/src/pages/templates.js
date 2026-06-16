@@ -64,7 +64,16 @@ export async function pageTemplates(view) {
     if (filters.status) list = list.filter(t => t.status === filters.status);
     if (filters.sort === 'az') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     else if (filters.sort === 'za') list.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
-    else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // recent
+    else {
+      // "Mais recentes": usa o meta_id (sequencial crescente da Meta — maior = mais novo).
+      // Fallback pra created_at quando não há meta_id (templates criados localmente sem sync).
+      list.sort((a, b) => {
+        const am = a.meta_id ? BigInt(a.meta_id) : 0n;
+        const bm = b.meta_id ? BigInt(b.meta_id) : 0n;
+        if (am !== bm) return bm > am ? 1 : -1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    }
     return list;
   }
 
