@@ -65,13 +65,15 @@ export async function pageTemplates(view) {
     if (filters.sort === 'az') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     else if (filters.sort === 'za') list.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
     else {
-      // "Mais recentes": usa o meta_id (sequencial crescente da Meta — maior = mais novo).
-      // Fallback pra created_at quando não há meta_id (templates criados localmente sem sync).
+      // "Mais recentes": criados pelo painel (origin='panel') no topo, por data desc.
+      // Os importados do sync (origin='sync') ficam abaixo, ordenados por nome.
       list.sort((a, b) => {
-        const am = a.meta_id ? BigInt(a.meta_id) : 0n;
-        const bm = b.meta_id ? BigInt(b.meta_id) : 0n;
-        if (am !== bm) return bm > am ? 1 : -1;
-        return new Date(b.created_at) - new Date(a.created_at);
+        const ap = a.origin !== 'sync';  // panel (ou sem origin) = novo
+        const bp = b.origin !== 'sync';
+        if (ap && !bp) return -1;
+        if (!ap && bp) return 1;
+        if (ap && bp) return new Date(b.created_at) - new Date(a.created_at); // novos: por data
+        return (a.name || '').localeCompare(b.name || '');                    // antigos: por nome
       });
     }
     return list;
