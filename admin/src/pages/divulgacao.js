@@ -249,6 +249,8 @@ export async function pageDivulgacao(view) {
     state.campaign = { id: campaignId };
     startProgress(campaignId);
   }
+
+  function field(label, control) { return h('label', { class: 'field' }, h('span', {}, label), control); }
   function selectEl(id, opts, current, onChange) {
     return h('select', { id, onchange: (e) => onChange(e.target.value) },
       ...opts.map(o => h('option', { value: o.v, selected: o.v === current || null }, o.t)));
