@@ -29,6 +29,8 @@ export async function pageEventDetail(view, { params }) {
   let filter = 'todos';
   let query = '';
   let visibleCount = PAGE_SIZE;
+  let sortBy = 'original';   // original | recent | old | az
+  let loteFilter = '';       // '' = todos os lotes
 
   try {
     allParticipants = await listAllParticipants(eventId);
@@ -42,10 +44,18 @@ export async function pageEventDetail(view, { params }) {
     return;
   }
 
+  // Lista única de lotes presentes (pro filtro), ignorando vazios
+  function lotesDisponiveis() {
+    const set = new Set();
+    allParticipants.forEach(p => { if (p.lote) set.add(p.lote); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
+
   function getFiltered() {
-    let list = allParticipants;
+    let list = allParticipants.slice();
     if (filter === 'checkin')      list = list.filter(p => p.checked === true);
     if (filter === 'pendentes')    list = list.filter(p => p.checked === false);
+    if (loteFilter)                list = list.filter(p => (p.lote || '') === loteFilter);
     if (query) {
       const q = query.toLowerCase().trim();
       const qDigits = q.replace(/\D/g, '');
@@ -57,6 +67,10 @@ export async function pageEventDetail(view, { params }) {
         return false;
       });
     }
+    // Ordenação (só reordena se o usuário escolher; 'original' mantém a ordem de carga)
+    if (sortBy === 'recent') list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    else if (sortBy === 'old') list.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+    else if (sortBy === 'az') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     return list;
   }
 
@@ -155,6 +169,7 @@ export async function pageEventDetail(view, { params }) {
     if (!container) return;
 
     const c = counts();
+    const lotes = lotesDisponiveis();
 
     setContent(container,
       h('div', { class: 'table-toolbar' },
@@ -172,6 +187,25 @@ export async function pageEventDetail(view, { params }) {
           tabBtn(`Check-in · ${c.checkin}`, filter === 'checkin', () => { filter = 'checkin'; visibleCount = PAGE_SIZE; updateBody(); }, 'green'),
           tabBtn(`Pendentes · ${c.pendentes}`, filter === 'pendentes', () => { filter = 'pendentes'; visibleCount = PAGE_SIZE; updateBody(); }, 'amber'),
           null
+        )
+      ),
+      // Segunda linha: filtro de lote + ordenação
+      h('div', { class: 'evd-subtoolbar' },
+        h('select', {
+          class: 'evd-select',
+          onchange: (e) => { loteFilter = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }
+        },
+          h('option', { value: '' }, `Todos os lotes${lotes.length ? ` (${lotes.length})` : ''}`),
+          ...lotes.map(l => h('option', { value: l, selected: l === loteFilter || null }, l))
+        ),
+        h('select', {
+          class: 'evd-select',
+          onchange: (e) => { sortBy = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }
+        },
+          h('option', { value: 'original', selected: sortBy === 'original' || null }, 'Ordem padrão'),
+          h('option', { value: 'recent', selected: sortBy === 'recent' || null }, 'Mais recentes'),
+          h('option', { value: 'old', selected: sortBy === 'old' || null }, 'Mais antigos'),
+          h('option', { value: 'az', selected: sortBy === 'az' || null }, 'Nome A–Z')
         )
       ),
       h('div', { id: 'evd-table-body' })
@@ -192,12 +226,12 @@ export async function pageEventDetail(view, { params }) {
         h('div', { class: 'loading-row' },
           query
             ? `Nenhum resultado para "${query}".`
-            : filter === 'checkin'
-              ? 'Nenhum check-in feito ainda.'
-              : filter === 'pendentes'
-                ? 'Nenhum pendente — todos fizeram check-in!'
-                : filter === 'inadimplentes'
-                  ? 'Nenhuma inadimplência registrada.'
+            : loteFilter
+              ? `Nenhum inscrito no lote "${loteFilter}".`
+              : filter === 'checkin'
+                ? 'Nenhum check-in feito ainda.'
+                : filter === 'pendentes'
+                  ? 'Nenhum pendente — todos fizeram check-in!'
                   : 'Sem inscritos ainda.'
         )
       );
@@ -280,7 +314,6 @@ function paymentPill(p) {
 
   let label, cls;
   if (status === 'paid') {
-    // Pago — mostrar se foi parcelado e quitou ou se foi à vista
     label = total > 1 ? `Pago ${total}/${total}` : 'Pago';
     cls   = 'payment-paid';
   } else if (status === 'partial') {
