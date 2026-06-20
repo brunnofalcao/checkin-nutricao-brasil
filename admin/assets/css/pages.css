@@ -1182,3 +1182,97 @@
   transition: border-color 0.15s;
 }
 .evd-select:focus { outline: none; border-color: var(--violet); }
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE — usabilidade de conteúdo (tabelas, cards, grids)
+   ════════════════════════════════════════════════════════════ */
+
+/* Ações rápidas (home): 4 colunas no desktop, responsivo no mobile */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 860px) {
+  /* ── HOME ── */
+  /* Cards do topo (todo-grid) empilham */
+  .todo-grid { grid-template-columns: 1fr; }
+  /* Ações rápidas: 2 colunas no mobile (não 4 espremidas) */
+  .quick-actions-grid { grid-template-columns: 1fr 1fr; }
+
+  /* ── TABELAS VIRAM CARDS ── */
+  /* Esconde o cabeçalho da tabela no mobile */
+  .table thead { display: none; }
+  /* Cada linha vira um card empilhado */
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table tr {
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    margin-bottom: 10px;
+    padding: 6px 0;
+    background: var(--surface);
+  }
+  .table tbody td {
+    border-bottom: 1px solid var(--line);
+    padding: 9px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .table tbody td:last-child { border-bottom: none; }
+  /* A primeira célula (nome) ocupa destaque, sem o flex */
+  .table tbody td:first-child {
+    display: block;
+    background: var(--bg);
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
+  }
+  .table .row-name { font-size: 15px; }
+  /* O conteúdo da célula encosta à direita */
+  .table tbody td > * { text-align: right; }
+  .table tbody td:first-child > * { text-align: left; }
+
+  /* A toolbar da tabela empilha (busca + filtros full-width) */
+  .table-toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-search { max-width: none; }
+  .table-toolbar > div { width: 100%; }
+
+  /* Tabelas dentro de card sem overflow lateral */
+  .table-card { overflow: visible; }
+  .table-card .table { padding: 8px; }
+
+  /* ── TÍTULOS E AÇÕES DE PÁGINA ── */
+  .evd-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .evd-actions .btn { flex: 1 1 auto; min-width: 0; }
+  .evd-actions .spacer { display: none; }
+
+  /* evd-head (detalhe do evento): empilha título e stats */
+  .evd-head { flex-direction: column; gap: 16px; }
+  .evd-stats { width: 100%; justify-content: flex-start; gap: 24px; }
+
+  /* Sub-toolbar (filtros de lote/ordem) full-width */
+  .evd-subtoolbar { flex-direction: column; }
+  .evd-select { width: 100%; }
+
+  /* Templates: barra de filtros empilha */
+  .tpl-filters { flex-direction: column; align-items: stretch; }
+  .tpl-search { min-width: 0; }
+  .tpl-filter-sel { width: 100%; }
+
+  /* Linha do template: nome + badges quebram melhor */
+  .tpl-row-head { flex-wrap: wrap; gap: 6px; }
+
+  /* Certificados: head de ações empilha */
+  .cert-head-actions { flex-direction: column; align-items: stretch; gap: 8px; }
+  .cert-head-actions .btn { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  /* Ações rápidas viram 1 coluna em telas bem pequenas */
+  .quick-actions-grid { grid-template-columns: 1fr; }
+}
