@@ -139,7 +139,7 @@ function quickActions() {
   ];
 
   return h('div', {
-    style: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }
+    class: 'quick-actions-grid'
   },
     ...actions.map((a) =>
       h('button', {
