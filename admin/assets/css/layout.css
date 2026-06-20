@@ -247,3 +247,105 @@
   font-size: 13px;
   margin-bottom: var(--s-3);
 }
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE — sidebar deslizante + shell responsivo
+   ════════════════════════════════════════════════════════════ */
+
+/* Botão hambúrguer: escondido no desktop */
+.menu-toggle {
+  display: none;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: -6px;
+}
+.menu-toggle:hover { background: var(--bg-2); }
+
+/* Overlay: escondido no desktop */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+@media (max-width: 860px) {
+  /* Shell vira coluna única */
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar vira painel deslizante off-canvas */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 270px;
+    max-width: 82vw;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: var(--shadow-2);
+  }
+  .app.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Overlay aparece quando a sidebar abre */
+  .app.sidebar-open .sidebar-overlay {
+    display: block;
+    opacity: 1;
+  }
+
+  /* Mostra o hambúrguer */
+  .menu-toggle {
+    display: inline-flex;
+  }
+
+  /* Topbar mais compacta */
+  .topbar {
+    padding: 0 16px;
+    height: 52px;
+  }
+
+  /* Conteúdo com padding menor no mobile */
+  .content {
+    padding: var(--s-5) 16px var(--s-7);
+  }
+
+  /* Títulos de página menores */
+  .page-title { font-size: 24px; }
+  .page-head {
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+  .page-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  /* Login adapta */
+  .login-card {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 16px;
+  }
+}
+
+/* Telas bem estreitas */
+@media (max-width: 480px) {
+  .content { padding: var(--s-4) 12px var(--s-6); }
+  .page-title { font-size: 21px; }
+}
