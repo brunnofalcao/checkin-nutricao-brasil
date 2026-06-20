@@ -39,6 +39,7 @@ export async function renderShell(rootEl) {
     'div',
     { class: 'app' },
     renderSidebar(profile),
+    h('div', { class: 'sidebar-overlay', onclick: closeSidebar }),
     h(
       'main',
       { class: 'main' },
@@ -48,6 +49,13 @@ export async function renderShell(rootEl) {
   );
   setContent(rootEl, app);
   return document.getElementById('view');
+}
+
+function toggleSidebar() {
+  document.querySelector('.app')?.classList.toggle('sidebar-open');
+}
+function closeSidebar() {
+  document.querySelector('.app')?.classList.remove('sidebar-open');
 }
 function renderSidebar(profile) {
   const sidebar = h(
@@ -107,6 +115,7 @@ function renderNavGroup(group) {
               import('./toast.js').then((m) => m.toast.info('Em construção — próxima entrega'));
               return;
             }
+            closeSidebar();
             navigate(it.path);
           }
         },
@@ -121,8 +130,19 @@ function renderTopbar() {
   return h(
     'header',
     { class: 'topbar' },
+    h(
+      'button',
+      { class: 'menu-toggle', title: 'Menu', onclick: toggleSidebar },
+      icons.menu ? icons.menu() : burgerSvg()
+    ),
     h('div', { class: 'topbar-crumb' }, h('strong', {}, 'Painel Nutrição Brasil'))
   );
+}
+
+function burgerSvg() {
+  const span = document.createElement('span');
+  span.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+  return span.firstChild;
 }
 function initials(email) {
   if (!email) return '?';
