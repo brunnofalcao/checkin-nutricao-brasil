@@ -1276,3 +1276,77 @@
   /* Ações rápidas viram 1 coluna em telas bem pequenas */
   .quick-actions-grid { grid-template-columns: 1fr; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   AGENDAMENTO — caixa de agendar + badge + cancelar
+   ════════════════════════════════════════════════════════════ */
+.sched-box {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+}
+.sched-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.sched-row {
+  display: flex;
+  gap: 8px;
+}
+.sched-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--ink-strong);
+}
+.sched-input:focus { outline: none; border-color: var(--violet); }
+.sched-hint { margin-top: 8px; line-height: 1.4; }
+
+/* Badge "Agendado" */
+.status.sched {
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+
+/* Linha de info do agendamento no histórico */
+.sched-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--violet-soft);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  color: var(--violet);
+  font-weight: 500;
+}
+.sched-cancel {
+  background: none;
+  border: 1px solid var(--violet-border, var(--violet));
+  color: var(--violet);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sched-cancel:hover { background: var(--violet); color: white; }
+
+@media (max-width: 860px) {
+  .sched-row { flex-direction: column; }
+  .sched-input { width: 100%; }
+  .sched-row .btn { width: 100%; }
+}
