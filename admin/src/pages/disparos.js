@@ -79,8 +79,11 @@ export async function pageDisparos(view) {
   }
 
   function updateSendState() {
+    const ready = !(!state.templateId || matched.length === 0);
     const btn = document.getElementById('b-send');
-    if (btn) btn.disabled = !state.templateId || matched.length === 0;
+    if (btn) btn.disabled = !ready;
+    const sbtn = document.getElementById('b-schedule');
+    if (sbtn) sbtn.disabled = !ready;
   }
 
   function tplById(id) { return templates.find(t => t.id === id); }
@@ -159,8 +162,18 @@ export async function pageDisparos(view) {
           h('div', { class: 'preview-box', id: 'b-preview' },
             h('div', { class: 'row-sub' }, 'Selecione um template para ver a prévia.')),
 
-          h('button', { class: 'btn btn-primary', id: 'b-send', style: { width: '100%' }, disabled: true, onclick: doSend },
+          h('button', { class: 'btn btn-primary', id: 'b-send', style: { width: '100%' }, disabled: true, onclick: () => doSend(null) },
             icons.send(), 'Disparar'),
+
+          h('div', { class: 'sched-box' },
+            h('div', { class: 'sched-label' }, 'Ou agende para depois:'),
+            h('div', { class: 'sched-row' },
+              h('input', { type: 'datetime-local', id: 'b-sched', class: 'sched-input' }),
+              h('button', { class: 'btn btn-secondary', id: 'b-schedule', disabled: true, onclick: doSchedule },
+                'Agendar')
+            ),
+            h('div', { class: 'sched-hint row-sub' }, 'Horário de Brasília. Os destinatários são congelados no momento do agendamento.')
+          ),
           h('div', { class: 'row-sub', style: { marginTop: '8px' } }, '~8 msg/s. A região é estimada pelo DDD e pode não bater 100%.')
         ),
         // Coluna 2 — histórico
@@ -218,7 +231,21 @@ export async function pageDisparos(view) {
     );
   }
 
-  async function doSend() {
+  function brasiliaToISO(localValue) {
+    if (!localValue) return null;
+    const iso = localValue.length === 16 ? localValue + ':00' : localValue;
+    return new Date(iso + '-03:00').toISOString();
+  }
+
+  async function doSchedule() {
+    const val = document.getElementById('b-sched')?.value;
+    if (!val) { toast.danger('Escolha a data e a hora.'); return; }
+    const when = brasiliaToISO(val);
+    if (new Date(when) <= new Date()) { toast.danger('A data precisa ser no futuro.'); return; }
+    doSend(when);
+  }
+
+  async function doSend(scheduledFor) {
     const t = tplById(state.templateId);
     if (!t || matched.length === 0) return;
     const evName = evById(state.eventId)?.name || state.eventId;
@@ -229,10 +256,17 @@ export async function pageDisparos(view) {
     if (state.regioes.length) parts.push(state.regioes.join('/'));
     const label = parts.join(' · ');
 
-    if (!confirm(`Disparar "${t.name}" para ${matched.length} pessoa(s)?\n\nFiltro: ${label}`)) return;
+    const isScheduled = !!scheduledFor;
+    const whenTxt = isScheduled
+      ? new Date(scheduledFor).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+      : null;
+    const confirmMsg = isScheduled
+      ? `Agendar "${t.name}" para ${matched.length} pessoa(s) em ${whenTxt}?\n\nFiltro: ${label}\n\nOs destinatários são congelados agora.`
+      : `Disparar "${t.name}" para ${matched.length} pessoa(s)?\n\nFiltro: ${label}`;
+    if (!confirm(confirmMsg)) return;
 
-    const btn = document.getElementById('b-send');
-    btn.disabled = true; btn.textContent = 'Criando disparo…';
+    const btn = document.getElementById(isScheduled ? 'b-schedule' : 'b-send');
+    btn.disabled = true; btn.textContent = isScheduled ? 'Agendando…' : 'Criando disparo…';
     try {
       const { supabase: sb } = await import('../data/supabase.js');
       const { data: bc, error } = await sb.from('wa_broadcasts').insert({
@@ -241,22 +275,31 @@ export async function pageDisparos(view) {
         template_name: t.name,
         audience: 'filtered',
         audience_label: label,
-        status: 'queued',
-        total: matched.length
+        status: isScheduled ? 'scheduled' : 'queued',
+        total: matched.length,
+        scheduled_for: scheduledFor,
+        auto_status: isScheduled ? 'scheduled' : 'idle',
+        participant_ids: isScheduled ? matched.map(p => p.id) : null
       }).select().single();
       if (error) throw error;
 
-      callFn('whatsapp-broadcast', {
-        broadcast_id: bc.id,
-        participant_ids: matched.map(p => p.id)
-      }).catch(err => console.error(err));
-
-      toast.success('Disparo iniciado! Acompanhe no histórico.');
+      if (!isScheduled) {
+        callFn('whatsapp-broadcast', {
+          broadcast_id: bc.id,
+          participant_ids: matched.map(p => p.id)
+        }).catch(err => console.error(err));
+        toast.success('Disparo iniciado! Acompanhe no histórico.');
+      } else {
+        toast.success(`Agendado para ${whenTxt}!`);
+      }
       loadHistory();
     } catch (e) {
       toast.danger('Erro: ' + e.message);
     } finally {
-      btn.disabled = false; btn.innerHTML = ''; btn.append(icons.send(), document.createTextNode('Disparar'));
+      const sb2 = document.getElementById('b-send');
+      if (sb2) { sb2.disabled = false; sb2.innerHTML = ''; sb2.append(icons.send(), document.createTextNode('Disparar')); }
+      const sc = document.getElementById('b-schedule');
+      if (sc) { sc.disabled = false; sc.textContent = 'Agendar'; }
     }
   }
 
@@ -290,9 +333,14 @@ export async function pageDisparos(view) {
   }
 
   function histItem(b) {
+    const scheduled = b.auto_status === 'scheduled';
     const pct = b.total ? Math.round(((b.sent + b.failed) / b.total) * 100) : 0;
-    const lbl = { queued: 'Na fila', sending: 'Enviando', done: 'Concluído', failed: 'Falhou', draft: 'Rascunho', canceled: 'Cancelado' }[b.status] || b.status;
-    const cls = b.status === 'done' ? 'status live' : b.status === 'sending' ? 'status done' : 'status done';
+    const lbl = scheduled ? 'Agendado' : ({ queued: 'Na fila', sending: 'Enviando', done: 'Concluído', failed: 'Falhou', draft: 'Rascunho', canceled: 'Cancelado' }[b.status] || b.status);
+    const cls = scheduled ? 'status sched' : (b.status === 'done' ? 'status live' : b.status === 'sending' ? 'status done' : 'status done');
+    const schedTxt = scheduled && b.scheduled_for
+      ? new Date(b.scheduled_for).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+      : null;
+
     return h('div', { class: 'hist-item', 'data-id': b.id },
       h('div', { class: 'hist-head' },
         h('strong', {}, b.template_name),
@@ -300,10 +348,27 @@ export async function pageDisparos(view) {
       ),
       h('div', { class: 'row-sub', style: { margin: '2px 0 8px' } },
         `${b.audience_label || b.event_id} · ${fmtRelative(b.created_at)}`),
-      h('div', { class: 'progress' }, h('div', { class: 'progress-bar', style: { width: pct + '%' } })),
-      h('div', { class: 'row-sub', style: { marginTop: '6px' } },
+      scheduled
+        ? h('div', { class: 'sched-info' },
+            h('span', {}, `⏰ Dispara em ${schedTxt} · ${b.total} pessoas`),
+            h('button', { class: 'sched-cancel', onclick: () => cancelarDisparo(b.id) }, 'Cancelar')
+          )
+        : h('div', { class: 'progress' }, h('div', { class: 'progress-bar', style: { width: pct + '%' } })),
+      scheduled ? null : h('div', { class: 'row-sub', style: { marginTop: '6px' } },
         `${b.sent} enviados · ${b.failed} falharam · ${b.total} total`)
     );
+  }
+
+  async function cancelarDisparo(broadcastId) {
+    if (!confirm('Cancelar este agendamento? O disparo não acontecerá.')) return;
+    try {
+      const { supabase: sb } = await import('../data/supabase.js');
+      await sb.from('wa_broadcasts').delete().eq('id', broadcastId);
+      toast.success('Agendamento cancelado.');
+      loadHistory();
+    } catch (e) {
+      toast.danger('Erro ao cancelar: ' + e.message);
+    }
   }
 
   async function subscribeRealtime() {
