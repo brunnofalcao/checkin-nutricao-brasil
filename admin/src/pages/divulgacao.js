@@ -176,8 +176,18 @@ export async function pageDivulgacao(view) {
           h('div', { class: 'preview-box', id: 'd-preview' },
             h('div', { class: 'row-sub' }, 'Selecione um template para ver a prévia.')),
 
-          h('button', { class: 'btn btn-primary', id: 'd-prepare', style: { width: '100%' }, disabled: true, onclick: prepare },
-            'Disparar agora')
+          h('button', { class: 'btn btn-primary', id: 'd-prepare', style: { width: '100%' }, disabled: true, onclick: () => prepare(null) },
+            'Disparar agora'),
+
+          h('div', { class: 'sched-box' },
+            h('div', { class: 'sched-label' }, 'Ou agende para depois:'),
+            h('div', { class: 'sched-row' },
+              h('input', { type: 'datetime-local', id: 'd-sched', class: 'sched-input' }),
+              h('button', { class: 'btn btn-secondary', id: 'd-schedule', disabled: true, onclick: agendar },
+                'Agendar')
+            ),
+            h('div', { class: 'sched-hint row-sub' }, 'Horário de Brasília. O disparo começa sozinho na hora marcada.')
+          )
         ),
         // Coluna 2 — lotes + progresso
         h('div', { class: 'card-block' },
@@ -220,15 +230,21 @@ export async function pageDivulgacao(view) {
     const done = (c.sent || 0) + (c.failed || 0);
     const pct = total ? Math.round((done / total) * 100) : 0;
     const running = c.auto_status === 'running';
+    const scheduled = c.auto_status === 'scheduled';
     const finished = c.auto_status === 'done' || c.status === 'done';
 
     const statusBadge = running
       ? h('span', { class: 'status live' }, 'Enviando')
-      : finished
-        ? h('span', { class: 'status done' }, 'Concluído')
-        : h('span', { class: 'status done' }, c.status || '—');
+      : scheduled
+        ? h('span', { class: 'status sched' }, 'Agendado')
+        : finished
+          ? h('span', { class: 'status done' }, 'Concluído')
+          : h('span', { class: 'status done' }, c.status || '—');
 
     const when = c.created_at ? new Date(c.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+    const schedTxt = scheduled && c.scheduled_for
+      ? new Date(c.scheduled_for).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+      : null;
 
     return h('div', { class: 'hist-row', onclick: () => running ? watchCampaign(c.id) : null, style: running ? { cursor: 'pointer' } : {} },
       h('div', { class: 'hist-top' },
@@ -236,12 +252,31 @@ export async function pageDivulgacao(view) {
         statusBadge
       ),
       h('div', { class: 'hist-meta' }, `${c.event_label || ''} · ${when}`),
-      h('div', { class: 'prog-bar', style: { marginTop: '8px' } },
-        h('div', { class: 'prog-fill', style: { width: pct + '%' } })),
-      h('div', { class: 'prog-stats' },
+      scheduled
+        ? h('div', { class: 'sched-info' },
+            h('span', {}, `⏰ Dispara em ${schedTxt}`),
+            h('button', { class: 'sched-cancel', onclick: (e) => { e.stopPropagation(); cancelarAgendamento(c.id); } }, 'Cancelar')
+          )
+        : h('div', { class: 'prog-bar', style: { marginTop: '8px' } },
+            h('div', { class: 'prog-fill', style: { width: pct + '%' } })),
+      scheduled ? null : h('div', { class: 'prog-stats' },
         h('span', {}, `${c.sent || 0} enviados${c.failed ? ` · ${c.failed} falhas` : ''}`),
         h('span', {}, `${done}/${total}`))
     );
+  }
+
+  // Cancela um agendamento (apaga a campanha e a fila antes da hora)
+  async function cancelarAgendamento(campaignId) {
+    if (!confirm('Cancelar este agendamento? A lista será descartada e o disparo não acontecerá.')) return;
+    try {
+      const { supabase: sb } = await import('../data/supabase.js');
+      await sb.from('wa_div_queue').delete().eq('campaign_id', campaignId);
+      await sb.from('wa_div_campaigns').delete().eq('id', campaignId);
+      toast.success('Agendamento cancelado.');
+      loadHistory();
+    } catch (e) {
+      toast.danger('Erro ao cancelar: ' + e.message);
+    }
   }
 
   // Acompanha uma campanha em andamento ao vivo
@@ -322,36 +357,63 @@ export async function pageDivulgacao(view) {
   }
 
   function updateReady() {
+    const ready = !!(state.contacts.length && state.templateId);
     const btn = document.getElementById('d-prepare');
-    if (btn) btn.disabled = !(state.contacts.length && state.templateId);
+    if (btn) btn.disabled = !ready;
+    const sbtn = document.getElementById('d-schedule');
+    if (sbtn) sbtn.disabled = !ready;
   }
 
   // ── Disparar em background: grava a fila e liga a campanha ──
-  async function prepare() {
+  // Converte datetime-local (horário de Brasília) para ISO UTC
+  function brasiliaToISO(localValue) {
+    if (!localValue) return null;
+    const iso = localValue.length === 16 ? localValue + ':00' : localValue;
+    return new Date(iso + '-03:00').toISOString();
+  }
+
+  async function agendar() {
+    const val = document.getElementById('d-sched')?.value;
+    if (!val) { toast.danger('Escolha a data e a hora.'); return; }
+    const when = brasiliaToISO(val);
+    if (new Date(when) <= new Date()) { toast.danger('A data precisa ser no futuro.'); return; }
+    prepare(when);
+  }
+
+  async function prepare(scheduledFor) {
     const t = tplById(state.templateId);
     if (!t || !state.contacts.length) return;
     const evName = evById(state.eventId)?.name || state.eventId;
 
-    if (!confirm(`Disparar para ${state.contacts.length} contatos?\n\nO envio roda automaticamente no servidor (~250/min). Você pode fechar esta aba — o progresso continua.`)) return;
+    const isScheduled = !!scheduledFor;
+    const whenTxt = isScheduled
+      ? new Date(scheduledFor).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+      : null;
+    const confirmMsg = isScheduled
+      ? `Agendar disparo para ${state.contacts.length} contatos em ${whenTxt}?\n\nNa hora marcada, o envio começa sozinho no servidor.`
+      : `Disparar para ${state.contacts.length} contatos?\n\nO envio roda automaticamente no servidor (~250/min). Você pode fechar esta aba — o progresso continua.`;
+    if (!confirm(confirmMsg)) return;
 
-    const btn = document.getElementById('d-prepare');
-    btn.disabled = true; btn.textContent = 'Preparando envio…';
+    const btn = document.getElementById(isScheduled ? 'd-schedule' : 'd-prepare');
+    btn.disabled = true; btn.textContent = isScheduled ? 'Agendando…' : 'Preparando envio…';
     try {
       const { supabase: sb } = await import('../data/supabase.js');
 
-      // 1. Cria a campanha
+      // 1. Cria a campanha (scheduled se agendado, idle se imediato)
       const { data: camp, error } = await sb.from('wa_div_campaigns').insert({
         event_id: state.eventId, event_label: evName,
         template_id: t.id, template_name: t.name,
         list_size: state.contacts.length, batch_size: BATCH_SIZE,
         total_batches: Math.ceil(state.contacts.length / BATCH_SIZE),
-        status: 'sending', auto_status: 'idle'
+        status: isScheduled ? 'scheduled' : 'sending',
+        auto_status: isScheduled ? 'scheduled' : 'idle',
+        scheduled_for: scheduledFor
       }).select().single();
       if (error) throw error;
       state.campaign = camp;
 
       // 2. Grava a fila em blocos (insert de muitos de uma vez)
-      btn.textContent = 'Gravando lista…';
+      btn.textContent = isScheduled ? 'Gravando lista…' : 'Gravando lista…';
       const CHUNK = 500;
       for (let i = 0; i < state.contacts.length; i += CHUNK) {
         const slice = state.contacts.slice(i, i + CHUNK).map(c => ({
@@ -361,14 +423,19 @@ export async function pageDivulgacao(view) {
         if (qErr) throw qErr;
       }
 
-      // 3. Liga a campanha — o cron começa a processar no próximo minuto
-      await sb.from('wa_div_campaigns').update({ auto_status: 'running' }).eq('id', camp.id);
-
-      toast.success('Disparo iniciado! Rodando no servidor — pode fechar a aba.');
-      startProgress(camp.id);
+      // 3. Se imediato, liga já. Se agendado, o cron liga na hora.
+      if (!isScheduled) {
+        await sb.from('wa_div_campaigns').update({ auto_status: 'running' }).eq('id', camp.id);
+        toast.success('Disparo iniciado! Rodando no servidor — pode fechar a aba.');
+        startProgress(camp.id);
+      } else {
+        toast.success(`Agendado para ${whenTxt}! Pode fechar a aba.`);
+        loadHistory();
+      }
     } catch (e) {
       toast.danger('Erro: ' + e.message);
-      btn.disabled = false; btn.textContent = 'Disparar agora';
+      btn.disabled = false;
+      btn.textContent = isScheduled ? 'Agendar' : 'Disparar agora';
     }
   }
 
