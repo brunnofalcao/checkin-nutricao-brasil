@@ -8,6 +8,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+@font-face{
+  font-family:'Placard Next Condensed';
+  src:url('fonts/PlacardNextCondensed.woff2') format('woff2'),
+      url('fonts/PlacardNextCondensed.woff') format('woff'),
+      url('fonts/PlacardNextCondensed.otf') format('opentype'),
+      url('fonts/PlacardNextCondensed.ttf') format('truetype');
+  font-weight:400 800; font-display:swap;
+}
+
 :root{
   --bg:#0d0618; --bg2:#1a0f2e; --bg3:#241540; --bd:#3a2a52;
   --t1:#ffffff; --t2:#c9bcde; --t3:#8a7aa5;
@@ -427,6 +436,12 @@ loadImg('oficial', OFICIAL_BG);
 loadImg('logoHor', EDITION.logos.horBranca);
 loadImg('logoVert', EDITION.logos.vertBranca);
 loadImg('logoSP', EDITION.logos.spBranca);
+/* retry: se alguma logo não carregou (rede/CORS), tenta de novo */
+setTimeout(()=>{
+  if(!IMG.ready.logoHor) loadImg('logoHor', EDITION.logos.horBranca);
+  if(!IMG.ready.logoVert) loadImg('logoVert', EDITION.logos.vertBranca);
+  if(!IMG.ready.logoSP) loadImg('logoSP', EDITION.logos.spBranca);
+}, 3500);
 
 /* =========================================================
    5. ENGINE DE DESENHO
@@ -436,7 +451,7 @@ const ctx = art.getContext('2d');
 
 /* --- utilitários de texto --- */
 const FAM_BODY='Poppins,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif';
-const FAM_DISPLAY='Anton,"Arial Narrow",-apple-system,Helvetica,sans-serif'; /* substituto web da Placard Next Compressed */
+const FAM_DISPLAY='"Placard Next Condensed",Anton,"Arial Narrow",-apple-system,Helvetica,sans-serif'; /* Placard Next Condensed (IDV oficial) com fallback Anton */
 function font(px, weight, ls, fam){
   const family = fam==='display' ? FAM_DISPLAY : FAM_BODY;
   ctx.font = (fam==='display'?'400':weight)+' '+px+'px '+family;
@@ -585,23 +600,28 @@ function chrome(W, H, opts){
   }
   const m = Math.round(Math.min(W,H)*0.074);           /* margem externa */
   const isLand = W > H*1.3;
+  /* Story 9:16: zonas de UI do Instagram (topo ~250px, base ~320px em 1920)
+     — logo e rodapé precisam ficar DENTRO da área segura */
+  const isStory = H >= W*1.7;
+  const mTop = isStory ? Math.round(H*0.150) : m;   /* ~288px em 1920 */
+  const mBot = isStory ? Math.round(H*0.190) : m;   /* ~365px em 1920 */
   /* logo */
   const lg = IMG.cache.logoHor;
   const lgH = Math.round(Math.min(W,H)* (isLand? 0.075 : 0.056));
   if(lg && !opts.noLogo && S.showLogoNB){
     const lgW = lgH * (lg.width/lg.height);
     const lx = opts.logoCenter ? (W-lgW)/2 : m;
-    ctx.globalAlpha=.98; ctx.drawImage(lg, lx, m, lgW, lgH); ctx.globalAlpha=1;
+    ctx.globalAlpha=.98; ctx.drawImage(lg, lx, mTop, lgW, lgH); ctx.globalAlpha=1;
   }
   /* rodapé */
-  let footTop = H - m;
+  let footTop = H - mBot;
   if(!opts.noFooter && S.showFooterBar){
     const fs = Math.round(Math.min(W,H)*0.02);
     font(fs, '700', fs*0.14);
     ctx.textAlign='left'; ctx.textBaseline='alphabetic';
     const line1 = EDITION.dataCurta+' · '+EDITION.cidade;
     const line2 = EDITION.local;
-    const yBase = H - m + fs*0.2;
+    const yBase = H - mBot + fs*0.2;
     ctx.fillStyle = C.t2; ctx.fillText(line1, m, yBase - fs*1.6);
     ctx.fillStyle = C.t3; font(fs*0.92,'400',0);
     ctx.fillText(line2, m, yBase);
@@ -615,10 +635,10 @@ function chrome(W, H, opts){
     }
     /* linha divisória sutil */
     ctx.fillStyle = hexA('#ffffff',.09);
-    ctx.fillRect(m, H-m-fs*3.1, W-2*m, 1);
-    footTop = H - m - fs*3.1;
+    ctx.fillRect(m, H-mBot-fs*3.1, W-2*m, 1);
+    footTop = H - mBot - fs*3.1;
   }
-  return { m, top: m + lgH + m*0.55, bottom: footTop, isLand };
+  return { m, top: mTop + lgH + m*0.55, bottom: footTop, isLand };
 }
 function drawEyebrow(text, x, y, u, color, align){
   if(!text) return y;
@@ -1438,6 +1458,8 @@ window.addEventListener('resize', queueRender);
 /* re-render quando as fontes web (Anton/Poppins) terminarem de carregar */
 if(document.fonts && document.fonts.ready){
   Promise.all([
+    document.fonts.load('400 80px "Placard Next Condensed"'),
+    document.fonts.load('700 80px "Placard Next Condensed"'),
     document.fonts.load('400 80px Anton'),
     document.fonts.load('400 20px Poppins'),
     document.fonts.load('700 20px Poppins')
