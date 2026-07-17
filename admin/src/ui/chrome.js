@@ -16,7 +16,8 @@ const NAV = [
     items: [
       { path: '/disparos', icon: 'send', label: 'Disparos' },
       { path: '/divulgacao', icon: 'send', label: 'Divulgação' },
-      { path: '/templates', icon: 'message', label: 'Templates WhatsApp' }
+      { path: '/templates', icon: 'message', label: 'Templates WhatsApp' },
+      { href: 'gerador.html', icon: 'edit', label: 'Gerador de Peças', external: true }
     ]
   },
   {
@@ -104,6 +105,21 @@ function renderNavGroup(group) {
     { class: 'nav-group' },
     h('div', { class: 'nav-group-label' }, group.label),
     ...group.items.map((it) => {
+      // Link externo (abre em nova aba) — ex: Gerador de Peças
+      if (it.external) {
+        return h(
+          'a',
+          {
+            class: 'nav-item',
+            href: it.href,
+            target: '_blank',
+            rel: 'noopener',
+            onclick: () => closeSidebar()
+          },
+          icons[it.icon](),
+          it.label
+        );
+      }
       const node = h(
         'a',
         {
