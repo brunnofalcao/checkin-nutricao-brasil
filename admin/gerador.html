@@ -18,99 +18,133 @@
 }
 
 :root{
-  --bg:#0d0618; --bg2:#1a0f2e; --bg3:#241540; --bd:#3a2a52;
+  --bg:#0d0618; --bg2:#160c28; --bg3:#241540; --card:#140a24; --bd:#32224a; --bd2:#4a3568;
   --t1:#ffffff; --t2:#c9bcde; --t3:#8a7aa5;
   --brand:#6f4d89; --cta:#8b5fbf; --gold:#ffc800;
   --green:#5ab78e; --red:#ff6b6b; --cyan:#80c0ff; --nude:#e0b3a1;
+  --panelW:400px; --headerH:58px; --exportH:74px;
+  --ring:0 0 0 3px rgba(128,192,255,.18);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--t1);font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.5}
 button,input,select,textarea{font-family:inherit;font-size:14px;color:var(--t1)}
-input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--cyan)}
-input[type=range]{padding:0;height:28px;accent-color:var(--cyan)}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:11px 13px;outline:none;transition:border-color .15s, box-shadow .15s}
+input:hover,select:hover,textarea:hover{border-color:var(--bd2)}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:var(--ring)}
+select{cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7aa5' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+input[type=range]{padding:0;height:30px;accent-color:var(--cyan);cursor:pointer;border:none;background:transparent}
+input[type=range]:focus{box-shadow:none}
 label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);font-weight:700;margin:14px 0 6px}
 label .cnt{float:right;font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3)}
 label .cnt.over{color:var(--red);font-weight:700}
 label .hint{display:block;font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3);font-size:11px;margin-top:2px}
 
-header.app{position:sticky;top:0;z-index:50;background:rgba(13,6,24,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;align-items:center;gap:12px}
-header.app img{height:26px}
-header.app .tt{font-size:13px;font-weight:800;letter-spacing:-.2px}
+/* ===== HEADER ===== */
+header.app{position:fixed;top:0;left:0;right:0;height:var(--headerH);z-index:80;background:rgba(13,6,24,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:0 18px;display:flex;align-items:center;gap:14px}
+header.app img{height:24px}
+header.app .tt{font-size:13.5px;font-weight:800;letter-spacing:-.2px;line-height:1.25}
 header.app .tt span{display:block;font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:1.5px}
+header.app .back{margin-left:auto;color:var(--t3);font-size:12.5px;font-weight:700;text-decoration:none;border:1px solid var(--bd);border-radius:8px;padding:7px 12px;transition:color .15s,border-color .15s}
+header.app .back:hover{color:var(--t1);border-color:var(--bd2)}
 
-.layout{display:grid;grid-template-columns:340px 1fr;gap:0;max-width:1500px;margin:0 auto;min-height:calc(100vh - 55px)}
-@media(max-width:900px){.layout{grid-template-columns:1fr}}
+/* ===== LAYOUT ===== */
+.layout{display:grid;grid-template-columns:var(--panelW) 1fr;padding-top:var(--headerH);min-height:100vh}
 
-/* ===== PAINEL ===== */
-.panel{border-right:1px solid var(--bd);padding:16px 16px 120px;overflow-y:auto;max-height:calc(100vh - 55px)}
-@media(max-width:900px){.panel{border-right:none;max-height:none;overflow:visible;padding-bottom:40px;order:2}}
-.panel h3{font-size:11px;text-transform:uppercase;letter-spacing:1.6px;color:var(--cyan);font-weight:800;margin:22px 0 4px;padding-top:16px;border-top:1px solid var(--bd)}
-.panel h3:first-child{margin-top:0;border-top:none;padding-top:0}
+/* ===== PAINEL (controles) ===== */
+.panel{border-right:1px solid var(--bd);padding:18px 18px calc(var(--exportH) + 28px);overflow-y:auto;height:calc(100vh - var(--headerH));scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+.panel::-webkit-scrollbar{width:8px}
+.panel::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
 
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{background:var(--bg2);border:1px solid var(--bd);border-radius:20px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--t2);cursor:pointer;white-space:nowrap}
+/* seções em cards com step numerado */
+.sec{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+.sec .secHead{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sec .secHead .n{flex:none;width:22px;height:22px;border-radius:50%;background:rgba(128,192,255,.12);border:1px solid rgba(128,192,255,.4);color:var(--cyan);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.sec .secHead h3{font-size:11.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);font-weight:800}
+.sec.plain{background:transparent;border-style:dashed}
+.sec > :last-child{margin-bottom:0}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chip{background:var(--bg);border:1px solid var(--bd);border-radius:22px;padding:8px 15px;font-size:12.5px;font-weight:700;color:var(--t2);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.chip:hover{border-color:var(--bd2);color:var(--t1)}
 .chip.on{background:var(--brand);border-color:var(--cta);color:#fff}
-.chip.v{min-width:42px;text-align:center}
+.chip.v{min-width:44px;text-align:center}
 
 .upl{display:flex;align-items:center;gap:10px;margin-top:6px}
-.upl .drop{flex:1;border:1.5px dashed var(--bd);border-radius:10px;padding:12px;text-align:center;font-size:12px;color:var(--t3);cursor:pointer}
+.upl .drop{flex:1;border:1.5px dashed var(--bd2);border-radius:10px;padding:13px;text-align:center;font-size:12.5px;color:var(--t3);cursor:pointer;transition:border-color .15s,color .15s}
+.upl .drop:hover{border-color:var(--cyan);color:var(--t2)}
 .upl .drop.has{border-color:var(--green);color:var(--green)}
-.upl .clr{background:none;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--t3);cursor:pointer}
+.upl .clr{background:none;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--t3);cursor:pointer}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
-.warn{display:none;background:rgba(255,107,107,.09);border:1px solid rgba(255,107,107,.35);border-radius:8px;padding:8px 12px;font-size:12px;color:#ffb3b3;margin-top:8px}
+.warn{display:none;background:rgba(255,107,107,.09);border:1px solid rgba(255,107,107,.35);border-radius:10px;padding:9px 12px;font-size:12.5px;color:#ffb3b3;margin-top:10px}
 .warn.show{display:block}
-.tip{background:rgba(128,192,255,.07);border:1px solid rgba(128,192,255,.25);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--t2);margin-top:8px}
+.tip{background:rgba(128,192,255,.07);border:1px solid rgba(128,192,255,.25);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--t2);margin-top:10px}
 
-/* ===== PREVIEW ===== */
-.stage{padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px}
-@media(max-width:900px){
-  .stage{order:1;position:sticky;top:55px;z-index:40;background:var(--bg);border-bottom:1px solid var(--bd);padding:10px}
-  .canvasBox{max-height:38vh}
-  #art,#guides{max-height:38vh;width:auto;max-width:100%}
-}
+/* ===== PREVIEW (stage) ===== */
+.stage{position:relative;height:calc(100vh - var(--headerH));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:22px 22px calc(var(--exportH) + 20px);background:radial-gradient(ellipse 80% 60% at 50% 35%, rgba(139,95,191,.09), transparent 65%)}
+.canvasWrap{position:relative;display:flex;justify-content:center;align-items:center;flex:1;min-height:0;width:100%}
+.canvasBox{position:relative;box-shadow:0 24px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.05);border-radius:8px;overflow:hidden;line-height:0}
+#art{display:block;max-width:min(100%, 860px);max-height:calc(100vh - var(--headerH) - var(--exportH) - 110px);width:auto;height:auto}
+#guides{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.stage .meta{flex:none;font-size:11.5px;color:var(--t3);display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center}
+.stage .meta b{color:var(--t2)}
+.toggle{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--t3);cursor:pointer;user-select:none}
+.toggle input{width:auto}
+
+/* ===== EXPORT BAR (fixa sobre a coluna do preview no desktop) ===== */
+.exportBar{position:fixed;bottom:0;left:var(--panelW);right:0;height:var(--exportH);z-index:70;background:rgba(13,6,24,.95);backdrop-filter:blur(12px);border-top:1px solid var(--bd);padding:0 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.exportBar select{width:auto;padding:10px 34px 10px 12px;font-size:13px}
+.btn{border:none;border-radius:11px;padding:12px 24px;font-weight:800;font-size:14px;letter-spacing:.3px;cursor:pointer;transition:filter .15s}
+.btn:hover{filter:brightness(1.08)}
+.btn.dl{background:var(--green);color:#07130d}
+.btn.sec{background:var(--bg2);border:1px solid var(--bd);color:var(--t2);font-weight:700;font-size:12.5px;padding:10px 14px}
+.btn:active{transform:translateY(1px)}
+
+/* ===== MODAL EXPORT ===== */
 .modal{position:fixed;inset:0;z-index:200;background:rgba(5,2,10,.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px}
 .modal.show{display:flex}
 .modal img{max-width:94vw;max-height:70vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.7);background:#1a0f2e}
 .modal .hint{color:var(--t2);font-size:14px;font-weight:700;text-align:center}
 .modal .hint span{display:block;font-weight:400;color:var(--t3);font-size:12px;margin-top:4px}
 .modal .row{display:flex;gap:10px}
-.canvasWrap{position:relative;width:100%;display:flex;justify-content:center}
-.canvasBox{position:relative;box-shadow:0 20px 60px rgba(0,0,0,.55);border-radius:6px;overflow:hidden;line-height:0}
-#art,#guides{display:block;max-width:100%;height:auto}
-#guides{position:absolute;inset:0;pointer-events:none}
-.stage .meta{font-size:11px;color:var(--t3);display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center}
-.stage .meta b{color:var(--t2)}
-.toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);cursor:pointer;user-select:none}
-.toggle input{width:auto}
 
-/* ===== EXPORT BAR ===== */
-.exportBar{position:fixed;bottom:0;left:0;right:0;z-index:60;background:rgba(13,6,24,.95);backdrop-filter:blur(10px);border-top:1px solid var(--bd);padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
-.exportBar select{width:auto;padding:9px 10px;font-size:13px}
-.btn{border:none;border-radius:10px;padding:12px 22px;font-weight:800;font-size:14px;letter-spacing:.3px;cursor:pointer}
-.btn.dl{background:var(--green);color:#07130d}
-.btn.sec{background:var(--bg2);border:1px solid var(--bd);color:var(--t2);font-weight:700;font-size:12px;padding:10px 14px}
-.btn:active{transform:translateY(1px)}
-
-/* saved */
-.savedList{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.savedList .it{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:12px}
+/* ===== PEÇAS SALVAS / GUIAS ===== */
+.savedList{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.savedList .it{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px 11px;font-size:12.5px}
 .savedList .it b{flex:1;color:var(--t2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .savedList .it button{background:none;border:none;color:var(--cyan);cursor:pointer;font-size:12px;font-weight:700}
 .savedList .it button.del{color:var(--red)}
-details.guide{margin-top:10px;font-size:12.5px;color:var(--t2)}
+details.guide{margin-top:12px;font-size:12.5px;color:var(--t2)}
 details.guide summary{cursor:pointer;color:var(--cyan);font-weight:700;font-size:12px}
 details.guide li{margin:6px 0 0 16px}
-.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--cyan);color:var(--t1);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast{position:fixed;left:50%;bottom:calc(var(--exportH) + 14px);transform:translateX(-50%);background:var(--bg3);border:1px solid var(--cyan);color:var(--t1);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 
-/* iOS: inputs a 16px no mobile evitam o zoom automático ao focar */
-@media(max-width:900px){
+/* ============================================================
+   MOBILE (≤960px): preview sticky no topo, controles abaixo,
+   export fixa no rodapé com safe-area. Inputs 16px (anti-zoom iOS).
+   ============================================================ */
+@media(max-width:960px){
+  :root{--exportH:66px}
+  .layout{grid-template-columns:1fr;padding-top:var(--headerH)}
+  header.app .back{display:none}
+
+  .stage{order:1;position:sticky;top:var(--headerH);z-index:60;height:auto;background:var(--bg);border-bottom:1px solid var(--bd);padding:12px 12px 10px;gap:8px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .canvasWrap{flex:none}
+  #art{max-height:34vh;max-width:100%}
+  .stage .meta{gap:12px;font-size:11px}
+
+  .panel{order:2;height:auto;overflow:visible;border-right:none;padding:14px 14px calc(var(--exportH) + env(safe-area-inset-bottom, 0px) + 26px)}
+  .sec{padding:14px;border-radius:12px}
+
+  .exportBar{left:0;height:calc(var(--exportH) + env(safe-area-inset-bottom, 0px));padding-bottom:env(safe-area-inset-bottom, 0px)}
+  .exportBar .btn.dl{flex:1;max-width:280px}
+
   input,select,textarea{font-size:16px}
-  .chip{padding:9px 15px;font-size:13px}
-  .btn{min-height:44px}
+  .chip{padding:10px 16px;font-size:13.5px}
+  .btn{min-height:46px}
+  .toast{bottom:calc(var(--exportH) + env(safe-area-inset-bottom, 0px) + 14px)}
 }
 </style>
 </head>
@@ -119,6 +153,7 @@ details.guide li{margin:6px 0 0 16px}
 <header class="app">
   <img src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png" alt="Nutrição Brasil">
   <div class="tt">Gerador de Peças<span>Brasília · 27–29 AGO 2026</span></div>
+  <a class="back" href="./">← Voltar ao painel</a>
 </header>
 
 <div class="layout">
@@ -126,17 +161,20 @@ details.guide li{margin:6px 0 0 16px}
 <!-- ============ PAINEL ============ -->
 <div class="panel">
 
-  <h3>1 · Tipo de comunicação</h3>
-  <select id="fType"></select>
+  <section class="sec"><div class="secHead"><span class="n">1</span><h3>Tipo de comunicação</h3></div>
+  <select id="fType" style="margin-top:8px"></select>
+  </section>
 
-  <h3>2 · Formato</h3>
+  <section class="sec"><div class="secHead"><span class="n">2</span><h3>Formato</h3></div>
   <div class="chips" id="fmtChips"></div>
+  </section>
 
-  <h3>3 · Conteúdo</h3>
+  <section class="sec"><div class="secHead"><span class="n">3</span><h3>Conteúdo</h3></div>
   <div id="fields"></div>
   <div class="warn" id="warnBox"></div>
+  </section>
 
-  <h3>4 · Fundo</h3>
+  <section class="sec"><div class="secHead"><span class="n">4</span><h3>Fundo</h3></div>
   <div class="chips" id="bgChips"></div>
   <div id="bgUpload" style="display:none">
     <label>Imagem de fundo (upload)</label>
@@ -152,20 +190,23 @@ details.guide li{margin:6px 0 0 16px}
     <label>Escurecimento</label><input type="range" id="bgDark" min="0" max="90" value="45">
     <input type="file" id="fileBg" accept="image/*" hidden>
   </div>
+  </section>
 
-  <h3 id="brandTitle">5 · Logomarcas na peça</h3>
+  <section class="sec"><div class="secHead"><span class="n">5</span><h3 id="brandTitle">Logomarcas na peça</h3></div>
   <div id="brandBox">
     <label><span class="toggle" style="text-transform:none;letter-spacing:0"><input type="checkbox" id="tglLogoNB" checked> Logomarca Nutrição Brasil</span></label>
     <label><span class="toggle" style="text-transform:none;letter-spacing:0"><input type="checkbox" id="tglLogoSP" checked> Logomarca Science Play (rodapé)</span></label>
     <label><span class="toggle" style="text-transform:none;letter-spacing:0"><input type="checkbox" id="tglFooter" checked> Rodapé institucional (data · local · site)</span></label>
   </div>
   <div class="tip" id="brandTipOficial" style="display:none">Na IDV Oficial, logomarca, data, site e patrocinadores já fazem parte da arte.</div>
+  </section>
 
-  <h3>6 · Variação</h3>
+  <section class="sec"><div class="secHead"><span class="n">6</span><h3>Variação</h3></div>
   <div class="chips" id="varChips"></div>
-  <button class="btn sec" id="btnShuffle" style="margin-top:10px;width:100%">⟳ Gerar variações</button>
+  <button class="btn sec" id="btnShuffle" style="margin-top:12px;width:100%">⟳ Gerar variações</button>
+  </section>
 
-  <h3>7 · Peças salvas</h3>
+  <section class="sec"><div class="secHead"><span class="n">7</span><h3>Peças salvas</h3></div>
   <div class="row2">
     <button class="btn sec" id="btnSave">Salvar peça</button>
     <button class="btn sec" id="btnDup">Duplicar</button>
@@ -176,8 +217,10 @@ details.guide li{margin:6px 0 0 16px}
   </div>
   <input type="file" id="fileJson" accept=".json" hidden>
   <div class="savedList" id="savedList"></div>
+  </section>
 
-  <details class="guide">
+  <section class="sec plain">
+  <details class="guide" style="margin-top:0">
     <summary>Logo não apareceu? Enviar manualmente</summary>
     <div class="tip" style="margin-top:8px">As logomarcas oficiais carregam sozinhas. Use estes campos apenas se alguma não aparecer no preview.</div>
     <label>Logo Nutrição Brasil (manual)</label>
@@ -200,6 +243,7 @@ details.guide li{margin:6px 0 0 16px}
       <li>Site oficial: <b>www.nutricaobrasil.com.br</b> · Expo: <b>@nutricaobrasil.expo</b>.</li>
     </ul>
   </details>
+  </section>
 </div>
 
 <!-- ============ PREVIEW ============ -->
