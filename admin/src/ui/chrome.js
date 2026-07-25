@@ -17,6 +17,7 @@ const NAV = [
       { path: '/disparos', icon: 'send', label: 'Disparos' },
       { path: '/divulgacao', icon: 'send', label: 'Divulgação' },
       { path: '/templates', icon: 'message', label: 'Templates WhatsApp' },
+      { path: '/base-conhecimento', icon: 'book', label: 'Base de Conhecimento' },
       { href: 'gerador.html', icon: 'edit', label: 'Gerador de Peças', external: true }
     ]
   },
