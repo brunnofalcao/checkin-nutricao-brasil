@@ -1350,3 +1350,194 @@
   .sched-input { width: 100%; }
   .sched-row .btn { width: 100%; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   NB RUN · CORRIDA — badge, chips e contadores de kit
+   Identidade da corrida em teal, diferenciando do violeta do congresso.
+   ════════════════════════════════════════════════════════════ */
+.row-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.race-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #e0f6fa;
+  color: #0e7490;
+  border: 1px solid #b5e7f0;
+  flex-shrink: 0;
+}
+.race-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.race-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.race-chip.dist {
+  background: #e0f6fa;
+  color: #0e7490;
+}
+.race-chip.shirt {
+  background: var(--bg-2);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+.race-chip.nutri {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.race-chip.bib {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-mute);
+  font-family: var(--font-mono);
+}
+
+/* Contadores de camiseta no topo do evento corrida */
+.evd-kit-sizes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -6px 0 20px;
+}
+.evd-kit-sizes-label {
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-right: 2px;
+}
+.kit-size-card {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 7px 13px;
+}
+.kit-size-card .ks-size {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink-strong);
+  letter-spacing: -0.01em;
+}
+.kit-size-card .ks-nums {
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+.kit-size-card.done {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+.kit-size-card.done .ks-nums { color: var(--green); }
+
+/* ════════════════════════════════════════════════════════════
+   BASE DE CONHECIMENTO (Kcal) — CRUD da ai_kb
+   ════════════════════════════════════════════════════════════ */
+.kb-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--violet-soft);
+  border: 1px solid var(--violet-border);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin-bottom: 18px;
+}
+.kb-note svg {
+  width: 16px;
+  height: 16px;
+  color: var(--violet);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.kb-note strong { color: var(--violet); }
+
+.status-toggle { cursor: pointer; transition: filter 0.12s; }
+.status-toggle:hover { filter: brightness(0.94); }
+
+.kb-edit-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--violet);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.table tbody tr:hover .kb-edit-hint { opacity: 1; }
+
+.kb-textarea {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  min-height: 260px;
+  resize: vertical;
+}
+.kb-field-hint {
+  font-size: 12px;
+  color: var(--ink-mute);
+  margin-top: 5px;
+}
+.kb-active-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border-radius: var(--r-sm);
+  user-select: none;
+}
+.kb-active-row input[type='checkbox'] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--violet);
+  margin: 0;
+  cursor: pointer;
+}
+.kb-del { color: var(--red); }
+.kb-del:hover:not(:disabled) { background: var(--red-soft); color: var(--red); }
+.kb-del-confirm { background: var(--red); }
+.kb-del-confirm:hover:not(:disabled) { background: #991b1b; }
+.kb-del-warn {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.kb-del-warn.muted { color: var(--ink-mute); font-size: 13px; }
+
+@media (max-width: 860px) {
+  .evd-kit-sizes { gap: 8px; }
+  .evd-kit-sizes-label { width: 100%; }
+  /* Chips do corredor alinham à esquerda no card mobile */
+  .table tbody td .race-chips { justify-content: flex-end; }
+  .table tbody td:first-child .row-name-wrap { justify-content: flex-start; }
+}
