@@ -197,6 +197,44 @@ export async function pageEventCertificates(view, event, onBack) {
     toast.success(`${done} PDFs gerados.`);
   }
 
+  // Artes sociais da corrida (Feed 1080×1350 + Stories 1080×1920) via certificate-render-v2.
+  // Lote paginado server-side: repete até done=true. Sem template no Storage → use o modo teste.
+  async function handleBulkSocial() {
+    const isTest = !confirm(
+      'Gerar artes sociais (Feed + Stories) para todos com kit retirado?\n\n' +
+      'OK = usar as ARTES OFICIAIS do Storage ({event_id}/template_feed.png e template_story.png).\n' +
+      'Cancelar = gerar em MODO TESTE (fundo provisório, serve para validar).'
+    );
+
+    generating = true;
+    renderTopBtns(true);
+
+    let total = 0, rounds = 0;
+    try {
+      while (rounds < 60) {
+        rounds++;
+        const r = await callFn('certificate-render-v2', {
+          event_id: event.id,
+          formats: ['feed', 'story'],
+          limit: 20,
+          test_mode: isTest
+        });
+        total += r.generated || 0;
+        updateBulkProgress(`Gerando artes sociais... ${total} geradas · ${r.remaining} restantes`);
+        if (r.errors && r.errors.length) {
+          toast.danger('Erros: ' + r.errors[0]);
+        }
+        if (r.done) break;
+      }
+      toast.success(`${total} artes sociais geradas${isTest ? ' (modo teste)' : ''}.`);
+    } catch (e) {
+      toast.danger('Erro nas artes sociais: ' + e.message);
+    } finally {
+      generating = false;
+      renderTopBtns(false);
+    }
+  }
+
   async function handleBulkWhatsApp() {
     const com_pdf = all.filter(p => p.certificate_url);
     if (com_pdf.length === 0) { toast.danger('Gera os PDFs primeiro.'); return; }
@@ -293,6 +331,14 @@ export async function pageEventCertificates(view, event, onBack) {
           disabled: disabled || !hasTemplate || null,
           onclick: handleBulkGenerate
         }, 'Gerar todos os PDFs'),
+        event.event_type === 'race'
+          ? h('button', {
+              class: 'btn btn-secondary',
+              disabled: disabled || null,
+              title: 'Feed 1080×1350 + Stories 1080×1920 (certificate-render-v2)',
+              onclick: handleBulkSocial
+            }, 'Artes sociais (Feed + Stories)')
+          : null,
         h('button', {
           class: 'btn btn-primary',
           disabled: disabled || null,
