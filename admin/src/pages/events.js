@@ -89,11 +89,14 @@ export async function pageEvents(view) {
 
     return h('tr', { onclick: () => navigate(`/eventos/${ev.id}`) },
       h('td', {},
-        h('div', { class: 'row-name' }, ev.name || ev.slug),
+        h('div', { class: 'row-name-wrap' },
+          h('div', { class: 'row-name' }, ev.name || ev.slug),
+          ev.event_type === 'race' ? h('span', { class: 'race-badge' }, 'Corrida') : null
+        ),
         ev.slug ? h('div', { class: 'row-sub' }, ev.slug) : null
       ),
-      h('td', { class: 'mono' }, fmtDate(ev.date_start)),
-      h('td', {}, ev.location || h('span', { style: { color: 'var(--ink-mute)' } }, 'A confirmar')),
+      h('td', { class: 'mono' }, fmtDate(ev.date_start || (ev.event_date ? ev.event_date + 'T00:00:00' : null))),
+      h('td', {}, ev.location || ev.venue || h('span', { style: { color: 'var(--ink-mute)' } }, 'A confirmar')),
       h('td', {}, progressMini(ev.total_inscritos || 0, capacity(ev))),
       h('td', { class: 'mono' },
         ev.status === 'encerrado' && ev.total_inscritos
