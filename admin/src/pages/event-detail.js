@@ -3,6 +3,7 @@ import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { getEvent, updateEvent } from '../data/events.js';
 import { listAllParticipants } from '../data/participants.js';
+import { listRaceProfiles, distanceLabel, shirtLabel, aggregateShirts } from '../data/race.js';
 import { fmtDate, fmtRelative, debounce } from '../core/utils.js';
 import { toast } from '../ui/toast.js';
 import { openModal } from '../ui/modal.js';
@@ -25,7 +26,10 @@ export async function pageEventDetail(view, { params }) {
     return;
   }
 
+  const isRace = event.event_type === 'race';
+
   let allParticipants = [];
+  let raceMap = {};          // participant_id -> race_profile (só evento corrida)
   let filter = 'todos';
   let query = '';
   let visibleCount = PAGE_SIZE;
@@ -42,6 +46,15 @@ export async function pageEventDetail(view, { params }) {
       h('button', { class: 'btn btn-secondary', onclick: () => location.reload() }, 'Recarregar')
     ));
     return;
+  }
+
+  if (isRace) {
+    try {
+      raceMap = await listRaceProfiles(eventId);
+    } catch (e) {
+      // Página segue funcionando sem os chips; só avisa.
+      toast.danger('Perfis da corrida não carregaram: ' + (e.message || e));
+    }
   }
 
   // Lista única de lotes presentes (pro filtro), ignorando vazios
@@ -64,6 +77,12 @@ export async function pageEventDetail(view, { params }) {
         if ((p.email || '').toLowerCase().includes(q)) return true;
         if ((p.code || '').toLowerCase().includes(q)) return true;
         if (qDigits && (p.phone || '').replace(/\D/g, '').includes(qDigits)) return true;
+        const rp = isRace ? raceMap[p.id] : null;
+        if (rp) {
+          if (distanceLabel(rp.distance).toLowerCase().includes(q)) return true;
+          if (shirtLabel(rp.shirt_size).toLowerCase().includes(q)) return true;
+          if ((rp.bib_number || '').toLowerCase().includes(q)) return true;
+        }
         return false;
       });
     }
@@ -90,41 +109,64 @@ export async function pageEventDetail(view, { params }) {
       ? Math.ceil((new Date(event.date_start) - Date.now()) / 86400000)
       : null;
 
-    return h('div', { class: 'evd-head' },
-      h('div', {},
-        h('button', {
-          class: 'btn btn-ghost',
-          style: { marginBottom: '8px', padding: '4px 8px', height: 'auto' },
-          onclick: () => navigate('/eventos')
-        }, icons.arrowLeft(), 'Eventos'),
-        h('div', { class: 'evd-title' }, event.name || event.slug),
-        h('div', { class: 'page-sub' },
-          [
-            event.location || 'A confirmar',
-            event.date_start ? fmtDate(event.date_start) : null,
-            isEncerrado ? 'encerrado' : (days !== null && days > 0 ? `em ${days} dia${days !== 1 ? 's' : ''}` : null)
-          ].filter(Boolean).join(' · ')
+    return h('div', {},
+      h('div', { class: 'evd-head' },
+        h('div', {},
+          h('button', {
+            class: 'btn btn-ghost',
+            style: { marginBottom: '8px', padding: '4px 8px', height: 'auto' },
+            onclick: () => navigate('/eventos')
+          }, icons.arrowLeft(), 'Eventos'),
+          h('div', { class: 'row-name-wrap' },
+            h('div', { class: 'evd-title' }, event.name || event.slug),
+            isRace ? h('span', { class: 'race-badge' }, 'Corrida') : null
+          ),
+          h('div', { class: 'page-sub' },
+            [
+              event.location || event.venue || 'A confirmar',
+              event.date_start
+                ? fmtDate(event.date_start)
+                : (event.event_date ? fmtDate(event.event_date + 'T00:00:00') : null),
+              isEncerrado ? 'encerrado' : (days !== null && days > 0 ? `em ${days} dia${days !== 1 ? 's' : ''}` : null)
+            ].filter(Boolean).join(' · ')
+          )
+        ),
+        h('div', { class: 'evd-stats' },
+          h('div', {},
+            h('div', { class: 'evd-stat-label' }, isRace ? 'Corredores' : 'Inscritos'),
+            h('div', { class: 'evd-stat-value mono' }, String(c.todos))
+          ),
+          h('div', {},
+            h('div', { class: 'evd-stat-label' }, isRace ? 'Kits retirados' : 'Check-in'),
+            h('div', { class: 'evd-stat-value mono', style: { color: c.checkin > 0 ? 'var(--green)' : 'var(--ink-strong)' } },
+              String(c.checkin),
+              c.todos > 0 ? h('small', {}, ` · ${pct}%`) : null
+            )
+          ),
+          h('div', {},
+            h('div', { class: 'evd-stat-label' }, isRace ? 'Kits pendentes' : 'Pendentes'),
+            h('div', { class: 'evd-stat-value mono', style: { color: c.pendentes > 0 ? 'var(--amber)' : 'var(--ink-strong)' } },
+              String(c.pendentes)
+            )
+          ),
+          null
         )
       ),
-      h('div', { class: 'evd-stats' },
-        h('div', {},
-          h('div', { class: 'evd-stat-label' }, 'Inscritos'),
-          h('div', { class: 'evd-stat-value mono' }, String(c.todos))
-        ),
-        h('div', {},
-          h('div', { class: 'evd-stat-label' }, 'Check-in'),
-          h('div', { class: 'evd-stat-value mono', style: { color: c.checkin > 0 ? 'var(--green)' : 'var(--ink-strong)' } },
-            String(c.checkin),
-            c.todos > 0 ? h('small', {}, ` · ${pct}%`) : null
-          )
-        ),
-        h('div', {},
-          h('div', { class: 'evd-stat-label' }, 'Pendentes'),
-          h('div', { class: 'evd-stat-value mono', style: { color: c.pendentes > 0 ? 'var(--amber)' : 'var(--ink-strong)' } },
-            String(c.pendentes)
-          )
-        ),
-        null
+      isRace ? kitSizesStrip() : null
+    );
+  }
+
+  // Contadores de camiseta por tamanho (retirados/total) — só evento corrida.
+  function kitSizesStrip() {
+    const sizes = aggregateShirts(raceMap, allParticipants);
+    if (!sizes.length) return null;
+    return h('div', { class: 'evd-kit-sizes' },
+      h('div', { class: 'evd-kit-sizes-label' }, 'Kits por camiseta'),
+      ...sizes.map(([size, d]) =>
+        h('div', { class: `kit-size-card ${d.taken >= d.total ? 'done' : ''}` },
+          h('span', { class: 'ks-size' }, size),
+          h('span', { class: 'ks-nums mono' }, `${d.taken}/${d.total}`)
+        )
       )
     );
   }
@@ -177,21 +219,23 @@ export async function pageEventDetail(view, { params }) {
           icons.search(),
           h('input', {
             type: 'text',
-            placeholder: 'Buscar por nome, email, telefone ou código...',
+            placeholder: isRace
+              ? 'Buscar por nome, camiseta (P, M...), distância (5K/10K) ou telefone...'
+              : 'Buscar por nome, email, telefone ou código...',
             value: query,
             oninput: (e) => { query = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }
           })
         ),
         h('div', { style: { display: 'flex', gap: '4px', marginLeft: 'auto', flexWrap: 'wrap' } },
           tabBtn(`Todos · ${c.todos}`, filter === 'todos', () => { filter = 'todos'; visibleCount = PAGE_SIZE; updateBody(); }),
-          tabBtn(`Check-in · ${c.checkin}`, filter === 'checkin', () => { filter = 'checkin'; visibleCount = PAGE_SIZE; updateBody(); }, 'green'),
+          tabBtn(`${isRace ? 'Kit retirado' : 'Check-in'} · ${c.checkin}`, filter === 'checkin', () => { filter = 'checkin'; visibleCount = PAGE_SIZE; updateBody(); }, 'green'),
           tabBtn(`Pendentes · ${c.pendentes}`, filter === 'pendentes', () => { filter = 'pendentes'; visibleCount = PAGE_SIZE; updateBody(); }, 'amber'),
           null
         )
       ),
-      // Segunda linha: filtro de lote + ordenação
+      // Segunda linha: filtro de lote + ordenação (lote não se aplica à corrida)
       h('div', { class: 'evd-subtoolbar' },
-        h('select', {
+        isRace ? null : h('select', {
           class: 'evd-select',
           onchange: (e) => { loteFilter = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }
         },
@@ -241,11 +285,11 @@ export async function pageEventDetail(view, { params }) {
     setContent(body,
       h('table', { class: 'table' },
         h('thead', {}, h('tr', {},
-          h('th', { style: { width: '32%' } }, 'Inscrito'),
+          h('th', { style: { width: '32%' } }, isRace ? 'Corredor' : 'Inscrito'),
           h('th', {}, 'Telefone'),
-          h('th', {}, 'Lote'),
+          h('th', {}, isRace ? 'Corrida' : 'Lote'),
           h('th', {}, 'Origem'),
-          h('th', {}, 'Check-in')
+          h('th', {}, isRace ? 'Kit' : 'Check-in')
         )),
         h('tbody', {}, ...visible.map(rowFor))
       ),
@@ -265,6 +309,7 @@ export async function pageEventDetail(view, { params }) {
 
   function rowFor(p) {
     const isCanceled = p.payment_status === 'canceled' || p.payment_status === 'refunded';
+    const rp = isRace ? raceMap[p.id] : null;
     return h('tr', {
         class: isCanceled ? 'row-payment-canceled' : '',
         onclick: () => openParticipant(p)
@@ -274,7 +319,9 @@ export async function pageEventDetail(view, { params }) {
         p.email ? h('div', { class: 'row-sub' }, p.email) : null
       ),
       h('td', { class: 'mono' }, p.phone || '—'),
-      h('td', {}, p.lote || '—'),
+      isRace
+        ? h('td', {}, rp ? raceChips(rp) : h('span', { class: 'muted' }, 'Sem perfil'))
+        : h('td', {}, p.lote || '—'),
       h('td', {}, sourcePill(p.source)),
       h('td', {},
         p.checked
@@ -284,16 +331,36 @@ export async function pageEventDetail(view, { params }) {
     );
   }
 
+  // Chips do corredor: distância · camiseta · Nutri · nº de peito.
+  function raceChips(rp) {
+    return h('div', { class: 'race-chips' },
+      rp.distance ? h('span', { class: 'race-chip dist' }, distanceLabel(rp.distance)) : null,
+      rp.shirt_size ? h('span', { class: 'race-chip shirt' }, shirtLabel(rp.shirt_size)) : null,
+      rp.is_nutritionist ? h('span', { class: 'race-chip nutri' }, 'Nutri') : null,
+      rp.bib_number ? h('span', { class: 'race-chip bib' }, `#${rp.bib_number}`) : null
+    );
+  }
+
   function openParticipant(p) {
+    const rp = isRace ? raceMap[p.id] : null;
     openModal({
-      title: p.name || 'Inscrito',
+      title: p.name || (isRace ? 'Corredor' : 'Inscrito'),
       body: h('div', {},
+        rp ? h('div', { class: 'race-chips', style: { marginBottom: '12px' } },
+          rp.distance ? h('span', { class: 'race-chip dist' }, distanceLabel(rp.distance)) : null,
+          rp.shirt_size ? h('span', { class: 'race-chip shirt' }, `Camiseta ${shirtLabel(rp.shirt_size)}`) : null,
+          rp.is_nutritionist ? h('span', { class: 'race-chip nutri' }, 'Nutricionista') : null
+        ) : null,
         infoRow('Email', p.email),
         infoRow('Telefone', p.phone),
         infoRow('Código', p.code),
-        infoRow('Lote', p.lote),
+        isRace ? null : infoRow('Lote', p.lote),
         infoRow('Origem', p.source || 'manual'),
-        infoRow('Check-in', p.checked ? `Sim · ${fmtRelative(p.checked_at)}` : 'Pendente'),
+        infoRow(isRace ? 'Kit' : 'Check-in', p.checked ? `${isRace ? 'Retirado' : 'Sim'} · ${fmtRelative(p.checked_at)}` : 'Pendente'),
+        rp ? infoRow('Nº de peito', rp.bib_number) : null,
+        rp ? infoRow('Nº do chip', rp.chip_number) : null,
+        rp ? infoRow('Contato de emergência', rp.emergency_contact) : null,
+        rp ? infoRow('Categoria (original)', rp.category) : null,
         infoRow('Hotmart transaction', p.hotmart_transaction_id),
         p.whatsapp_sent_at ? infoRow('WhatsApp enviado', fmtRelative(p.whatsapp_sent_at)) : null,
         p.whatsapp_error ? infoRow('Erro WhatsApp', p.whatsapp_error) : null
@@ -367,10 +434,11 @@ function tabBtn(label, active, onClick, accent) {
 
 function sourcePill(source) {
   const map = {
-    hotmart: { cls: 'hotmart', label: 'Hotmart' },
-    import:  { cls: 'import',  label: 'CSV' },
-    manual:  { cls: 'manual',  label: 'Manual' },
-    api:     { cls: 'api',     label: 'API' }
+    hotmart:      { cls: 'hotmart', label: 'Hotmart' },
+    ticketsports: { cls: 'api',     label: 'TicketSports' },
+    import:       { cls: 'import',  label: 'CSV' },
+    manual:       { cls: 'manual',  label: 'Manual' },
+    api:          { cls: 'api',     label: 'API' }
   };
   const cfg = map[source] || map.manual;
   return h('span', { class: `source-pill ${cfg.cls}` }, cfg.label);
