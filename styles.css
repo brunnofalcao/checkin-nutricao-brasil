@@ -1016,5 +1016,85 @@ input, textarea { user-select: text; -webkit-user-select: text; font-family: inh
 }
 .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
 
+/* ============== NB RUN · CORRIDA ============== */
+/* Identidade da corrida: teal (--teal), coerente com o gradient-neon da IDV. */
+.race-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 4px 9px; border-radius: 99px;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  color: var(--teal);
+}
+.race-pill.inline {
+  font-size: 8px; padding: 2px 7px;
+  vertical-align: middle;
+  position: relative; top: -1px;
+}
+
+/* Chips na linha do corredor (distância · camiseta · nutri · nº peito) */
+.race-meta { margin-bottom: 4px; }
+.race-chip {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.race-chip.dist {
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  color: var(--teal);
+}
+.race-chip.shirt {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+}
+.race-chip.nutri {
+  background: rgba(255, 209, 92, 0.12);
+  border: 1px solid rgba(255, 209, 92, 0.35);
+  color: var(--gold);
+}
+.race-chip.bib {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Fita de contadores de camiseta (retirados/total por tamanho) */
+.kit-sizes {
+  display: flex; gap: 8px;
+  padding: 12px 20px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.kit-sizes::-webkit-scrollbar { display: none; }
+.kit-size-chip {
+  flex-shrink: 0;
+  display: flex; align-items: baseline; gap: 7px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 7px 12px;
+}
+.kit-size-chip .ks-size {
+  font-family: 'Bricolage Grotesque', serif;
+  font-weight: 700; font-size: 14px;
+  letter-spacing: -0.01em;
+}
+.kit-size-chip .ks-nums {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.kit-size-chip.done {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.08);
+}
+.kit-size-chip.done .ks-nums { color: var(--success); }
+
 /* ============== HELPERS ============== */
 .hidden { display: none !important; }
