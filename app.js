@@ -19,6 +19,7 @@ const state = {
   events: [],
   currentEvent: null,
   participants: [],
+  raceProfiles: {},     // participant_id -> race_profile (só em eventos de corrida)
   filter: "all",
   search: "",
   view: "loading",
@@ -66,6 +67,33 @@ function haptic(type = "light") {
   if (type === "light") navigator.vibrate(8);
   else if (type === "success") navigator.vibrate([12, 40, 18]);
   else if (type === "error") navigator.vibrate([30, 50, 30]);
+}
+
+// =============================================================
+// NB RUN · Helpers de corrida
+// =============================================================
+function isRaceEvent(e) {
+  return e?.event_type === "race";
+}
+// "Corrida 5Km" -> "5K" | "Corrida 10Km" -> "10K" (fallback: valor original)
+function raceDistanceLabel(d) {
+  if (!d) return "";
+  const m = String(d).match(/(\d+)\s*k/i);
+  return m ? `${m[1]}K` : String(d).trim();
+}
+// "CAMISETA GG" -> "GG" (fallback: valor original)
+function raceShirtLabel(s) {
+  if (!s) return "";
+  const clean = String(s).replace(/camiseta/i, "").replace(/[^a-zA-Z]/g, "").trim().toUpperCase();
+  return clean || String(s).trim().toUpperCase();
+}
+const SHIRT_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XGG", "EG", "EGG"];
+function shirtSortKey(size) {
+  const i = SHIRT_ORDER.indexOf(size);
+  return i === -1 ? 100 : i;
+}
+function raceProfileOf(p) {
+  return state.raceProfiles[p.id] || null;
 }
 
 // =============================================================
@@ -198,6 +226,21 @@ async function loadParticipants(eventId) {
   state.participants = data || [];
 }
 
+// Perfis da corrida (distância, camiseta, nutricionista) — só em evento race.
+// Query separada da lista de participantes: zero impacto no fluxo do congresso.
+async function loadRaceProfiles(eventId) {
+  state.raceProfiles = {};
+  const { data, error } = await sb
+    .from("race_profiles")
+    .select("*, participants!inner(event_id)")
+    .eq("participants.event_id", eventId);
+  if (error) {
+    toast("Perfis da corrida não carregaram: " + error.message, "error");
+    return;
+  }
+  (data || []).forEach(rp => { state.raceProfiles[rp.participant_id] = rp; });
+}
+
 async function toggleCheckIn(participantId) {
   const p = state.participants.find(x => x.id === participantId);
   if (!p) return;
@@ -218,7 +261,13 @@ async function toggleCheckIn(participantId) {
   Object.assign(p, patch);
   renderCheckinList();
   haptic(newChecked ? "success" : "light");
-  toast(newChecked ? `✓ ${p.name.split(" ")[0]} — check-in feito` : `Desfeito: ${p.name.split(" ")[0]}`, "success");
+  const isRace = isRaceEvent(state.currentEvent);
+  toast(
+    newChecked
+      ? `✓ ${p.name.split(" ")[0]} — ${isRace ? "kit entregue" : "check-in feito"}`
+      : `Desfeito: ${p.name.split(" ")[0]}`,
+    "success"
+  );
 
   const { error } = await sb.from("participants").update(patch).eq("id", participantId);
   if (error) {
@@ -266,6 +315,8 @@ function subscribeToParticipants(eventId) {
       const { eventType, new: newRow, old: oldRow } = payload;
       if (eventType === "INSERT") {
         if (!state.participants.find(p => p.id === newRow.id)) state.participants.push(newRow);
+        // Corredor novo chegando ao vivo (webhook TicketSports): recarrega perfis pro chip aparecer.
+        if (isRaceEvent(state.currentEvent)) await loadRaceProfiles(state.currentEvent.id);
       } else if (eventType === "UPDATE") {
         const idx = state.participants.findIndex(p => p.id === newRow.id);
         if (idx >= 0) state.participants[idx] = newRow;
@@ -430,6 +481,7 @@ function renderEvents() {
             ` : ''}
           </div>
           <div class="event-status">
+            ${e.event_type === 'race' ? '<span class="race-pill">Corrida</span>' : ''}
             ${e.status === 'ativo'
               ? '<span class="status-pill ativo">AO VIVO</span>'
               : e.status === 'embreve'
@@ -700,13 +752,16 @@ async function openCheckin(event) {
   state.view = "checkin";
   state.filter = "all";
   state.search = "";
+  state.raceProfiles = {};
   await loadParticipants(event.id);
+  if (isRaceEvent(event)) await loadRaceProfiles(event.id);
   subscribeToParticipants(event.id);
   renderCheckinScreen();
 }
 
 function renderCheckinScreen() {
   const e = state.currentEvent;
+  const isRace = isRaceEvent(e);
   const d = new Date(e.event_date + "T00:00:00");
   const dateDisplay = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   const locked = e.status === "encerrado" && !isEditable(e);
@@ -719,7 +774,7 @@ function renderCheckinScreen() {
             <button class="ch-brand-back" id="btnBack">
               <div class="ch-back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
               <div class="ch-event-info">
-                <div class="ch-event-name">${esc(e.city)}</div>
+                <div class="ch-event-name">${esc(isRace ? (e.name || e.city) : e.city)}${isRace ? ' <span class="race-pill inline">Corrida</span>' : ''}</div>
                 <div class="ch-event-date">${dateDisplay}</div>
               </div>
             </button>
@@ -762,15 +817,16 @@ function renderCheckinScreen() {
         ` : ''}
 
         <div class="stats">
-          <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0</div></div>
-          <div class="stat success"><div class="stat-label">Check-in</div><div class="stat-value" id="statChecked">0</div></div>
-          <div class="stat violet"><div class="stat-label">Pendente</div><div class="stat-value" id="statPending">0</div></div>
+          <div class="stat"><div class="stat-label">${isRace ? 'Corredores' : 'Total'}</div><div class="stat-value" id="statTotal">0</div></div>
+          <div class="stat success"><div class="stat-label">${isRace ? 'Kits retirados' : 'Check-in'}</div><div class="stat-value" id="statChecked">0</div></div>
+          <div class="stat violet"><div class="stat-label">${isRace ? 'Kits pendentes' : 'Pendente'}</div><div class="stat-value" id="statPending">0</div></div>
         </div>
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        ${isRace ? '<div class="kit-sizes" id="kitSizes"></div>' : ''}
         <div class="filters" id="filters">
           <button class="filter active" data-filter="all">Todos <span class="filter-count" id="cAll">0</span></button>
           <button class="filter" data-filter="pending">Pendentes <span class="filter-count" id="cPending">0</span></button>
-          <button class="filter" data-filter="checked">Já fizeram <span class="filter-count" id="cChecked">0</span></button>
+          <button class="filter" data-filter="checked">${isRace ? 'Kit retirado' : 'Já fizeram'} <span class="filter-count" id="cChecked">0</span></button>
         </div>
       </div>
       <div class="list" id="list"></div>
@@ -874,6 +930,7 @@ function renderCheckinScreen() {
 }
 
 function renderCheckinList() {
+  const isRace = isRaceEvent(state.currentEvent);
   const total = state.participants.length;
   const checked = state.participants.filter(p => p.checked).length;
   const pending = total - checked;
@@ -885,13 +942,23 @@ function renderCheckinList() {
   $("cPending").textContent = pending;
   $("progressFill").style.width = total ? (checked / total * 100) + "%" : "0%";
   document.querySelectorAll(".filter").forEach(f => f.classList.toggle("active", f.dataset.filter === state.filter));
+  if (isRace) renderKitSizes();
 
   const q = norm(state.search);
   let arr = state.participants;
   if (state.filter === "pending") arr = arr.filter(p => !p.checked);
   else if (state.filter === "checked") arr = arr.filter(p => p.checked);
   if (q) {
-    arr = arr.filter(p => norm(p.name).includes(q) || norm(p.code || "").includes(q) || norm(p.lote || "").includes(q) || norm(p.email || "").includes(q));
+    arr = arr.filter(p => {
+      if (norm(p.name).includes(q) || norm(p.code || "").includes(q) || norm(p.lote || "").includes(q) || norm(p.email || "").includes(q)) return true;
+      const rp = isRace ? raceProfileOf(p) : null;
+      if (rp) {
+        if (norm(raceDistanceLabel(rp.distance)).includes(q)) return true;
+        if (norm(raceShirtLabel(rp.shirt_size)).includes(q)) return true;
+        if (norm(rp.bib_number || "").includes(q)) return true;
+      }
+      return false;
+    });
   }
   arr = arr.slice().sort((a, b) => {
     if (a.checked !== b.checked) return a.checked ? 1 : -1;
@@ -921,25 +988,61 @@ function renderCheckinList() {
     return;
   }
 
-  list.innerHTML = arr.map((p, i) => `
+  list.innerHTML = arr.map((p, i) => {
+    const rp = isRace ? raceProfileOf(p) : null;
+    const raceChips = rp ? `
+          <div class="row-meta race-meta">
+            ${rp.distance ? `<span class="race-chip dist">${esc(raceDistanceLabel(rp.distance))}</span>` : ''}
+            ${rp.shirt_size ? `<span class="race-chip shirt">${esc(raceShirtLabel(rp.shirt_size))}</span>` : ''}
+            ${rp.is_nutritionist ? '<span class="race-chip nutri">Nutri</span>' : ''}
+            ${rp.bib_number ? `<span class="race-chip bib">#${esc(rp.bib_number)}</span>` : ''}
+          </div>` : '';
+    return `
     <div class="row ${p.checked ? 'checked' : ''}" data-id="${p.id}" style="animation-delay:${Math.min(i * 15, 200)}ms">
       <div class="row-action" data-action="toggle">
         <div class="row-action-inner">
           ${p.checked
             ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>Desfazer</span>'
-            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Check-in</span>'}
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${isRace ? 'Entregar kit' : 'Check-in'}</span>`}
         </div>
       </div>
       <div class="row-content">
         <div class="row-main">
           <div class="row-name">${esc(p.name)}</div>
-          ${p.lote ? `<div class="row-meta"><span class="lot-tag">${esc(p.lote)}</span></div>` : ''}
+          ${raceChips || (p.lote ? `<div class="row-meta"><span class="lot-tag">${esc(p.lote)}</span></div>` : '')}
           <div class="row-code">${esc(p.code || "")}${p.checked ? ` · ${fmtTime(p.checked_at)}` : ''}</div>
         </div>
         <div class="row-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
+}
+
+// Fita de contadores de camiseta (retirados/total por tamanho) — só evento corrida.
+function renderKitSizes() {
+  const el = $("kitSizes");
+  if (!el) return;
+  const profiles = Object.values(state.raceProfiles);
+  if (!profiles.length) { el.innerHTML = ""; return; }
+
+  const checkedIds = new Set(state.participants.filter(p => p.checked).map(p => p.id));
+  const bySize = {};
+  profiles.forEach(rp => {
+    const size = raceShirtLabel(rp.shirt_size) || "?";
+    if (!bySize[size]) bySize[size] = { total: 0, taken: 0 };
+    bySize[size].total++;
+    if (checkedIds.has(rp.participant_id)) bySize[size].taken++;
+  });
+
+  el.innerHTML = Object.entries(bySize)
+    .sort((a, b) => shirtSortKey(a[0]) - shirtSortKey(b[0]) || a[0].localeCompare(b[0]))
+    .map(([size, d]) => `
+      <div class="kit-size-chip ${d.taken >= d.total ? 'done' : ''}">
+        <span class="ks-size">${esc(size)}</span>
+        <span class="ks-nums">${d.taken}/${d.total}</span>
+      </div>
+    `).join("");
 }
 
 // =============================================================
@@ -1029,6 +1132,7 @@ function onListClick(e) {
 // =============================================================
 function openDashboard() {
   const e = state.currentEvent;
+  const isRace = isRaceEvent(e);
   const total = state.participants.length;
   const checked = state.participants.filter(p => p.checked).length;
   const pending = total - checked;
@@ -1051,7 +1155,13 @@ function openDashboard() {
 
   const byLote = {};
   state.participants.forEach(p => {
-    const k = p.lote || "Sem categoria";
+    let k;
+    if (isRace) {
+      const rp = raceProfileOf(p);
+      k = rp ? (raceShirtLabel(rp.shirt_size) || "Sem camiseta") : "Sem perfil";
+    } else {
+      k = p.lote || "Sem categoria";
+    }
     if (!byLote[k]) byLote[k] = { total: 0, checked: 0 };
     byLote[k].total++;
     if (p.checked) byLote[k].checked++;
@@ -1088,8 +1198,8 @@ function openDashboard() {
                 <div class="dash-circle-text"><div class="dash-circle-pct">${pct}%</div><div class="dash-circle-label">Realizado</div></div>
               </div>
               <div class="dash-numbers">
-                <div class="dash-number-row"><div class="dash-number-label">Inscritos</div><div class="dash-number-val">${total}</div></div>
-                <div class="dash-number-row"><div class="dash-number-label">Presentes</div><div class="dash-number-val success">${checked}</div></div>
+                <div class="dash-number-row"><div class="dash-number-label">${isRace ? 'Corredores' : 'Inscritos'}</div><div class="dash-number-val">${total}</div></div>
+                <div class="dash-number-row"><div class="dash-number-label">${isRace ? 'Kits retirados' : 'Presentes'}</div><div class="dash-number-val success">${checked}</div></div>
                 <div class="dash-number-row"><div class="dash-number-label">Faltam</div><div class="dash-number-val mute">${pending}</div></div>
               </div>
             </div>
@@ -1097,11 +1207,11 @@ function openDashboard() {
         </div>
         <div class="dash-section">
           <div class="dash-section-title"><div class="dash-section-title-text">Ritmo</div><div class="dash-live-dot">AO VIVO</div></div>
-          <div class="speed-row"><div class="speed-label">Último check-in</div><div class="speed-value violet">${lastTime ? fmtTime(lastTime) + ' · ' + fmtRelative(lastTime) : '—'}</div></div>
-          <div class="speed-row"><div class="speed-label">Check-ins na última hora</div><div class="speed-value">${lastHourCount}</div></div>
-          <div class="speed-row"><div class="speed-label">Tempo médio entre check-ins</div><div class="speed-value">${avgGap}</div></div>
+          <div class="speed-row"><div class="speed-label">${isRace ? 'Última retirada' : 'Último check-in'}</div><div class="speed-value violet">${lastTime ? fmtTime(lastTime) + ' · ' + fmtRelative(lastTime) : '—'}</div></div>
+          <div class="speed-row"><div class="speed-label">${isRace ? 'Kits na última hora' : 'Check-ins na última hora'}</div><div class="speed-value">${lastHourCount}</div></div>
+          <div class="speed-row"><div class="speed-label">${isRace ? 'Tempo médio entre retiradas' : 'Tempo médio entre check-ins'}</div><div class="speed-value">${avgGap}</div></div>
         </div>
-        ${Object.keys(byLote).length > 0 ? `<div class="dash-section"><div class="dash-section-title"><div class="dash-section-title-text">Presença por lote</div></div>${bdHtml}</div>` : ''}
+        ${Object.keys(byLote).length > 0 ? `<div class="dash-section"><div class="dash-section-title"><div class="dash-section-title-text">${isRace ? 'Kits por camiseta' : 'Presença por lote'}</div></div>${bdHtml}</div>` : ''}
         <div class="dash-section"><div class="dash-section-title"><div class="dash-section-title-text">Últimos check-ins</div></div>${actHtml}</div>
       </div>
     </div>
@@ -1258,14 +1368,27 @@ function openAddOne() {
 // =============================================================
 function exportCSV() {
   if (!state.participants.length) { toast("Lista vazia.", "error"); return; }
-  const rows = [["Nome", "Email", "Telefone", "Lote", "Codigo", "Status", "Hora Check-in", "WhatsApp"]];
+  const isRace = isRaceEvent(state.currentEvent);
+  const header = ["Nome", "Email", "Telefone", "Lote", "Codigo", "Status", "Hora Check-in", "WhatsApp"];
+  if (isRace) header.splice(4, 0, "Distancia", "Camiseta", "Nutricionista", "Numero Peito");
+  const rows = [header];
   state.participants.forEach(p => {
-    rows.push([
+    const base = [
       p.name, p.email || "", p.phone || "", p.lote || "", p.code || "",
-      p.checked ? "Presente" : "Ausente",
+      p.checked ? (isRace ? "Kit retirado" : "Presente") : (isRace ? "Kit pendente" : "Ausente"),
       p.checked ? new Date(p.checked_at).toLocaleString("pt-BR") : "",
       p.whatsapp_sent ? "Enviado" : (p.whatsapp_error ? "Erro" : "—")
-    ]);
+    ];
+    if (isRace) {
+      const rp = raceProfileOf(p);
+      base.splice(4, 0,
+        rp ? raceDistanceLabel(rp.distance) : "",
+        rp ? raceShirtLabel(rp.shirt_size) : "",
+        rp && rp.is_nutritionist ? "Sim" : "",
+        rp?.bib_number || ""
+      );
+    }
+    rows.push(base);
   });
   const csv = rows.map(r => r.map(c => {
     const s = (c || "").toString();
