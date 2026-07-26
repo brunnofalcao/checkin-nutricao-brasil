@@ -36,6 +36,22 @@ async function pageList(view) {
         )
       )
     ),
+    h('div', {
+      class: 'table-card',
+      style: { padding: '18px 20px', marginBottom: '16px', display: 'flex',
+               alignItems: 'center', justifyContent: 'space-between', gap: '18px', flexWrap: 'wrap' }
+    },
+      h('div', {},
+        h('div', { class: 'row-name' }, 'Entrega de certificados'),
+        h('div', { class: 'row-sub' },
+          'O link pessoal de cada inscrito, a tabela de módulos e quantos já baixaram. ' +
+          'É aqui que o certificado vira operação.')
+      ),
+      h('button', {
+        class: 'btn btn-primary',
+        onClick: () => navigate('/certificados/entrega')
+      }, 'Abrir entrega →')
+    ),
     h('div', { class: 'table-card' },
       h('table', { class: 'table' },
         h('thead', {}, h('tr', {},

@@ -25,6 +25,7 @@ const NAV = [
     label: 'Saída',
     items: [
       { path: '/certificados', icon: 'award', label: 'Certificados' },
+      { path: '/certificados/entrega', icon: 'send', label: 'Entrega de certificados' },
       { path: '/etiquetas', icon: 'tag', label: 'Etiquetas' }
     ]
   },

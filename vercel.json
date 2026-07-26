@@ -49,11 +49,11 @@
   "rewrites": [
     {
       "source": "/c/:token",
-      "destination": "/c/index.html"
+      "destination": "/c"
     },
     {
       "source": "/v/:codigo",
-      "destination": "/v/index.html"
+      "destination": "/v"
     }
   ]
 }
