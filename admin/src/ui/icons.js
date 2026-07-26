@@ -9,6 +9,8 @@ function svg(path, viewBox = '0 0 24 24') {
 }
 
 export const icons = {
+  briefcase: () =>
+    svg('<rect x="2.5" y="7" width="19" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M2.5 12h19"/>'),
   home: () => svg('<path d="M3 12 12 3l9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/>'),
   calendar: () =>
     svg(

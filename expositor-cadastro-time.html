@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cadastro de equipe · Expositores · Nutrição Brasil 2026</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d0618">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0618;--card:#1b0f2d;--card2:#160c26;--line:#2f1d4a;
+      --t1:#f4f0fa;--t2:#c3b4dd;--t3:#8b78ad;--roxo:#a78bfa;--ciano:#22d3ee;--ok:#34d399;--al:#fbbf24}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:radial-gradient(1100px 600px at 78% -12%,#2a1247,var(--bg) 62%) fixed;
+  color:var(--t1);font-family:Poppins,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.55;min-height:100vh}
+.wrap{max-width:820px;margin:0 auto;padding:32px 20px 80px}
+@media(max-width:640px){.wrap{padding:22px 15px 70px}}
+
+.kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ciano);margin-bottom:8px}
+h1{font-size:clamp(25px,5vw,36px);font-weight:700;letter-spacing:-1px;margin:0 0 10px;line-height:1.15}
+.lead{color:var(--t2);margin:0 0 8px;max-width:640px}
+.empresa-tag{display:inline-block;background:rgba(167,139,250,.14);border:1px solid #4b2f77;color:#d7c9f5;
+  border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;margin:14px 0 0}
+
+.bloco{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+  border-radius:18px;padding:20px 22px;margin-top:16px}
+.bloco h2{font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--t3);margin:0 0 4px}
+.bloco .ajuda{font-size:12.5px;color:var(--t3);margin:0 0 16px;line-height:1.5}
+
+label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin:0 0 6px}
+input[type=text],input[type=email],input[type=tel],textarea{
+  width:100%;background:#0f0720;border:1px solid var(--line);color:var(--t1);border-radius:11px;
+  padding:11px 12px;font-family:inherit;font-size:14.5px;outline:none}
+input:focus,textarea:focus{border-color:var(--roxo)}
+input.ruim{border-color:#f87171}
+.campo{margin-bottom:13px}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tripla{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px}
+@media(max-width:640px){.dupla,.tripla{grid-template-columns:1fr}}
+
+.check{display:flex;align-items:center;gap:9px;margin:2px 0 14px;cursor:pointer;color:var(--t2);font-size:13.5px}
+.check input{width:18px;height:18px;accent-color:#a78bfa;flex:0 0 auto;cursor:pointer}
+
+.pessoa{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:#140b23;position:relative}
+.pessoa .num{position:absolute;top:-9px;left:14px;background:#2a1442;border:1px solid var(--line);
+  color:var(--t3);font-size:10.5px;font-weight:700;letter-spacing:1px;padding:2px 9px;border-radius:999px}
+.pessoa .sai{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--t3);
+  font-size:19px;line-height:1;cursor:pointer;padding:2px 6px}
+.pessoa .sai:hover{color:#f87171}
+.pessoa.travada{opacity:.72}
+.selo-ret{display:inline-block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);
+  color:#a7f3d0;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  padding:3px 9px;border-radius:999px;margin-top:6px}
+
+.btn{display:block;width:100%;text-align:center;border:0;border-radius:12px;padding:14px;
+  font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;transition:.15s}
+.btn.pri{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff}
+.btn.sec{background:#241436;color:var(--t1);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn+.btn{margin-top:10px}
+
+.contador{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  font-size:12.5px;color:var(--t3);margin:14px 0 4px;flex-wrap:wrap}
+.contador b{color:var(--t2)}
+.contador.cheio b{color:var(--al)}
+
+.aviso{background:#1d1330;border:1px solid #3a2a55;border-radius:12px;padding:12px 14px;
+  font-size:12.5px;color:var(--t2);margin-top:14px;line-height:1.55}
+.aviso b{color:var(--al)}
+.erro-msg{color:#fca5a5;font-size:13px;margin-top:12px;min-height:18px}
+.hide{display:none!important}
+.estado{text-align:center;padding:80px 20px;color:var(--t2)}
+.estado h2{font-size:23px;color:var(--t1);margin:0 0 10px}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--roxo);
+  border-radius:50%;margin:0 auto 18px;animation:g .8s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+.entrada{display:flex;gap:8px;max-width:400px;margin:24px auto 0}
+.entrada input{flex:1;text-transform:uppercase;min-width:0}
+.entrada button{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:0;border-radius:11px;
+  padding:12px 22px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
+.linkbox{background:#0f0720;border:1px solid var(--line);border-radius:11px;padding:12px;
+  font-size:12.5px;word-break:break-all;color:var(--t2);margin-top:12px;font-family:ui-monospace,Menlo,monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="carregando" class="estado"><div class="spin"></div>Abrindo o cadastro…</div>
+
+  <div id="codigo" class="estado hide">
+    <h2>Cadastro de equipe · Expositores</h2>
+    <p>Digite o código que a Science Play enviou junto do seu contrato.<br>
+       Ele começa com <b>NB</b> e tem sete caracteres.</p>
+    <div class="entrada">
+      <input id="cod" placeholder="NBXXXXX" maxlength="12" autocomplete="off" spellcheck="false">
+      <button id="irCod">Abrir</button>
+    </div>
+    <p class="erro-msg" id="codErro"></p>
+    <p style="margin-top:26px;color:var(--t3);font-size:13px">
+      Não tem o código? Fale com quem cuida do seu contrato na Science Play.</p>
+  </div>
+
+  <div id="pronto" class="estado hide">
+    <h2 style="color:var(--ok)">Equipe cadastrada</h2>
+    <p id="prontoTxt"></p>
+    <div class="aviso" style="text-align:left">
+      <b>Guarde este link.</b> É por ele que você volta e edita a equipe até a data de corte.
+      <div class="linkbox" id="linkEdit"></div>
+    </div>
+    <button class="btn sec" style="margin-top:16px" id="voltarEditar">Voltar e editar</button>
+  </div>
+
+  <form id="form" class="hide" autocomplete="on" novalidate>
+    <div class="kicker">Nutrição Brasil 2026 · Brasília · 27 a 29 de agosto</div>
+    <h1>Cadastro da equipe do seu estande</h1>
+    <p class="lead">Preencha antes do evento. No credenciamento, os crachás já estarão impressos
+       e prontos — sua equipe não pega fila.</p>
+    <div class="empresa-tag" id="tagEmpresa"></div>
+
+    <div class="bloco">
+      <h2>A empresa</h2>
+      <p class="ajuda">O nome aqui é o que vai impresso no crachá de todo mundo.</p>
+      <div class="campo"><label>Nome da empresa, como deve aparecer no crachá *</label>
+        <input type="text" id="empresa"></div>
+      <div class="dupla">
+        <div class="campo"><label>CNPJ</label><input type="text" id="cnpj" inputmode="numeric"></div>
+        <div class="campo"><label>Estande</label><input type="text" id="estande" placeholder="se já souber"></div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Quem está preenchendo</h2>
+      <p class="ajuda">Para a gente saber com quem falar se algo mudar.</p>
+      <div class="campo"><label>Nome *</label><input type="text" id="cadNome"></div>
+      <div class="tripla">
+        <div class="campo"><label>E-mail *</label><input type="email" id="cadEmail"></div>
+        <div class="campo"><label>WhatsApp *</label><input type="tel" id="cadWhats" placeholder="(61) 99999-0000"></div>
+        <div class="campo"><label>Cargo</label><input type="text" id="cadCargo"></div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Responsável pelo contrato</h2>
+      <p class="ajuda">Recebe o aviso quando a equipe for credenciada, mesmo sem estar no evento.</p>
+      <label class="check"><input type="checkbox" id="respEuMesmo"> Sou eu mesmo</label>
+      <div id="respCampos">
+        <div class="campo"><label>Nome *</label><input type="text" id="respNome"></div>
+        <div class="dupla">
+          <div class="campo"><label>E-mail</label><input type="email" id="respEmail"></div>
+          <div class="campo"><label>WhatsApp *</label><input type="tel" id="respWhats"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Ponto focal com a Science Play</h2>
+      <p class="ajuda">Quem conversa com a gente no dia a dia. Se for a mesma pessoa, deixe em branco.</p>
+      <div class="campo"><label>Nome</label><input type="text" id="focoNome"></div>
+      <div class="dupla">
+        <div class="campo"><label>E-mail</label><input type="email" id="focoEmail"></div>
+        <div class="campo"><label>WhatsApp</label><input type="tel" id="focoWhats"></div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Equipe no estande</h2>
+      <p class="ajuda">Um crachá por pessoa. Marque quem está autorizado a retirar os crachás
+         no credenciamento — pode ser mais de uma pessoa.</p>
+      <div id="equipe"></div>
+      <div class="contador" id="contador"></div>
+      <button type="button" class="btn sec" id="addPessoa">+ Adicionar pessoa</button>
+    </div>
+
+    <div class="bloco">
+      <h2>Para fechar</h2>
+      <div class="campo"><label>Alguma observação para a produção?</label>
+        <textarea id="obs" rows="3" placeholder="opcional"></textarea></div>
+      <label class="check"><input type="checkbox" id="aceite">
+        Confirmo que os dados estão corretos e autorizo o uso de imagem da equipe em fotos e
+        vídeos do evento.</label>
+      <p class="erro-msg" id="erro"></p>
+      <button type="submit" class="btn pri" id="salvar">Salvar cadastro</button>
+    </div>
+
+    <div class="aviso">
+      Você pode voltar e editar a equipe até a data de corte. Quem já retirou o crachá
+      no evento fica travado e não pode ser removido.
+    </div>
+  </form>
+</div>
+
+<script>
+const URL_SB = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
+const $ = i => document.getElementById(i);
+const S = { dados:null, limite:5, chave:null };
+
+async function rpc(fn, body){
+  const r = await fetch(URL_SB + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers:{ apikey:ANON, Authorization:'Bearer ' + ANON, 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error('rede');
+  return r.json();
+}
+const fone = v => String(v||'').replace(/\D/g,'');
+function foneBonito(v){
+  const d = fone(v);
+  if (d.length < 10) return v || '';
+  const n = d.length > 11 ? d.slice(-11) : d;
+  return n.length === 11 ? `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`
+                         : `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
+}
+
+/* ── equipe ────────────────────────────────────────────────────────── */
+function linhaPessoa(p, i){
+  p = p || {};
+  const travada = !!p.retirado;
+  const el = document.createElement('div');
+  el.className = 'pessoa' + (travada ? ' travada' : '');
+  el.innerHTML =
+    '<span class="num">' + (i + 1) + '</span>' +
+    (travada ? '' : '<button type="button" class="sai" title="remover">&times;</button>') +
+    '<div class="campo"><label>Nome completo *</label>' +
+      '<input type="text" class="p-nome" value="' + esc(p.nome) + '"' + (travada ? ' disabled' : '') + '></div>' +
+    '<div class="tripla">' +
+      '<div class="campo"><label>Cargo no crachá</label><input type="text" class="p-cargo" value="' + esc(p.cargo) + '"' + (travada ? ' disabled' : '') + '></div>' +
+      '<div class="campo"><label>E-mail</label><input type="email" class="p-email" value="' + esc(p.email) + '"' + (travada ? ' disabled' : '') + '></div>' +
+      '<div class="campo"><label>WhatsApp *</label><input type="tel" class="p-whats" value="' + esc(foneBonito(p.whatsapp)) + '"' + (travada ? ' disabled' : '') + '></div>' +
+    '</div>' +
+    '<label class="check"><input type="checkbox" class="p-ret"' + (p.pode_retirar ? ' checked' : '') +
+      (travada ? ' disabled' : '') + '> Pode retirar os crachás da equipe</label>' +
+    (travada ? '<div class="selo-ret">Crachá já retirado</div>' : '');
+  const x = el.querySelector('.sai');
+  if (x) x.addEventListener('click', () => { el.remove(); renumera(); });
+  const w = el.querySelector('.p-whats');
+  w.addEventListener('blur', () => { w.value = foneBonito(w.value); });
+  return el;
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function renumera(){
+  [...$('equipe').children].forEach((el,i) => el.querySelector('.num').textContent = i + 1);
+  const n = $('equipe').children.length, c = $('contador');
+  c.className = 'contador' + (n >= S.limite ? ' cheio' : '');
+  c.innerHTML = '<span><b>' + n + ' de ' + S.limite + '</b> credenciais usadas</span>' +
+    (n >= S.limite ? '<span>Limite da sua cota. Precisa de mais? Fale com a Science Play.</span>' : '');
+  $('addPessoa').disabled = n >= S.limite;
+}
+$('addPessoa').addEventListener('click', () => {
+  if ($('equipe').children.length >= S.limite) return;
+  $('equipe').appendChild(linhaPessoa({}, $('equipe').children.length));
+  renumera();
+  $('equipe').lastElementChild.querySelector('.p-nome').focus();
+});
+$('respEuMesmo').addEventListener('change', e => {
+  $('respCampos').classList.toggle('hide', e.target.checked);
+});
+
+/* ── carregar ──────────────────────────────────────────────────────── */
+function pintaForm(d){
+  S.dados = d; S.limite = d.limite || 5; S.chave = d.token;
+  $('tagEmpresa').textContent = (d.empresa || 'Expositor') + (d.cota ? ' · cota ' + d.cota : '') +
+    ' · até ' + S.limite + ' credenciais';
+  $('empresa').value = d.empresa || '';
+  $('cnpj').value = d.cnpj || ''; $('estande').value = d.estande || '';
+  $('cadNome').value = d.cad?.nome || ''; $('cadEmail').value = d.cad?.email || '';
+  $('cadWhats').value = foneBonito(d.cad?.whatsapp); $('cadCargo').value = d.cad?.cargo || '';
+  $('respNome').value = d.resp?.nome || ''; $('respEmail').value = d.resp?.email || '';
+  $('respWhats').value = foneBonito(d.resp?.whatsapp);
+  $('focoNome').value = d.foco?.nome || ''; $('focoEmail').value = d.foco?.email || '';
+  $('focoWhats').value = foneBonito(d.foco?.whatsapp);
+  const eq = (d.equipe && d.equipe.length) ? d.equipe : [{}];
+  $('equipe').replaceChildren(...eq.map((p,i) => linhaPessoa(p,i)));
+  renumera();
+  $('carregando').classList.add('hide'); $('codigo').classList.add('hide');
+  $('pronto').classList.add('hide'); $('form').classList.remove('hide');
+}
+async function abrir(codigo, token){
+  try{
+    const d = await rpc('expo_abre', { p_codigo: codigo || null, p_token: token || null });
+    if (!d) return false;
+    if (d.bloqueado){ $('codErro').textContent = 'Este cadastro está bloqueado. Fale com a Science Play.'; return false; }
+    pintaForm(d);
+    if (token) history.replaceState(null, '', location.pathname + '?t=' + token);
+    return true;
+  } catch(e){ return false; }
+}
+$('irCod').addEventListener('click', async () => {
+  const v = $('cod').value.trim().toUpperCase();
+  $('codErro').textContent = '';
+  if (v.length < 4){ $('codErro').textContent = 'Digite o código inteiro.'; return; }
+  if (!await abrir(v, null)) $('codErro').textContent = 'Código não encontrado. Confira com a Science Play.';
+});
+$('cod').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('irCod').click(); } });
+
+/* ── salvar ────────────────────────────────────────────────────────── */
+$('form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  $('erro').textContent = '';
+  document.querySelectorAll('.ruim').forEach(el => el.classList.remove('ruim'));
+
+  const equipe = [...$('equipe').children].map(el => ({
+    nome: el.querySelector('.p-nome').value.trim(),
+    cargo: el.querySelector('.p-cargo').value.trim(),
+    email: el.querySelector('.p-email').value.trim(),
+    whatsapp: fone(el.querySelector('.p-whats').value),
+    pode_retirar: el.querySelector('.p-ret').checked
+  })).filter(p => p.nome);
+
+  const falta = [];
+  if (!$('empresa').value.trim()) falta.push($('empresa'));
+  if (!$('cadNome').value.trim()) falta.push($('cadNome'));
+  if (fone($('cadWhats').value).length < 10) falta.push($('cadWhats'));
+  const euMesmo = $('respEuMesmo').checked;
+  if (!euMesmo){
+    if (!$('respNome').value.trim()) falta.push($('respNome'));
+    if (fone($('respWhats').value).length < 10) falta.push($('respWhats'));
+  }
+  if (falta.length){
+    falta.forEach(el => el.classList.add('ruim'));
+    falta[0].scrollIntoView({behavior:'smooth', block:'center'}); falta[0].focus();
+    $('erro').textContent = 'Faltou preencher os campos marcados.';
+    return;
+  }
+  if (!equipe.length){ $('erro').textContent = 'Cadastre pelo menos uma pessoa na equipe.'; return; }
+  const semFone = equipe.filter(p => p.whatsapp.length < 10);
+  if (semFone.length){
+    $('erro').textContent = 'Falta o WhatsApp de: ' + semFone.map(p => p.nome).join(', ') +
+      '. É por ele que a pessoa recebe o aviso do crachá.';
+    return;
+  }
+  if (!equipe.some(p => p.pode_retirar)){
+    $('erro').textContent = 'Marque pelo menos uma pessoa autorizada a retirar os crachás.';
+    return;
+  }
+  if (!$('aceite').checked){
+    $('aceite').closest('.check').scrollIntoView({behavior:'smooth', block:'center'});
+    $('erro').textContent = 'Falta confirmar os dados e o uso de imagem.';
+    return;
+  }
+
+  const b = $('salvar'); b.disabled = true; b.textContent = 'Salvando…';
+  try{
+    const dados = {
+      empresa: $('empresa').value.trim(), cnpj: $('cnpj').value.trim(), estande: $('estande').value.trim(),
+      observacoes: $('obs').value.trim(),
+      cad: { nome:$('cadNome').value.trim(), email:$('cadEmail').value.trim(),
+             whatsapp:fone($('cadWhats').value), cargo:$('cadCargo').value.trim() },
+      resp: euMesmo
+        ? { nome:$('cadNome').value.trim(), email:$('cadEmail').value.trim(), whatsapp:fone($('cadWhats').value) }
+        : { nome:$('respNome').value.trim(), email:$('respEmail').value.trim(), whatsapp:fone($('respWhats').value) },
+      foco: { nome:$('focoNome').value.trim(), email:$('focoEmail').value.trim(), whatsapp:fone($('focoWhats').value) },
+      equipe
+    };
+    const r = await rpc('expo_salva', { p_chave: S.chave || S.dados.codigo, p_dados: dados });
+    if (!r || r.erro){
+      $('erro').textContent = ({
+        limite: 'Sua cota permite até ' + (r?.limite || S.limite) + ' credenciais.',
+        empresa: 'O nome da empresa é obrigatório.',
+        bloqueado: 'Este cadastro está bloqueado. Fale com a Science Play.',
+        codigo: 'Código inválido. Recarregue a página.'
+      })[r?.erro] || 'Não consegui salvar. Tente de novo.';
+      b.disabled = false; b.textContent = 'Salvar cadastro'; return;
+    }
+    const url = location.origin + location.pathname + '?t=' + r.token;
+    $('prontoTxt').textContent = dados.empresa + ' · ' + equipe.length +
+      (equipe.length > 1 ? ' pessoas cadastradas.' : ' pessoa cadastrada.') +
+      ' Os crachás serão impressos com estes nomes.';
+    $('linkEdit').textContent = url;
+    $('form').classList.add('hide'); $('pronto').classList.remove('hide');
+    window.scrollTo({ top:0, behavior:'smooth' });
+  } catch(e){
+    $('erro').textContent = 'Não consegui salvar. Confira sua conexão e tente de novo.';
+    b.disabled = false; b.textContent = 'Salvar cadastro';
+  }
+});
+$('voltarEditar').addEventListener('click', () => {
+  $('pronto').classList.add('hide'); $('form').classList.remove('hide');
+  $('salvar').disabled = false; $('salvar').textContent = 'Salvar cadastro';
+  window.scrollTo({ top:0, behavior:'smooth' });
+});
+
+/* ── boot ──────────────────────────────────────────────────────────── */
+(async function(){
+  const q = new URLSearchParams(location.search);
+  const t = q.get('t'), c = q.get('e') || q.get('c');
+  if (t && await abrir(null, t)) return;
+  if (c && await abrir(c.toUpperCase(), null)) return;
+  $('carregando').classList.add('hide');
+  $('codigo').classList.remove('hide');
+  if (c) $('cod').value = c.toUpperCase();
+  $('cod').focus();
+})();
+</script>
+</body>
+</html>

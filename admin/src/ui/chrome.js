@@ -8,6 +8,7 @@ const NAV = [
     items: [
       { path: '/', icon: 'home', label: 'Início' },
       { path: '/eventos', icon: 'calendar', label: 'Eventos' },
+      { path: '/expositores', icon: 'briefcase', label: 'Expositores' },
       { path: '/pessoas', icon: 'people', label: 'Pessoas' }
     ]
   },
