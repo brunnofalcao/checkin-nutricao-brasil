@@ -20,6 +20,8 @@ const state = {
   currentEvent: null,
   participants: [],
   raceProfiles: {},     // participant_id -> race_profile (só em eventos de corrida)
+  raceStock: {},        // tamanho -> qtd cadastrada no estoque (só em eventos de corrida)
+  kitTab: "operacao",   // aba ativa do painel do kit
   filter: "all",
   search: "",
   view: "loading",
@@ -94,6 +96,18 @@ function shirtSortKey(size) {
 }
 function raceProfileOf(p) {
   return state.raceProfiles[p.id] || null;
+}
+// Corredor que também está inscrito no congresso pai (tag aplicada no banco).
+function isCongressista(p) {
+  return Array.isArray(p.tags) && p.tags.includes("congressista");
+}
+// Estoque cadastrado do tamanho (null = não cadastrado ainda).
+function stockOf(size) {
+  const v = state.raceStock[size];
+  return (v === undefined || v === null) ? null : v;
+}
+function hasStock() {
+  return Object.keys(state.raceStock).length > 0;
 }
 
 // =============================================================
@@ -239,6 +253,23 @@ async function loadRaceProfiles(eventId) {
     return;
   }
   (data || []).forEach(rp => { state.raceProfiles[rp.participant_id] = rp; });
+}
+
+// Estoque de camisetas cadastrado pelo admin (tabela race_stock).
+// Leitura tolerante: se a tabela não existir ou vier vazia, o painel só esconde
+// os blocos de estoque — nada quebra no check-in.
+async function loadRaceStock(eventId) {
+  state.raceStock = {};
+  const { data, error } = await sb
+    .from("race_stock")
+    .select("size, qty, item")
+    .eq("event_id", eventId)
+    .eq("item", "camiseta");
+  if (error) return;
+  (data || []).forEach(r => {
+    const size = raceShirtLabel(r.size) || String(r.size || "").toUpperCase();
+    if (size) state.raceStock[size] = Number(r.qty) || 0;
+  });
 }
 
 async function toggleCheckIn(participantId) {
@@ -753,8 +784,13 @@ async function openCheckin(event) {
   state.filter = "all";
   state.search = "";
   state.raceProfiles = {};
+  state.raceStock = {};
+  state.kitTab = "operacao";
   await loadParticipants(event.id);
-  if (isRaceEvent(event)) await loadRaceProfiles(event.id);
+  if (isRaceEvent(event)) {
+    await loadRaceProfiles(event.id);
+    await loadRaceStock(event.id);
+  }
   subscribeToParticipants(event.id);
   renderCheckinScreen();
 }
@@ -995,6 +1031,7 @@ function renderCheckinList() {
             ${rp.distance ? `<span class="race-chip dist">${esc(raceDistanceLabel(rp.distance))}</span>` : ''}
             ${rp.shirt_size ? `<span class="race-chip shirt">${esc(raceShirtLabel(rp.shirt_size))}</span>` : ''}
             ${rp.is_nutritionist ? '<span class="race-chip nutri">Nutri</span>' : ''}
+            ${isCongressista(p) ? '<span class="race-chip congresso">Congresso</span>' : ''}
             ${rp.bib_number ? `<span class="race-chip bib">#${esc(rp.bib_number)}</span>` : ''}
           </div>` : '';
     return `
@@ -1019,30 +1056,102 @@ function renderCheckinList() {
   }).join("");
 }
 
+// Agregação única do kit — usada pela fita de tamanhos e pelo Painel do Kit.
+// Trabalha só com o que já está em memória: zero request extra.
+function computeKitStats() {
+  const parts = state.participants;
+  const stockKnown = hasStock();
+  const sizes = {};
+  const ensureSize = (s) => (sizes[s] = sizes[s] || { demanda: 0, entregue: 0 });
+
+  const dist = {};
+  const publico = { nutri: { total: 0, entregue: 0 }, geral: { total: 0, entregue: 0 } };
+  const genero = {};
+  let semPerfil = 0, semTamanho = 0, semNumero = 0;
+  let congTotal = 0, congPendente = 0, soCorridaTotal = 0, soCorridaPendente = 0;
+  let entregues = 0;
+
+  parts.forEach(p => {
+    const rp = raceProfileOf(p);
+    const done = !!p.checked;
+    if (done) entregues++;
+    if (!rp) semPerfil++;
+
+    const size = rp ? raceShirtLabel(rp.shirt_size) : "";
+    if (rp && !size) semTamanho++;
+    if (rp && !rp.bib_number) semNumero++;
+    if (size) { const s = ensureSize(size); s.demanda++; if (done) s.entregue++; }
+
+    const dLabel = (rp && raceDistanceLabel(rp.distance)) || "Sem percurso";
+    dist[dLabel] = dist[dLabel] || { total: 0, entregue: 0 };
+    dist[dLabel].total++;
+    if (done) dist[dLabel].entregue++;
+
+    const bucket = (rp && rp.is_nutritionist) ? publico.nutri : publico.geral;
+    bucket.total++;
+    if (done) bucket.entregue++;
+
+    const g = rp && rp.gender ? String(rp.gender).trim().toUpperCase().charAt(0) : "";
+    if (g === "F" || g === "M") genero[g] = (genero[g] || 0) + 1;
+
+    if (isCongressista(p)) { congTotal++; if (!done) congPendente++; }
+    else { soCorridaTotal++; if (!done) soCorridaPendente++; }
+  });
+
+  // Tamanho que existe só no estoque (comprado sem demanda) também aparece.
+  Object.keys(state.raceStock).forEach(s => ensureSize(s));
+
+  const linhas = Object.entries(sizes).map(([size, d]) => {
+    const estoque = stockKnown ? (state.raceStock[size] ?? 0) : null;
+    const pendente = d.demanda - d.entregue;
+    const saldo = estoque === null ? null : estoque - d.entregue;   // peças ainda na mesa
+    const cobertura = saldo === null ? null : saldo - pendente;     // negativo = ruptura
+    return {
+      size, demanda: d.demanda, entregue: d.entregue, pendente, estoque, saldo, cobertura,
+      pct: d.demanda ? Math.round(d.entregue / d.demanda * 100) : 0
+    };
+  }).sort((a, b) => shirtSortKey(a.size) - shirtSortKey(b.size) || a.size.localeCompare(b.size));
+
+  const totalDemanda = linhas.reduce((a, l) => a + l.demanda, 0);
+  const totalEntregue = linhas.reduce((a, l) => a + l.entregue, 0);
+  const totalEstoque = stockKnown ? linhas.reduce((a, l) => a + (l.estoque || 0), 0) : null;
+
+  return {
+    stockKnown, linhas, dist, publico, genero,
+    semPerfil, semTamanho, semNumero,
+    congTotal, congPendente, soCorridaTotal, soCorridaPendente,
+    total: parts.length,
+    entregues,
+    pendentes: parts.length - entregues,
+    totalDemanda, totalEntregue, totalEstoque,
+    totalPendente: totalDemanda - totalEntregue,
+    totalSaldo: totalEstoque === null ? null : totalEstoque - totalEntregue,
+    sobraPrevista: totalEstoque === null ? null : totalEstoque - totalDemanda,
+    ruptura: linhas.filter(l => l.cobertura !== null && l.cobertura < 0)
+  };
+}
+
 // Fita de contadores de camiseta (retirados/total por tamanho) — só evento corrida.
+// Com estoque cadastrado, a fita passa a alertar risco de ruptura no próprio chip.
 function renderKitSizes() {
   const el = $("kitSizes");
   if (!el) return;
-  const profiles = Object.values(state.raceProfiles);
-  if (!profiles.length) { el.innerHTML = ""; return; }
+  if (!Object.keys(state.raceProfiles).length) { el.innerHTML = ""; return; }
 
-  const checkedIds = new Set(state.participants.filter(p => p.checked).map(p => p.id));
-  const bySize = {};
-  profiles.forEach(rp => {
-    const size = raceShirtLabel(rp.shirt_size) || "?";
-    if (!bySize[size]) bySize[size] = { total: 0, taken: 0 };
-    bySize[size].total++;
-    if (checkedIds.has(rp.participant_id)) bySize[size].taken++;
-  });
-
-  el.innerHTML = Object.entries(bySize)
-    .sort((a, b) => shirtSortKey(a[0]) - shirtSortKey(b[0]) || a[0].localeCompare(b[0]))
-    .map(([size, d]) => `
-      <div class="kit-size-chip ${d.taken >= d.total ? 'done' : ''}">
-        <span class="ks-size">${esc(size)}</span>
-        <span class="ks-nums">${d.taken}/${d.total}</span>
+  const k = computeKitStats();
+  el.innerHTML = k.linhas
+    .filter(l => l.demanda > 0 || (l.estoque || 0) > 0)
+    .map(l => {
+      const done = l.demanda > 0 && l.entregue >= l.demanda;
+      const risco = l.cobertura !== null && l.cobertura < 0;
+      return `
+      <div class="kit-size-chip ${done ? 'done' : ''} ${risco ? 'risk' : ''}" title="${esc(l.size)}: ${l.entregue} entregues de ${l.demanda}${l.estoque !== null ? ' · estoque ' + l.estoque : ''}">
+        <span class="ks-size">${esc(l.size)}</span>
+        <span class="ks-nums">${l.entregue}/${l.demanda}</span>
+        ${risco ? `<span class="ks-alert">falta ${Math.abs(l.cobertura)}</span>` : ''}
       </div>
-    `).join("");
+    `;
+    }).join("");
 }
 
 // =============================================================
@@ -1130,9 +1239,53 @@ function onListClick(e) {
 // =============================================================
 // DASHBOARD
 // =============================================================
+// Barras de retiradas por hora (últimas 8 horas) — leitura rápida de ritmo.
+function hourBarsHtml(rows) {
+  const withTime = rows.filter(p => p.checked_at);
+  if (!withTime.length) return '';
+  const now = Date.now();
+  const buckets = [];
+  for (let i = 7; i >= 0; i--) {
+    const start = new Date(now - i * 3600000);
+    start.setMinutes(0, 0, 0);
+    const s = start.getTime();
+    const n = withTime.filter(p => {
+      const t = new Date(p.checked_at).getTime();
+      return t >= s && t < s + 3600000;
+    }).length;
+    buckets.push({ h: start.getHours(), n });
+  }
+  const max = Math.max(1, ...buckets.map(b => b.n));
+  return `
+    <div class="hour-chart">
+      ${buckets.map(b => `
+        <div class="hc-col">
+          <div class="hc-val">${b.n || ''}</div>
+          <div class="hc-bar ${b.n ? '' : 'empty'}" style="height:${b.n ? Math.max(6, Math.round(b.n / max * 62)) : 3}px"></div>
+          <div class="hc-lbl">${String(b.h).padStart(2, '0')}h</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// Linha de barra segmentada: entregue / a entregar coberto pelo estoque / ruptura.
+function kitBarHtml(l) {
+  const base = Math.max(l.demanda, l.estoque || 0, 1);
+  const saldoPos = l.saldo === null ? l.pendente : Math.max(0, l.saldo);
+  const coberto = Math.min(l.pendente, saldoPos);
+  const falta = Math.max(0, l.pendente - saldoPos);
+  const pctOf = (n) => (n / base * 100).toFixed(1);
+  return `
+    <div class="kit-bar">
+      <div class="kb-seg done" style="width:${pctOf(l.entregue)}%"></div>
+      <div class="kb-seg todo" style="width:${pctOf(coberto)}%"></div>
+      <div class="kb-seg miss" style="width:${pctOf(falta)}%"></div>
+    </div>`;
+}
+
 function openDashboard() {
   const e = state.currentEvent;
   const isRace = isRaceEvent(e);
+  const kitPanel = isRace && isAdmin();
   const total = state.participants.length;
   const checked = state.participants.filter(p => p.checked).length;
   const pending = total - checked;
@@ -1151,6 +1304,17 @@ function openDashboard() {
     const avgMs = gaps.reduce((a, b) => a + b, 0) / gaps.length;
     const avgMin = avgMs / 60000;
     avgGap = avgMin < 1 ? Math.round(avgMs / 1000) + "s" : avgMin.toFixed(1) + "min";
+  }
+
+  // Projeção de término no ritmo da última hora.
+  let projecao = "—";
+  if (pending === 0) projecao = "Concluído";
+  else if (lastHourCount > 0) {
+    const horas = pending / lastHourCount;
+    const fim = new Date(Date.now() + horas * 3600000);
+    const hh = String(fim.getHours()).padStart(2, "0");
+    const mm = String(fim.getMinutes()).padStart(2, "0");
+    projecao = horas < 24 ? `~${hh}:${mm}` : `~${Math.ceil(horas / 24)} dias`;
   }
 
   const byLote = {};
@@ -1173,17 +1337,16 @@ function openDashboard() {
 
   const recent = checkedRows.slice(0, 6);
   const actHtml = recent.length
-    ? recent.map(p => `<div class="act-row"><div class="act-avatar">${initials(p.name)}</div><div class="act-info"><div class="act-name">${esc(p.name)}</div><div class="act-meta">${esc(p.lote || "")}</div></div><div class="act-time">${fmtTime(p.checked_at)}</div></div>`).join("")
+    ? recent.map(p => `<div class="act-row"><div class="act-avatar">${initials(p.name)}</div><div class="act-info"><div class="act-name">${esc(p.name)}</div><div class="act-meta">${esc(isRace ? (raceProfileOf(p) ? [raceDistanceLabel(raceProfileOf(p).distance), raceShirtLabel(raceProfileOf(p).shirt_size)].filter(Boolean).join(" · ") : "") : (p.lote || ""))}</div></div><div class="act-time">${fmtTime(p.checked_at)}</div></div>`).join("")
     : '<div style="text-align:center; color:var(--ink-mute); font-size:13px; padding:14px 0;">Nenhum check-in ainda</div>';
 
   const circ = 2 * Math.PI * 52;
   const offset = circ - (pct / 100) * circ;
 
-  openModal(`
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <div class="modal-header"><div class="modal-title">Dashboard ao vivo</div><button class="modal-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
-      <div class="modal-body">
+  const k = kitPanel ? computeKitStats() : null;
+
+  // ── Aba OPERAÇÃO ──────────────────────────────────────────────────────────
+  const operacaoHtml = `
         <div class="dash-hero">
           <div class="dash-hero-content">
             <div class="dash-event-label">Evento</div>
@@ -1210,12 +1373,128 @@ function openDashboard() {
           <div class="speed-row"><div class="speed-label">${isRace ? 'Última retirada' : 'Último check-in'}</div><div class="speed-value violet">${lastTime ? fmtTime(lastTime) + ' · ' + fmtRelative(lastTime) : '—'}</div></div>
           <div class="speed-row"><div class="speed-label">${isRace ? 'Kits na última hora' : 'Check-ins na última hora'}</div><div class="speed-value">${lastHourCount}</div></div>
           <div class="speed-row"><div class="speed-label">${isRace ? 'Tempo médio entre retiradas' : 'Tempo médio entre check-ins'}</div><div class="speed-value">${avgGap}</div></div>
+          <div class="speed-row"><div class="speed-label">Projeção de término</div><div class="speed-value ${pending === 0 ? 'violet' : ''}">${projecao}</div></div>
+          ${hourBarsHtml(checkedRows)}
         </div>
-        ${Object.keys(byLote).length > 0 ? `<div class="dash-section"><div class="dash-section-title"><div class="dash-section-title-text">${isRace ? 'Kits por camiseta' : 'Presença por lote'}</div></div>${bdHtml}</div>` : ''}
-        <div class="dash-section"><div class="dash-section-title"><div class="dash-section-title-text">Últimos check-ins</div></div>${actHtml}</div>
+        ${(!kitPanel && Object.keys(byLote).length > 0) ? `<div class="dash-section"><div class="dash-section-title"><div class="dash-section-title-text">${isRace ? 'Kits por camiseta' : 'Presença por lote'}</div></div>${bdHtml}</div>` : ''}
+        <div class="dash-section"><div class="dash-section-title"><div class="dash-section-title-text">${isRace ? 'Últimas retiradas' : 'Últimos check-ins'}</div></div>${actHtml}</div>`;
+
+  // ── Aba CAMISETAS ─────────────────────────────────────────────────────────
+  const camisetasHtml = !kitPanel ? '' : `
+        ${k.ruptura.length ? `
+        <div class="kit-alert danger">
+          <div class="ka-title">Risco de ruptura</div>
+          <div class="ka-body">Não há peça para todo mundo em ${k.ruptura.map(l => `<strong>${esc(l.size)}</strong> (falta ${Math.abs(l.cobertura)})`).join(', ')}. Decida agora: troca de tamanho na mesa, reposição ou vale-camiseta.</div>
+        </div>` : (k.stockKnown ? `
+        <div class="kit-alert ok">
+          <div class="ka-title">Estoque cobre a demanda</div>
+          <div class="ka-body">Todos os tamanhos têm peça suficiente para quem ainda não retirou.</div>
+        </div>` : `
+        <div class="kit-alert warn">
+          <div class="ka-title">Estoque não cadastrado</div>
+          <div class="ka-body">Cadastre quantas camisetas você tem de cada tamanho no painel admin (evento da corrida → Estoque do kit). Sem isso não dá para avisar ruptura antes de acontecer.</div>
+        </div>`)}
+
+        <div class="kit-grid">
+          <div class="kit-cell"><div class="kc-label">Estoque</div><div class="kc-val">${k.totalEstoque === null ? '—' : k.totalEstoque}</div></div>
+          <div class="kit-cell"><div class="kc-label">Demanda</div><div class="kc-val">${k.totalDemanda}</div></div>
+          <div class="kit-cell"><div class="kc-label">Entregues</div><div class="kc-val success">${k.totalEntregue}</div></div>
+          <div class="kit-cell"><div class="kc-label">A entregar</div><div class="kc-val violet">${k.totalPendente}</div></div>
+          <div class="kit-cell"><div class="kc-label">Na mesa</div><div class="kc-val">${k.totalSaldo === null ? '—' : k.totalSaldo}</div></div>
+          <div class="kit-cell"><div class="kc-label">Sobra prevista</div><div class="kc-val ${k.sobraPrevista !== null && k.sobraPrevista < 0 ? 'danger' : 'mute'}">${k.sobraPrevista === null ? '—' : (k.sobraPrevista > 0 ? '+' : '') + k.sobraPrevista}</div></div>
+        </div>
+
+        <div class="dash-section">
+          <div class="dash-section-title"><div class="dash-section-title-text">Por tamanho</div><div class="dash-legend"><span class="lg done"></span>entregue <span class="lg todo"></span>a entregar <span class="lg miss"></span>falta peça</div></div>
+          ${k.linhas.filter(l => l.demanda > 0 || (l.estoque || 0) > 0).map(l => `
+            <div class="kit-row ${l.cobertura !== null && l.cobertura < 0 ? 'risk' : ''}">
+              <div class="kit-row-head">
+                <div class="kit-row-size">${esc(l.size)}</div>
+                <div class="kit-row-pct">${l.pct}%</div>
+              </div>
+              ${kitBarHtml(l)}
+              <div class="kit-row-nums">
+                <span>Demanda <strong>${l.demanda}</strong></span>
+                <span>Entregues <strong>${l.entregue}</strong></span>
+                <span>Faltam <strong>${l.pendente}</strong></span>
+                <span>${l.estoque === null ? 'Estoque —' : `Na mesa <strong>${l.saldo}</strong>`}</span>
+              </div>
+              ${l.cobertura !== null && l.cobertura < 0 ? `<div class="kit-row-warn">Faltam ${Math.abs(l.cobertura)} peças para atender quem ainda não retirou</div>` : ''}
+            </div>`).join('')}
+        </div>`;
+
+  // ── Aba PÚBLICO ───────────────────────────────────────────────────────────
+  const barRow = (label, entregue, tot, extra) => {
+    const p = tot ? Math.round(entregue / tot * 100) : 0;
+    return `<div class="bd-row"><div class="bd-row-head"><div class="bd-name">${esc(label)}${extra ? ` <span class="bd-extra">${esc(extra)}</span>` : ''}</div><div class="bd-count"><strong>${entregue}</strong> / ${tot} · ${p}%</div></div><div class="bd-bar"><div class="bd-bar-fill" style="width:${p}%"></div></div></div>`;
+  };
+  const pendencias = !kitPanel ? [] : [
+    k.semNumero ? `${k.semNumero} sem número de peito` : '',
+    k.semTamanho ? `${k.semTamanho} sem tamanho de camiseta` : '',
+    k.semPerfil ? `${k.semPerfil} sem perfil de corrida` : ''
+  ].filter(Boolean);
+
+  const publicoHtml = !kitPanel ? '' : `
+        <div class="dash-section">
+          <div class="dash-section-title"><div class="dash-section-title-text">Percurso</div></div>
+          ${Object.entries(k.dist).sort((a, b) => b[1].total - a[1].total).map(([name, d]) => barRow(name, d.entregue, d.total)).join('')}
+        </div>
+
+        <div class="dash-section">
+          <div class="dash-section-title"><div class="dash-section-title-text">Quem ainda não retirou</div></div>
+          <div class="kit-grid two">
+            <div class="kit-cell"><div class="kc-label">Congressistas</div><div class="kc-val violet">${k.congPendente}</div><div class="kc-sub">de ${k.congTotal} · estão no Ulysses</div></div>
+            <div class="kit-cell"><div class="kc-label">Só corrida</div><div class="kc-val">${k.soCorridaPendente}</div><div class="kc-sub">de ${k.soCorridaTotal} · vêm só para o kit</div></div>
+          </div>
+          <div class="kit-note">${k.soCorridaPendente > 0
+            ? `<strong>${k.soCorridaPendente}</strong> pessoas precisam se deslocar só para retirar o kit — é nesse grupo que o lembrete de WhatsApp tem que bater primeiro. Os <strong>${k.congPendente}</strong> congressistas já estarão no evento.`
+            : 'Todo mundo que não é congressista já retirou.'}</div>
+        </div>
+
+        <div class="dash-section">
+          <div class="dash-section-title"><div class="dash-section-title-text">Perfil</div></div>
+          ${barRow('Nutricionistas', k.publico.nutri.entregue, k.publico.nutri.total)}
+          ${barRow('Público geral', k.publico.geral.entregue, k.publico.geral.total)}
+          ${Object.keys(k.genero).length ? `<div class="kit-note mini">Gênero: ${Object.entries(k.genero).sort((a, b) => b[1] - a[1]).map(([g, n]) => `${g === 'F' ? 'Feminino' : 'Masculino'} ${n} (${Math.round(n / k.total * 100)}%)`).join(' · ')}</div>` : ''}
+        </div>
+
+        ${pendencias.length ? `
+        <div class="dash-section">
+          <div class="dash-section-title"><div class="dash-section-title-text">Pendências de cadastro</div></div>
+          <div class="kit-alert warn compact"><div class="ka-body">${pendencias.join(' · ')}</div></div>
+        </div>` : ''}`;
+
+  openModal(`
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header"><div class="modal-title">${kitPanel ? 'Painel do kit' : 'Dashboard ao vivo'}</div><button class="modal-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+      ${kitPanel ? `
+      <div class="dash-tabs">
+        <button class="dash-tab ${state.kitTab === 'operacao' ? 'active' : ''}" data-tab="operacao">Operação</button>
+        <button class="dash-tab ${state.kitTab === 'camisetas' ? 'active' : ''}" data-tab="camisetas">Camisetas</button>
+        <button class="dash-tab ${state.kitTab === 'publico' ? 'active' : ''}" data-tab="publico">Público</button>
+      </div>` : ''}
+      <div class="modal-body">
+        <div class="dash-panel" data-panel="operacao" ${kitPanel && state.kitTab !== 'operacao' ? 'hidden' : ''}>${operacaoHtml}</div>
+        ${kitPanel ? `
+        <div class="dash-panel" data-panel="camisetas" ${state.kitTab !== 'camisetas' ? 'hidden' : ''}>${camisetasHtml}</div>
+        <div class="dash-panel" data-panel="publico" ${state.kitTab !== 'publico' ? 'hidden' : ''}>${publicoHtml}</div>` : ''}
       </div>
     </div>
   `);
+
+  if (kitPanel) {
+    document.querySelectorAll(".dash-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tab = btn.dataset.tab;
+        state.kitTab = tab;
+        document.querySelectorAll(".dash-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+        document.querySelectorAll(".dash-panel").forEach(p => { p.hidden = p.dataset.panel !== tab; });
+        document.querySelector(".modal-body").scrollTop = 0;
+        haptic("light");
+      });
+    });
+  }
 }
 
 // =============================================================

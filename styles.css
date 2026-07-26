@@ -1096,5 +1096,196 @@ input, textarea { user-select: text; -webkit-user-select: text; font-family: inh
 }
 .kit-size-chip.done .ks-nums { color: var(--success); }
 
+/* ============== NB RUN · PAINEL DO KIT (admin) ============== */
+/* Chip de congressista: quem também está inscrito no congresso pai. */
+.race-chip.congresso {
+  background: rgba(167, 139, 250, 0.14);
+  border: 1px solid rgba(167, 139, 250, 0.38);
+  color: var(--violet);
+}
+
+/* Alerta de ruptura direto na fita de tamanhos */
+.kit-size-chip.risk {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.08);
+}
+.kit-size-chip .ks-alert {
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+/* Abas do painel */
+.dash-tabs {
+  display: flex; gap: 4px;
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.dash-tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 8px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-mute);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.dash-tab.active {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.dash-panel[hidden] { display: none; }
+
+/* Mini gráfico de barras por hora */
+.hour-chart {
+  display: flex; align-items: flex-end; gap: 6px;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+.hc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hc-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--ink-soft);
+  height: 12px;
+}
+.hc-bar {
+  width: 100%; border-radius: 4px 4px 2px 2px;
+  background: var(--gradient-neon);
+  min-height: 3px;
+}
+.hc-bar.empty { background: var(--line); }
+.hc-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--ink-mute);
+}
+
+/* Caixas de alerta do kit */
+.kit-alert {
+  border-radius: 14px;
+  padding: 13px 15px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.kit-alert.danger { border-color: rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.07); }
+.kit-alert.ok { border-color: rgba(52, 211, 153, 0.35); background: rgba(52, 211, 153, 0.06); }
+.kit-alert.warn { border-color: rgba(255, 209, 92, 0.35); background: rgba(255, 209, 92, 0.06); }
+.kit-alert.compact { padding: 10px 13px; margin-bottom: 0; }
+.ka-title {
+  font-family: 'Bricolage Grotesque', serif;
+  font-size: 14px; font-weight: 700;
+  margin-bottom: 4px;
+}
+.kit-alert.danger .ka-title { color: var(--danger); }
+.kit-alert.ok .ka-title { color: var(--success); }
+.kit-alert.warn .ka-title { color: var(--gold); }
+.ka-body { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); }
+
+/* Grade de números do kit */
+.kit-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; margin-bottom: 18px;
+}
+.kit-grid.two { grid-template-columns: repeat(2, 1fr); margin-bottom: 12px; }
+.kit-cell {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+}
+.kc-label {
+  font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  margin-bottom: 5px;
+}
+.kc-val {
+  font-family: 'Bricolage Grotesque', serif;
+  font-size: 22px; font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.kc-val.success { color: var(--success); }
+.kc-val.violet { color: var(--violet); }
+.kc-val.danger { color: var(--danger); }
+.kc-val.mute { color: var(--ink-mute); }
+.kc-sub {
+  font-size: 10.5px; color: var(--ink-mute);
+  margin-top: 5px; line-height: 1.35;
+}
+
+/* Linha por tamanho, com barra segmentada */
+.kit-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.kit-row:last-child { border-bottom: none; }
+.kit-row-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 7px;
+}
+.kit-row-size {
+  font-family: 'Bricolage Grotesque', serif;
+  font-size: 16px; font-weight: 700;
+}
+.kit-row.risk .kit-row-size { color: var(--danger); }
+.kit-row-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.kit-bar {
+  display: flex; height: 9px;
+  background: var(--line-soft);
+  border-radius: 99px; overflow: hidden;
+}
+.kb-seg { height: 100%; transition: width 0.3s ease; }
+.kb-seg.done { background: var(--success); }
+.kb-seg.todo { background: var(--violet); }
+.kb-seg.miss { background: var(--danger); }
+.kit-row-nums {
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  margin-top: 8px;
+  font-size: 11px; color: var(--ink-mute);
+}
+.kit-row-nums strong {
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.kit-row-warn {
+  margin-top: 7px;
+  font-size: 11.5px; font-weight: 600;
+  color: var(--danger);
+}
+.kit-note {
+  margin-top: 10px;
+  font-size: 12.5px; line-height: 1.5;
+  color: var(--ink-soft);
+}
+.kit-note strong { color: var(--ink); }
+.kit-note.mini { font-size: 11.5px; color: var(--ink-mute); margin-top: 12px; }
+
+/* Legenda das barras */
+.dash-legend {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 9.5px; color: var(--ink-mute);
+  text-transform: none; letter-spacing: 0;
+}
+.dash-legend .lg {
+  width: 8px; height: 8px; border-radius: 3px;
+  display: inline-block;
+}
+.dash-legend .lg + .lg, .dash-legend .lg { margin-left: 6px; }
+.dash-legend .lg.done { background: var(--success); }
+.dash-legend .lg.todo { background: var(--violet); }
+.dash-legend .lg.miss { background: var(--danger); }
+.bd-extra { color: var(--ink-mute); font-weight: 500; }
+
 /* ============== HELPERS ============== */
 .hidden { display: none !important; }
