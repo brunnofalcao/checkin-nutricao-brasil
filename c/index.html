@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seu certificado · Nutrição Brasil 2026</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d0618">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0618; --card:#1b0f2d; --card2:#160c26; --line:#2f1d4a;
+  --t1:#f4f0fa; --t2:#c3b4dd; --t3:#8b78ad;
+  --roxo:#a78bfa; --ciano:#22d3ee;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(1100px 600px at 78% -12%, #2a1247 0%, var(--bg) 62%) fixed;
+  color:var(--t1);font-family:Poppins,-apple-system,'Segoe UI',sans-serif;
+  font-size:15px;line-height:1.55;min-height:100vh
+}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 20px 70px}
+@media(max-width:640px){.wrap{padding:24px 16px 56px}}
+
+.marca{height:52px;margin-bottom:26px;display:block}
+.kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ciano);margin-bottom:8px}
+h1{font-size:clamp(26px,5.2vw,40px);font-weight:700;letter-spacing:-1px;margin:0 0 8px;line-height:1.12}
+h1 span{color:var(--roxo)}
+.sub{color:var(--t2);margin:0 0 26px;max-width:600px}
+
+/* ── ficha de dados (só leitura) ───────────────────────────────── */
+.ficha{
+  background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+  border-radius:18px;padding:20px 22px;margin-bottom:14px
+}
+.ficha-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.ficha h2{font-size:19px;font-weight:700;margin:0;letter-spacing:-.3px}
+.selo{
+  font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:#a7f3d0;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);
+  padding:5px 10px;border-radius:999px;white-space:nowrap
+}
+.dados{display:flex;gap:28px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.dado .r{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--t3)}
+.dado .v{font-size:15px;font-weight:600;color:var(--t1);margin-top:2px}
+
+/* ── abas de módulo ────────────────────────────────────────────── */
+.abas{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.aba{
+  background:#160c26;border:1px solid var(--line);color:var(--t2);border-radius:999px;
+  padding:9px 16px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s
+}
+.aba.on{background:linear-gradient(135deg,#7c3aed,#a78bfa);border-color:transparent;color:#fff}
+
+/* ── grade de opções ───────────────────────────────────────────── */
+.grade{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.op{
+  background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+  border-radius:16px;padding:13px;text-align:left;cursor:pointer;font-family:inherit;color:var(--t1);
+  transition:.16s;display:flex;flex-direction:column;gap:11px
+}
+.op:hover{border-color:var(--roxo);transform:translateY(-2px)}
+.op .thumb{
+  width:100%;aspect-ratio:4/3;border-radius:9px;overflow:hidden;background:#0f0720;
+  display:flex;align-items:center;justify-content:center;position:relative
+}
+.op .thumb img{max-width:100%;max-height:100%;display:block}
+.op .thumb .tag{
+  position:absolute;right:7px;bottom:7px;background:rgba(13,6,24,.82);border:1px solid var(--line);
+  color:var(--t2);font-size:9.5px;font-weight:700;letter-spacing:.6px;padding:3px 7px;border-radius:6px
+}
+.op .tt{font-size:14px;font-weight:700;line-height:1.25}
+.op .ds{font-size:11.5px;color:var(--t3);margin-top:-6px;line-height:1.4}
+.op .cta{font-size:12px;font-weight:700;color:var(--roxo);margin-top:auto}
+.op.destaque{border-color:#4b2f77;background:linear-gradient(180deg,#241442,#180d2b)}
+
+.rodape{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);color:var(--t3);font-size:12.5px}
+.rodape b{color:var(--t2);font-weight:600}
+
+/* ── estados ───────────────────────────────────────────────────── */
+.estado{text-align:center;padding:90px 20px;color:var(--t2)}
+.estado h2{font-size:22px;color:var(--t1);margin:0 0 8px}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--roxo);border-radius:50%;
+  margin:0 auto 18px;animation:g .8s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+.hide{display:none!important}
+.entrada{display:flex;gap:8px;max-width:430px;margin:22px auto 0}
+.entrada input{flex:1;background:#0f0720;border:1px solid var(--line);color:var(--t1);border-radius:11px;
+  padding:12px 13px;font-family:inherit;font-size:14px;outline:none;min-width:0}
+.entrada input:focus{border-color:var(--roxo)}
+.entrada button{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:0;border-radius:11px;
+  padding:12px 22px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+
+/* ── modal da foto ─────────────────────────────────────────────── */
+.modal{position:fixed;inset:0;background:rgba(6,2,12,.86);backdrop-filter:blur(6px);
+  z-index:50;display:flex;align-items:center;justify-content:center;padding:18px}
+.caixa{
+  background:linear-gradient(180deg,#1b0f2d,#120a1f);border:1px solid var(--line);border-radius:20px;
+  padding:20px;max-width:900px;width:100%;max-height:94vh;overflow:auto
+}
+.caixa h3{margin:0 0 4px;font-size:18px;font-weight:700;letter-spacing:-.3px}
+.caixa .ds{color:var(--t3);font-size:12.5px;margin:0 0 16px}
+.editor{display:grid;grid-template-columns:1fr 260px;gap:18px}
+@media(max-width:720px){.editor{grid-template-columns:1fr}}
+#pal{display:flex;align-items:center;justify-content:center;background:#0b0516;border-radius:12px;padding:12px;min-height:240px}
+#cv{max-width:100%;max-height:52vh;width:auto;height:auto;border-radius:6px;display:block;touch-action:none;cursor:grab}
+#cv.drag{cursor:grabbing}
+.btn{display:block;width:100%;text-align:center;border:0;border-radius:12px;padding:13px;
+  font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.btn.pri{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff}
+.btn.sec{background:#241436;color:var(--t1);border:1px solid var(--line)}
+.btn+.btn{margin-top:9px}
+.btn:disabled{opacity:.45;cursor:default}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin:16px 0 7px}
+.slider{width:100%;accent-color:#a78bfa}
+.dica{font-size:11.5px;color:var(--t3);margin-top:9px;line-height:1.45}
+.dica a{color:var(--roxo)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div id="carregando" class="estado">
+    <div class="spin"></div>
+    Abrindo seu certificado…
+  </div>
+
+  <div id="erro" class="estado hide">
+    <h2 id="erroTt">Esta página abre pelo link do seu e-mail</h2>
+    <p id="erroDs">Enviamos para você um link pessoal, terminado num código de 22 letras.
+       Abra por ele — ou cole o link (ou só o código) aqui embaixo.</p>
+    <div class="entrada">
+      <input id="tk" placeholder="cole aqui o link ou o código" autocomplete="off" spellcheck="false">
+      <button id="irTk">Abrir</button>
+    </div>
+    <p style="margin-top:20px;color:var(--t3);font-size:13px">
+      Não achou o e-mail? Confira a caixa de promoções e o spam. Se não estiver lá,
+      responda o e-mail da sua inscrição que a gente reenvia.</p>
+  </div>
+
+  <div id="pagina" class="hide">
+    <img class="marca" id="marca" alt="Nutrição Brasil">
+    <div class="kicker" id="kick">Nutrição Brasil 2026</div>
+    <h1>Seu certificado está pronto,<br><span id="primeiro"></span>.</h1>
+    <p class="sub">Baixe o documento oficial e, se quiser, as versões para o Instagram —
+       inclusive uma com a sua própria foto de fundo.</p>
+
+    <div class="abas hide" id="abas"></div>
+    <div class="ficha" id="ficha"></div>
+    <div class="grade" id="grade"></div>
+
+    <div class="rodape">
+      <b>Os dados deste certificado vêm da sua inscrição</b> e não podem ser editados nesta página.
+      O PDF oficial é montado no servidor e sai com um código de autenticidade que qualquer pessoa
+      pode conferir — útil para conselho, empregador ou processo seletivo.<br>
+      Guarde este link: ele não expira e você pode voltar quando quiser para gerar de novo.
+    </div>
+  </div>
+</div>
+
+<!-- ── modal da foto ─────────────────────────────────────────────── -->
+<div class="modal hide" id="modal">
+  <div class="caixa">
+    <h3 id="mTitulo">Story com a sua foto</h3>
+    <p class="ds" id="mDesc">Escolha uma foto do evento, enquadre e baixe. A imagem não sai do seu aparelho.</p>
+    <div class="editor">
+      <div id="pal"><canvas id="cv"></canvas></div>
+      <div>
+        <button class="btn sec file">Escolher foto<input type="file" id="arq" accept="image/*"></button>
+        <label class="mini">Zoom</label>
+        <input type="range" class="slider" id="zoom" min="100" max="320" value="100">
+        <p class="dica">Arraste em cima da imagem para reposicionar.<br>
+           Sem foto escolhida, o fundo fica liso.</p>
+        <button class="btn pri" id="mBaixar" style="margin-top:18px">Baixar</button>
+        <button class="btn sec" id="mFechar">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   PÁGINA DO CERTIFICADO · Nutrição Brasil 2026
+   Os dados variáveis vêm do servidor pelo token. Não há campo editável.
+   ═══════════════════════════════════════════════════════════════════════ */
+const SUPABASE_URL = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
+
+const FN_PDF = SUPABASE_URL + '/functions/v1/cert-pdf';
+const CDN = 'https://res.cloudinary.com/dlzrfhwin/image/upload/';
+const MARCA = CDN + 'v1775583229/nb_logotipo_hor_05_wqsydv.png';
+const GALERIA = 'https://nutricaobrasil.com.br/fotos';
+const ART = {
+  a4:    { limpo:'nb2026/cert_pdf_limpo.png' },
+  feed:  { limpo:'nb2026/cert_feed_limpo.png',  preto:'nb2026/cert_feed_preto.png',  branco:'nb2026/cert_feed_branco.png' },
+  story: { limpo:'nb2026/cert_story_limpo.png', preto:'nb2026/cert_story_preto.png', branco:'nb2026/cert_story_branco.png' }
+};
+
+const FORMATOS = {
+  a4:    { W:2480, H:1754, cx:1239.5, fio:821,
+           nomeMax:1560, nomeSize:120, nomeGap:104,
+           parTop:858, parSize:50, parLead:70, parMax:1600, ref:3, limite:1090, foto:false },
+  feed:  { W:1080, H:1350, cx:539.5, fio:655,
+           nomeMax:860, nomeSize:64, nomeGap:40,
+           parTop:686, parSize:33, parLead:46, parMax:870, ref:4, limite:952, foto:true },
+  story: { W:1080, H:1920, cx:539.5, fio:933,
+           nomeMax:860, nomeSize:68, nomeGap:42,
+           parTop:964, parSize:33, parLead:46, parMax:870, ref:4, limite:1235, foto:true }
+};
+
+const NB = ' ';
+const LISO = '#170b24';
+const VEU = 0.75;                       // véu chapado sobre foto do participante
+
+/* ── medição ─────────────────────────────────────────────────────────── */
+const med = document.createElement('canvas').getContext('2d');
+med.fontKerning = 'none';
+function face(p, s){ return p + ' ' + s + 'px Poppins, sans-serif'; }
+function wid(t, p, s){ med.font = face(p, s); return med.measureText(t).width; }
+
+/* ── frase ───────────────────────────────────────────────────────────── */
+function frase(m, extenso){
+  const data  = (extenso ? m.extenso : m.curta).replace(/ /g, NB);
+  const verbo = m.dias > 1 ? 'realizado nos dias ' : 'realizado no dia ';
+  return [
+    ['Participou do ', 0], ['Nutrição'+NB+'Brasil'+NB+'2026', 1], [' no módulo de ', 0],
+    [String(m.nome).replace(/ /g, NB), 1], [', ' + verbo, 0], [data, 1],
+    [', em Brasília'+NB+'–'+NB+'DF, perfazendo um total de ', 0], [String(m.horas), 1], [' horas-aula.', 0]
+  ];
+}
+function palavras(runs){
+  const out = []; let pe = true;
+  for (const [txt, b] of runs){
+    if (!txt) continue;
+    const cola = txt[0] !== ' ' && !pe && out.length > 0;
+    txt.split(' ').filter(Boolean).forEach((w, i) => {
+      if (i === 0 && cola) out[out.length-1].push([w, b]); else out.push([[w, b]]);
+    });
+    pe = txt[txt.length-1] === ' ';
+  }
+  return out;
+}
+function quebra(runs, size, maxw){
+  const pal = palavras(runs), esp = wid(' ', 400, size);
+  const linhas = []; let atual = [], total = 0;
+  for (const p of pal){
+    const lw = p.reduce((s, [t, b]) => s + wid(t, b ? 700 : 400, size), 0);
+    if (atual.length && total + esp + lw > maxw){ linhas.push([atual, total]); atual = []; total = 0; }
+    if (atual.length) total += esp;
+    atual.push(p); total += lw;
+  }
+  if (atual.length) linhas.push([atual, total]);
+  return linhas;
+}
+function quebraNome(txt, size, maxw){
+  const l = []; let a = '';
+  for (const w of txt.split(' ')){
+    const t = a ? a + ' ' + w : w;
+    if (a && wid(t, 600, size) > maxw){ l.push(a); a = w; } else a = t;
+  }
+  if (a) l.push(a);
+  return l;
+}
+function layout(fmt, nome, m){
+  const f = FORMATOS[fmt], extenso = (fmt === 'a4');
+  let ns = f.nomeSize; const piso = Math.round(f.nomeSize * 0.72);
+  while (ns > piso && wid(nome, 600, ns) > f.nomeMax) ns--;
+  let nomeLinhas = [nome];
+  if (wid(nome, 600, ns) > f.nomeMax){
+    ns = Math.round(f.nomeSize * 0.62);
+    while (ns > 12){
+      nomeLinhas = quebraNome(nome, ns, f.nomeMax);
+      if (nomeLinhas.length <= 2 && Math.max(...nomeLinhas.map(l => wid(l, 600, ns))) <= f.nomeMax) break;
+      ns -= 2;
+    }
+  }
+  let ps = f.parSize, lead = f.parLead, linhas;
+  const runs = frase(m, extenso);
+  for(;;){
+    linhas = quebra(runs, ps, f.parMax);
+    const fim = f.parTop + (f.ref - linhas.length) * lead / 2 + linhas.length * lead;
+    if (fim <= f.limite || ps <= f.parSize - 10) break;
+    ps--; lead = Math.round(lead * ps / (ps + 1));
+  }
+  return { ns, nomeLinhas, ps, lead, linhas, topo: f.parTop + (f.ref - linhas.length) * lead / 2 };
+}
+
+/* ── desenho (k = escala; 1 para arquivo final, 0.3 para miniatura) ──── */
+function desenha(ctx, fmt, nome, m, k){
+  const f = FORMATOS[fmt], L = layout(fmt, nome, m);
+  ctx.fontKerning = 'none';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const leadN = L.ns * 1.12;
+  const base = f.fio - f.nomeGap - (L.nomeLinhas.length - 1) * leadN;
+  ctx.font = face(600, L.ns * k);
+  L.nomeLinhas.forEach((ln, i) => ctx.fillText(ln, f.cx * k, (base + i * leadN) * k));
+
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  const esp = wid(' ', 400, L.ps) * k;
+  let y = L.topo;
+  for (const [linha, total] of L.linhas){
+    let x = (f.cx - total / 2) * k;
+    for (const p of linha){
+      for (const [t, b] of p){
+        ctx.font = face(b ? 700 : 400, L.ps * k);
+        ctx.fillText(t, x, y * k);
+        x += ctx.measureText(t).width;
+      }
+      x += esp;
+    }
+    y += L.lead;
+  }
+}
+
+/* ── assets + alfa ───────────────────────────────────────────────────── */
+const imgs = {}, over = {};
+function carrega(url){
+  return new Promise((ok, er) => {
+    const i = new Image(); i.crossOrigin = 'anonymous';
+    i.onload = () => ok(i); i.onerror = () => er(new Error(url)); i.src = url;
+  });
+}
+function off(w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function montaOverlay(preto, branco){
+  const w = preto.naturalWidth, h = preto.naturalHeight;
+  const cp = off(w, h), cb = off(w, h), cm = off(w, h);
+  cp.getContext('2d').drawImage(preto, 0, 0);
+  cb.getContext('2d').drawImage(branco, 0, 0);
+  const P = cp.getContext('2d').getImageData(0,0,w,h).data;
+  const B = cb.getContext('2d').getImageData(0,0,w,h).data;
+  const dm = cm.getContext('2d').createImageData(w, h), M = dm.data;
+  for (let i = 0; i < P.length; i += 4){
+    const dif = ((B[i]-P[i]) + (B[i+1]-P[i+1]) + (B[i+2]-P[i+2])) / 3;
+    let a = 255 - dif; if (a < 0) a = 0; else if (a > 255) a = 255;
+    M[i] = M[i+1] = M[i+2] = 0; M[i+3] = a;
+  }
+  cm.getContext('2d').putImageData(dm, 0, 0);
+  return { mask: cm, prem: cp };
+}
+
+/* ── composição de uma peça ──────────────────────────────────────────── */
+function compoe(fmt, nome, m, opts){
+  const o = opts || {}, k = o.k || 1, f = FORMATOS[fmt];
+  const c = off(Math.round(f.W * k), Math.round(f.H * k));
+  const ctx = c.getContext('2d');
+  if (!o.trocaFundo){
+    ctx.drawImage(imgs[fmt], 0, 0, c.width, c.height);
+  } else {
+    if (o.foto){
+      const im = o.foto;
+      const esc = Math.max(c.width / im.naturalWidth, c.height / im.naturalHeight) * (o.zoom || 1);
+      const w = im.naturalWidth * esc, h = im.naturalHeight * esc;
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(im, (c.width - w)/2 + (o.dx||0)*k, (c.height - h)/2 + (o.dy||0)*k, w, h);
+      ctx.fillStyle = 'rgba(0,0,0,' + VEU + ')'; ctx.fillRect(0, 0, c.width, c.height);
+    } else {
+      ctx.fillStyle = LISO; ctx.fillRect(0, 0, c.width, c.height);
+    }
+    const ov = over[fmt];
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.drawImage(ov.mask, 0, 0, c.width, c.height);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(ov.prem, 0, 0, c.width, c.height);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  desenha(ctx, fmt, nome, m, k);
+  return c;
+}
+
+/* ── downloads ───────────────────────────────────────────────────────── */
+function slug(s){
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+          .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'certificado';
+}
+function baixa(blob, arq){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = arq; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function baixaCanvas(c, arq){ c.toBlob(b => baixa(b, arq), 'image/png'); }
+// O PDF oficial é montado no servidor. Esta página não sabe gerar um.
+function baixaPdfOficial(chave){
+  location.href = FN_PDF + '?t=' + encodeURIComponent(S.token) + '&m=' + encodeURIComponent(chave);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ESTADO DA PÁGINA
+   ═════════════════════════════════════════════════════════════════════ */
+const S = { token:null, dados:null, mod:0, modalFmt:null, foto:null, zoom:1, dx:0, dy:0 };
+const $ = id => document.getElementById(id);
+
+function pegaToken(){
+  const q = new URLSearchParams(location.search).get('t');
+  if (q) return q.trim();
+  const p = location.pathname.replace(/\/+$/,'').split('/').pop();
+  if (p && /^[A-Za-z0-9]{16,40}$/.test(p) && p !== 'index.html') return p;
+  return (location.hash || '').replace('#','').trim();
+}
+
+const OPCOES = [
+  { id:'pdf',        fmt:'a4',    troca:false, tt:'Certificado oficial',  ds:'PDF A4 · emitido pelo servidor, com código de autenticidade',       tag:'PDF' },
+  { id:'feed',       fmt:'feed',  troca:false, tt:'Post para o feed',     ds:'1080 × 1350 · arte oficial',          tag:'FEED' },
+  { id:'feed-foto',  fmt:'feed',  troca:true,  tt:'Feed com sua foto',    ds:'1080 × 1350 · você escolhe o fundo',  tag:'SUA FOTO' },
+  { id:'story',      fmt:'story', troca:false, tt:'Story',                ds:'1080 × 1920 · arte oficial',          tag:'STORY' },
+  { id:'story-foto', fmt:'story', troca:true,  tt:'Story com sua foto',   ds:'1080 × 1920 · você escolhe o fundo',  tag:'SUA FOTO' }
+];
+
+function modAtual(){ return S.dados.modulos[S.mod]; }
+
+function pintaFicha(){
+  const m = modAtual(), d = S.dados;
+  $('ficha').innerHTML =
+    '<div class="ficha-topo"><h2>' + esc(m.nome) + '</h2>' +
+    '<span class="selo">Emitido pela Science Play</span></div>' +
+    '<div class="dados">' +
+    dado('Participante', d.nome) +
+    dado('Realização', m.extenso) +
+    dado('Carga horária', m.horas + ' horas-aula') +
+    dado('Local', d.local) +
+    '</div>';
+}
+function dado(r, v){ return '<div class="dado"><div class="r">' + r + '</div><div class="v">' + esc(v) + '</div></div>'; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function pintaGrade(){
+  const g = $('grade'); g.innerHTML = '';
+  const nome = S.dados.nome, m = modAtual();
+  OPCOES.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'op' + (o.id === 'pdf' ? ' destaque' : '');
+    b.innerHTML = '<div class="thumb"><span class="tag">' + o.tag + '</span></div>' +
+                  '<div class="tt">' + o.tt + '</div><div class="ds">' + o.ds + '</div>' +
+                  '<div class="cta">' + (o.troca ? 'Escolher foto →' : 'Baixar →') + '</div>';
+    g.appendChild(b);
+    const mini = compoe(o.fmt, nome, m, { k: o.fmt === 'a4' ? 0.16 : 0.24, trocaFundo:o.troca, foto:null });
+    const im = new Image(); im.src = mini.toDataURL('image/jpeg', .8);
+    b.querySelector('.thumb').prepend(im);
+    b.addEventListener('click', () => acionar(o));
+  });
+}
+
+function acionar(o){
+  const m = modAtual();
+  if (o.troca){ abreModal(o); return; }
+  if (o.id === 'pdf'){ baixaPdfOficial(m.chave); return; }
+  const c = compoe(o.fmt, S.dados.nome, m, { k:1 });
+  baixaCanvas(c, 'certificado-nb2026-' + slug(S.dados.nome) + '-' + slug(m.nome) + '-' + o.fmt + '.png');
+}
+
+/* ── modal ───────────────────────────────────────────────────────────── */
+const cv = $('cv'), cvx = cv.getContext('2d');
+function abreModal(o){
+  S.modalFmt = o.fmt; S.foto = null; S.zoom = 1; S.dx = S.dy = 0;
+  $('zoom').value = 100;
+  $('mTitulo').textContent = o.tt;
+  $('mDesc').innerHTML = 'Escolha uma foto sua no evento, enquadre e baixe. ' +
+    'A imagem não sai do seu aparelho. <a href="' + GALERIA + '" target="_blank" rel="noopener">Galeria oficial de fotos →</a>';
+  $('modal').classList.remove('hide');
+  pintaModal();
+}
+function pintaModal(){
+  const f = FORMATOS[S.modalFmt];
+  const c = compoe(S.modalFmt, S.dados.nome, modAtual(),
+                   { k:0.5, trocaFundo:true, foto:S.foto, zoom:S.zoom, dx:S.dx, dy:S.dy });
+  cv.width = c.width; cv.height = c.height;
+  cvx.clearRect(0,0,c.width,c.height); cvx.drawImage(c, 0, 0);
+}
+$('mFechar').addEventListener('click', () => $('modal').classList.add('hide'));
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) $('modal').classList.add('hide'); });
+$('zoom').addEventListener('input', e => { S.zoom = e.target.value / 100; pintaModal(); });
+$('arq').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const fr = new FileReader();
+  fr.onload = () => { const i = new Image(); i.onload = () => { S.foto = i; S.dx = S.dy = 0; pintaModal(); }; i.src = fr.result; };
+  fr.readAsDataURL(f);
+});
+$('mBaixar').addEventListener('click', () => {
+  const m = modAtual();
+  const c = compoe(S.modalFmt, S.dados.nome, m,
+                   { k:1, trocaFundo:true, foto:S.foto, zoom:S.zoom, dx:S.dx, dy:S.dy });
+  baixaCanvas(c, 'certificado-nb2026-' + slug(S.dados.nome) + '-' + slug(m.nome) + '-' + S.modalFmt + '.png');
+});
+let arr = null;
+cv.addEventListener('pointerdown', e => {
+  if (!S.foto) return;
+  arr = { x:e.clientX, y:e.clientY, dx:S.dx, dy:S.dy };
+  cv.setPointerCapture(e.pointerId); cv.classList.add('drag');
+});
+cv.addEventListener('pointermove', e => {
+  if (!arr) return;
+  const k = FORMATOS[S.modalFmt].W / cv.getBoundingClientRect().width;
+  S.dx = arr.dx + (e.clientX - arr.x) * k;
+  S.dy = arr.dy + (e.clientY - arr.y) * k;
+  pintaModal();
+});
+['pointerup','pointercancel'].forEach(ev =>
+  cv.addEventListener(ev, () => { arr = null; cv.classList.remove('drag'); }));
+
+/* ── abas ────────────────────────────────────────────────────────────── */
+function pintaAbas(){
+  const a = $('abas');
+  if (S.dados.modulos.length < 2) return;
+  a.classList.remove('hide'); a.innerHTML = '';
+  S.dados.modulos.forEach((m, i) => {
+    const b = document.createElement('button');
+    b.className = 'aba' + (i === S.mod ? ' on' : '');
+    b.textContent = m.nome;
+    b.addEventListener('click', () => {
+      S.mod = i;
+      [...a.children].forEach((x, j) => x.classList.toggle('on', j === i));
+      pintaFicha(); pintaGrade();
+    });
+    a.appendChild(b);
+  });
+}
+
+function mostraEntrada(errou){
+  $('carregando').classList.add('hide');
+  $('pagina').classList.add('hide');
+  if (errou){
+    $('erroTt').textContent = 'Link não encontrado';
+    $('erroDs').textContent = 'Esse código não corresponde a nenhuma inscrição. ' +
+      'Confira se copiou o link inteiro do e-mail — ele termina com um código de 22 letras.';
+  }
+  $('erro').classList.remove('hide');
+  $('tk').focus();
+}
+function abrePorCodigo(){
+  const v = ($('tk').value || '').trim();
+  const m = v.match(/[A-Za-z0-9]{16,40}(?=[^A-Za-z0-9]*$)/);
+  if (!m) { $('tk').focus(); return; }
+  location.href = location.pathname.replace(/\/[^/]*$/, '/') +
+    (location.pathname.endsWith('.html') ? location.pathname.split('/').pop() : '') + '?t=' + m[0];
+}
+
+/* ── boot ────────────────────────────────────────────────────────────── */
+document.getElementById('irTk').addEventListener('click', abrePorCodigo);
+document.getElementById('tk').addEventListener('keydown', e => { if (e.key === 'Enter') abrePorCodigo(); });
+
+(async function(){
+  const token = pegaToken();
+  S.token = token;
+  if (!token){ mostraEntrada(false); return; }
+  try{
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/cert_por_token', {
+      method:'POST',
+      headers:{ 'apikey':SUPABASE_ANON, 'Authorization':'Bearer ' + SUPABASE_ANON, 'Content-Type':'application/json' },
+      body: JSON.stringify({ p_token: token })
+    });
+    const dados = await r.json();
+    if (!r.ok || !dados || !dados.nome || !dados.modulos || !dados.modulos.length) throw new Error('sem dados');
+    dados.modulos.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+    S.dados = dados;
+
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('400 40px Poppins'),
+      document.fonts.load('600 60px Poppins'),
+      document.fonts.load('700 40px Poppins')
+    ]);
+    const [a4, fL, fP, fB, sL, sP, sB] = await Promise.all([
+      carrega(CDN + ART.a4.limpo),
+      carrega(CDN + ART.feed.limpo),  carrega(CDN + ART.feed.preto),  carrega(CDN + ART.feed.branco),
+      carrega(CDN + ART.story.limpo), carrega(CDN + ART.story.preto), carrega(CDN + ART.story.branco)
+    ]);
+    imgs.a4 = a4; imgs.feed = fL; imgs.story = sL;
+    over.feed = montaOverlay(fP, fB); over.story = montaOverlay(sP, sB);
+
+    $('marca').src = MARCA;
+    $('kick').textContent = dados.evento;
+    $('primeiro').textContent = String(dados.nome).split(' ')[0];
+    pintaAbas(); pintaFicha(); pintaGrade();
+    $('carregando').classList.add('hide');
+    $('pagina').classList.remove('hide');
+  } catch(e){
+    mostraEntrada(true);
+  }
+})();
+</script>
+</body>
+</html>

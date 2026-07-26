@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Certificado NB 2026 · Estúdio de teste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600;700&family=Questrial&family=Kumbh+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0618; --bg2:#150a24; --card:#1b0f2d; --line:#2f1d4a;
+  --t1:#f4f0fa; --t2:#c3b4dd; --t3:#8b78ad;
+  --roxo:#a78bfa; --ciano:#22d3ee; --ok:#34d399; --alerta:#fbbf24;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(1200px 700px at 80% -10%, #2a1247 0%, var(--bg) 60%);
+  color:var(--t1);font-family:Poppins,-apple-system,'Segoe UI',sans-serif;
+  min-height:100vh;font-size:15px;line-height:1.5;
+}
+header{padding:22px 20px 8px;max-width:1400px;margin:0 auto}
+.kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ciano)}
+h1{font-size:26px;font-weight:700;letter-spacing:-.6px;margin:6px 0 4px}
+header p{margin:0;color:var(--t2);font-size:14px;max-width:640px}
+main{max-width:1400px;margin:0 auto;padding:18px 20px 60px;display:grid;gap:22px;grid-template-columns:360px 1fr}
+@media(max-width:900px){
+  main{grid-template-columns:1fr;padding:14px 14px 48px}
+  .palco{order:-1;position:sticky;top:8px;z-index:5;padding:12px}
+  #cv{max-height:56vh}
+}
+
+.card{background:linear-gradient(180deg,var(--card),#160c26);border:1px solid var(--line);border-radius:16px;padding:18px}
+.card+.card{margin-top:14px}
+.card h2{font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--t3);margin:0 0 14px}
+
+label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin:0 0 6px}
+input[type=text],input[type=number],select{
+  width:100%;background:#0f0720;border:1px solid var(--line);color:var(--t1);
+  border-radius:10px;padding:11px 12px;font-family:inherit;font-size:14px;outline:none
+}
+input:focus,select:focus{border-color:var(--roxo)}
+.field{margin-bottom:13px}
+.row{display:flex;gap:9px}
+.row>*{flex:1}
+
+.seg{display:flex;gap:6px;background:#0f0720;border:1px solid var(--line);border-radius:11px;padding:4px}
+.seg button{
+  flex:1;background:none;border:0;color:var(--t2);font-family:inherit;font-size:13px;font-weight:600;
+  padding:9px 4px;border-radius:8px;cursor:pointer;transition:.15s
+}
+.seg button.on{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff}
+
+.btn{
+  display:block;width:100%;text-align:center;border:0;border-radius:11px;padding:13px;
+  font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:.15s
+}
+.btn.pri{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff}
+.btn.sec{background:#241436;color:var(--t1);border:1px solid var(--line)}
+.btn+.btn{margin-top:9px}
+.btn:disabled{opacity:.45;cursor:default}
+
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+.palco{
+  background:linear-gradient(180deg,#150a24,#0d0618);border:1px solid var(--line);border-radius:16px;
+  padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;min-height:400px;justify-content:center
+}
+#cv{max-width:100%;max-height:74vh;width:auto;height:auto;border-radius:8px;
+     box-shadow:0 24px 60px rgba(0,0,0,.6);display:block;touch-action:none;cursor:grab}
+#cv.drag{cursor:grabbing}
+.meta{font-size:12px;color:var(--t3);text-align:center}
+.meta b{color:var(--t2);font-weight:600}
+
+.aviso{background:#1d1330;border:1px solid #3a2a55;border-radius:11px;padding:11px 13px;font-size:12.5px;color:var(--t2);margin-top:12px}
+.aviso b{color:var(--alerta)}
+.hint{font-size:11.5px;color:var(--t3);margin:7px 0 0}
+.hide{display:none!important}
+.carregando{color:var(--t2);font-size:14px;text-align:center;padding:60px 0}
+.slider{width:100%;accent-color:#a78bfa}
+.slider-lab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--t3);margin-top:3px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Nutrição Brasil 2026 · Brasília</div>
+  <h1>Estúdio de teste do certificado</h1>
+  <p>O sistema desenha nome, módulo, data e horas por cima da arte oficial — sem parágrafo chapado.
+     Troque os valores, veja como quebra e baixe o arquivo real.</p>
+</header>
+
+<main>
+  <div>
+    <div class="card">
+      <h2>Dados do participante</h2>
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="nome" value="Maria Eduarda Nascimento" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Módulo comprado</label>
+        <select id="mod"></select>
+      </div>
+      <div class="row">
+        <div class="field"><label>Data (extenso · PDF)</label><input type="text" id="dExt"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2"><label>Data (curta · social)</label><input type="text" id="dCur"></div>
+        <div class="field" style="flex:1"><label>Horas</label><input type="number" id="hrs" min="1" max="99"></div>
+      </div>
+      <p class="hint">Estes três campos são exatamente o que vai virar tabela editável no painel.</p>
+    </div>
+
+    <div class="card">
+      <h2>Formato</h2>
+      <div class="seg" id="segFmt">
+        <button data-f="a4" class="on">PDF A4</button>
+        <button data-f="feed">Feed</button>
+        <button data-f="story">Story</button>
+      </div>
+
+      <div id="boxFundo" class="hide" style="margin-top:15px">
+        <label>Fundo</label>
+        <div class="seg" id="segFundo">
+          <button data-b="oficial" class="on">Oficial</button>
+          <button data-b="liso">Liso</button>
+          <button data-b="foto">Minha foto</button>
+        </div>
+        <div id="boxFoto" class="hide" style="margin-top:12px">
+          <button class="btn sec file">Escolher imagem<input type="file" id="arq" accept="image/*"></button>
+          <div style="margin-top:12px">
+            <label>Zoom</label>
+            <input type="range" class="slider" id="zoom" min="100" max="300" value="100">
+            <div class="slider-lab"><span>1×</span><span>arraste na imagem para reposicionar</span><span>3×</span></div>
+          </div>
+          <div style="margin-top:12px">
+            <label>Véu preto sobre a foto</label>
+            <input type="range" class="slider" id="veu" min="0" max="95" value="75">
+            <div class="slider-lab"><span>0%</span><span id="veuV">75%</span><span>95%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Tipografia</h2>
+      <div class="field">
+        <label>Fonte do texto gerado</label>
+        <select id="fonte">
+          <option value="Poppins">Poppins</option>
+          <option value="Jost">Jost</option>
+          <option value="Questrial">Questrial</option>
+          <option value="Kumbh Sans">Kumbh Sans</option>
+        </select>
+      </div>
+      <p class="hint">A arte veio do Canva com uma fonte que não é do Google Fonts.
+         Compare com o “CERTIFICADO DE PARTICIPAÇÃO” da própria arte e me diga qual casa melhor.</p>
+    </div>
+
+    <div class="card">
+      <h2>Baixar</h2>
+      <button class="btn pri" id="btnPng">Baixar PNG em resolução cheia</button>
+      <button class="btn sec hide" id="btnPdf">Baixar PDF (A4 paisagem)</button>
+      <div class="aviso">
+        <b>Isto é um banco de testes.</b> A página real do aluno vai ser
+        <code>/c/{token}</code>, já com o nome dele preenchido e só as três opções de download.
+      </div>
+    </div>
+  </div>
+
+  <div class="palco">
+    <div id="load" class="carregando">carregando as artes oficiais…</div>
+    <canvas id="cv" class="hide"></canvas>
+    <div id="meta" class="meta hide"></div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+/* =====================================================================
+   MOTOR DO CERTIFICADO — Nutrição Brasil 2026 · Brasília
+   Um motor só para os três formatos. Tudo que varia está em FORMATOS.
+   ===================================================================== */
+const CDN = 'https://res.cloudinary.com/dlzrfhwin/image/upload/';
+const ART = {
+  a4:    { limpo:'nb2026/cert_pdf_limpo.png' },
+  feed:  { limpo:'nb2026/cert_feed_limpo.png',  preto:'nb2026/cert_feed_preto.png',  branco:'nb2026/cert_feed_branco.png' },
+  story: { limpo:'nb2026/cert_story_limpo.png', preto:'nb2026/cert_story_preto.png', branco:'nb2026/cert_story_branco.png' }
+};
+
+const FORMATOS = {
+  a4:    { W:2480, H:1754, cx:1239.5, fio:821,
+           nomeMax:1560, nomeSize:120, nomeGap:104,
+           parTop:858, parSize:50, parLead:70, parMax:1600, ref:3, limite:1090, foto:false },
+  feed:  { W:1080, H:1350, cx:539.5, fio:655,
+           nomeMax:860, nomeSize:64, nomeGap:40,
+           parTop:686, parSize:33, parLead:46, parMax:870, ref:4, limite:952, foto:true },
+  story: { W:1080, H:1920, cx:539.5, fio:933,
+           nomeMax:860, nomeSize:68, nomeGap:42,
+           parTop:964, parSize:33, parLead:46, parMax:870, ref:4, limite:1235, foto:true }
+};
+
+const MODULOS = {
+  plenaria:      { nome:'Plenária Principal', dias:3, extenso:'27, 28 e 29 de agosto de 2026', curta:'27 a 29/08/2026', horas:20 },
+  esportiva:     { nome:'Nutrição Esportiva', dias:1, extenso:'28 de agosto de 2026',          curta:'28/08/2026',      horas:8  },
+  universitario: { nome:'NB Universitário',   dias:1, extenso:'29 de agosto de 2026',          curta:'29/08/2026',      horas:8  },
+  medbrasil:     { nome:'MedBrasil',          dias:1, extenso:'29 de agosto de 2026',          curta:'29/08/2026',      horas:8  }
+};
+
+const NB = '\u00a0';                       // espaço que não quebra
+const LISO = '#170b24';
+
+/* ---- medição de texto ------------------------------------------------ */
+const med = document.createElement('canvas').getContext('2d');
+let FONTE = 'Poppins';
+function face(peso, size){ return peso + ' ' + size + 'px "' + FONTE + '", sans-serif'; }
+function wid(txt, peso, size){ med.font = face(peso, size); return med.measureText(txt).width; }
+
+/* ---- montagem da frase ---------------------------------------------- */
+function frase(m, extenso){
+  const data  = (extenso ? m.extenso : m.curta).replace(/ /g, NB);
+  const verbo = m.dias > 1 ? 'realizado nos dias ' : 'realizado no dia ';
+  return [
+    ['Participou do ', 0], ['Nutrição'+NB+'Brasil'+NB+'2026', 1], [' no módulo de ', 0],
+    [String(m.nome).replace(/ /g, NB), 1], [', ' + verbo, 0], [data, 1],
+    [', em Brasília'+NB+'–'+NB+'DF, perfazendo um total de ', 0], [String(m.horas), 1], [' horas-aula.', 0]
+  ];
+}
+
+/* ---- quebra de linha com trechos em negrito -------------------------- */
+function palavras(runs){
+  const out = []; let prevEspaco = true;
+  for (const [txt, b] of runs){
+    if (!txt) continue;
+    const cola = txt[0] !== ' ' && !prevEspaco && out.length > 0;
+    const partes = txt.split(' ').filter(Boolean);
+    partes.forEach((w, i) => {
+      if (i === 0 && cola) out[out.length-1].push([w, b]);
+      else out.push([[w, b]]);
+    });
+    prevEspaco = txt[txt.length-1] === ' ';
+  }
+  return out;
+}
+function quebra(runs, size, maxw){
+  const pal = palavras(runs), esp = wid(' ', 400, size);
+  const linhas = []; let atual = [], total = 0;
+  for (const p of pal){
+    const lw = p.reduce((s, [t, b]) => s + wid(t, b ? 700 : 400, size), 0);
+    if (atual.length && total + esp + lw > maxw){ linhas.push([atual, total]); atual = []; total = 0; }
+    if (atual.length) total += esp;
+    atual.push(p); total += lw;
+  }
+  if (atual.length) linhas.push([atual, total]);
+  return linhas;
+}
+function quebraNome(txt, size, maxw){
+  const linhas = []; let atual = '';
+  for (const w of txt.split(' ')){
+    const teste = (atual ? atual + ' ' + w : w);
+    if (atual && wid(teste, 600, size) > maxw){ linhas.push(atual); atual = w; }
+    else atual = teste;
+  }
+  if (atual) linhas.push(atual);
+  return linhas;
+}
+
+/* ---- layout ---------------------------------------------------------- */
+function layout(fmt, nome, m){
+  const f = FORMATOS[fmt], extenso = (fmt === 'a4');
+
+  let ns = f.nomeSize; const piso = Math.round(f.nomeSize * 0.72);
+  while (ns > piso && wid(nome, 600, ns) > f.nomeMax) ns--;
+  let nomeLinhas = [nome];
+  if (wid(nome, 600, ns) > f.nomeMax){
+    ns = Math.round(f.nomeSize * 0.62);
+    while (ns > 12){
+      nomeLinhas = quebraNome(nome, ns, f.nomeMax);
+      if (nomeLinhas.length <= 2 && Math.max(...nomeLinhas.map(l => wid(l, 600, ns))) <= f.nomeMax) break;
+      ns -= 2;
+    }
+  }
+
+  let ps = f.parSize, lead = f.parLead, linhas;
+  const runs = frase(m, extenso);
+  for(;;){
+    linhas = quebra(runs, ps, f.parMax);
+    const fim = f.parTop + (f.ref - linhas.length) * lead / 2 + linhas.length * lead;
+    if (fim <= f.limite || ps <= f.parSize - 10) break;
+    ps--; lead = Math.round(lead * ps / (ps + 1));
+  }
+  const topo = f.parTop + (f.ref - linhas.length) * lead / 2;
+  return { ns, nomeLinhas, ps, lead, topo, linhas, fim: topo + linhas.length * lead };
+}
+
+/* ---- desenho --------------------------------------------------------- */
+function desenhaTexto(ctx, fmt, nome, m){
+  const f = FORMATOS[fmt], L = layout(fmt, nome, m);
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+
+  const leadN = L.ns * 1.12;
+  const base = f.fio - f.nomeGap - (L.nomeLinhas.length - 1) * leadN;
+  ctx.font = face(600, L.ns);
+  L.nomeLinhas.forEach((ln, i) => ctx.fillText(ln, f.cx, base + i * leadN));
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  const esp = wid(' ', 400, L.ps);
+  let y = L.topo;
+  for (const [palavrasLinha, total] of L.linhas){
+    let x = f.cx - total / 2;
+    for (const p of palavrasLinha){
+      for (const [t, b] of p){
+        ctx.font = face(b ? 700 : 400, L.ps);
+        ctx.fillText(t, x, y);
+        x += ctx.measureText(t).width;
+      }
+      x += esp;
+    }
+    y += L.lead;
+  }
+  return L;
+}
+
+/* =====================================================================
+   ASSETS + reconstrução de alfa (moldura sobre preto ÷ sobre branco)
+   ===================================================================== */
+const imgs = {}, over = {};
+function carrega(url){
+  return new Promise((ok, err) => {
+    const i = new Image(); i.crossOrigin = 'anonymous';
+    i.onload = () => ok(i); i.onerror = () => err(new Error(url));
+    i.src = url;
+  });
+}
+function off(w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+
+function montaOverlay(preto, branco){
+  const w = preto.naturalWidth, h = preto.naturalHeight;
+  const cp = off(w, h), cb = off(w, h), cm = off(w, h);
+  cp.getContext('2d').drawImage(preto, 0, 0);
+  cb.getContext('2d').drawImage(branco, 0, 0);
+  const dp = cp.getContext('2d').getImageData(0, 0, w, h);
+  const db = cb.getContext('2d').getImageData(0, 0, w, h);
+  const dm = cm.getContext('2d').createImageData(w, h);
+  const P = dp.data, B = db.data, M = dm.data;
+  for (let i = 0; i < P.length; i += 4){
+    // sobre_branco - sobre_preto = (1 - alfa) * 255
+    const dif = ((B[i]-P[i]) + (B[i+1]-P[i+1]) + (B[i+2]-P[i+2])) / 3;
+    let a = 255 - dif; if (a < 0) a = 0; else if (a > 255) a = 255;
+    M[i] = 0; M[i+1] = 0; M[i+2] = 0; M[i+3] = a;
+  }
+  cm.getContext('2d').putImageData(dm, 0, 0);
+  return { mask: cm, prem: cp };
+}
+
+/* =====================================================================
+   ESTADO + RENDER
+   ===================================================================== */
+const S = { fmt:'a4', fundo:'oficial', foto:null, zoom:1, dx:0, dy:0, veu:.75 };
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+
+function modAtual(){
+  return {
+    nome:  document.getElementById('mod').selectedOptions[0].dataset.nome,
+    dias:  +document.getElementById('mod').selectedOptions[0].dataset.dias,
+    extenso: document.getElementById('dExt').value,
+    curta:   document.getElementById('dCur').value,
+    horas:   document.getElementById('hrs').value
+  };
+}
+
+function render(){
+  const f = FORMATOS[S.fmt];
+  cv.width = f.W; cv.height = f.H;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,f.W,f.H);
+
+  const usaOverlay = f.foto && S.fundo !== 'oficial';
+  if (!usaOverlay){
+    ctx.drawImage(imgs[S.fmt], 0, 0, f.W, f.H);
+  } else {
+    if (S.fundo === 'foto' && S.foto){
+      const im = S.foto;
+      const esc = Math.max(f.W / im.naturalWidth, f.H / im.naturalHeight) * S.zoom;
+      const w = im.naturalWidth * esc, h = im.naturalHeight * esc;
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,f.W,f.H);
+      ctx.drawImage(im, (f.W - w)/2 + S.dx, (f.H - h)/2 + S.dy, w, h);
+      ctx.fillStyle = 'rgba(0,0,0,' + S.veu + ')';
+      ctx.fillRect(0,0,f.W,f.H);
+    } else {
+      ctx.fillStyle = LISO; ctx.fillRect(0,0,f.W,f.H);
+    }
+    const o = over[S.fmt];
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.drawImage(o.mask, 0, 0, f.W, f.H);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(o.prem, 0, 0, f.W, f.H);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  const L = desenhaTexto(ctx, S.fmt, document.getElementById('nome').value.trim() || ' ', modAtual());
+
+  const folga = Math.round(FORMATOS[S.fmt].limite - L.fim);
+  document.getElementById('meta').innerHTML =
+    f.W + '×' + f.H + ' &nbsp;·&nbsp; nome <b>' + L.ns + 'px</b> em ' + L.nomeLinhas.length + ' linha' +
+    (L.nomeLinhas.length > 1 ? 's' : '') + ' &nbsp;·&nbsp; parágrafo <b>' + L.ps + 'px</b> em ' +
+    L.linhas.length + ' linhas &nbsp;·&nbsp; folga até a assinatura <b>' + folga + 'px</b>';
+
+}
+
+/* ---- interação ------------------------------------------------------- */
+function seg(id, campo, fn){
+  document.getElementById(id).addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    [...e.currentTarget.children].forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); fn(b.dataset[campo]);
+  });
+}
+function aplicaFormato(v){
+  S.fmt = v;
+  const social = FORMATOS[v].foto;
+  document.getElementById('boxFundo').classList.toggle('hide', !social);
+  document.getElementById('btnPdf').classList.toggle('hide', social);
+  if (!social){
+    S.fundo = 'oficial';
+    document.getElementById('boxFoto').classList.add('hide');
+    [...document.getElementById('segFundo').children].forEach(
+      b => b.classList.toggle('on', b.dataset.b === 'oficial'));
+  }
+}
+seg('segFmt', 'f', v => { aplicaFormato(v); render(); });
+seg('segFundo', 'b', v => {
+  S.fundo = v;
+  document.getElementById('boxFoto').classList.toggle('hide', v !== 'foto');
+  render();
+});
+
+['nome','dExt','dCur','hrs'].forEach(id =>
+  document.getElementById(id).addEventListener('input', render));
+
+document.getElementById('mod').addEventListener('change', e => {
+  const m = MODULOS[e.target.value];
+  document.getElementById('dExt').value = m.extenso;
+  document.getElementById('dCur').value = m.curta;
+  document.getElementById('hrs').value  = m.horas;
+  render();
+});
+document.getElementById('fonte').addEventListener('change', async e => {
+  FONTE = e.target.value;
+  await document.fonts.load('600 60px "' + FONTE + '"');
+  await document.fonts.load('700 40px "' + FONTE + '"');
+  render();
+});
+document.getElementById('veu').addEventListener('input', e => {
+  S.veu = e.target.value / 100;
+  document.getElementById('veuV').textContent = e.target.value + '%';
+  render();
+});
+document.getElementById('zoom').addEventListener('input', e => { S.zoom = e.target.value / 100; render(); });
+document.getElementById('arq').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const fr = new FileReader();
+  fr.onload = () => { const i = new Image(); i.onload = () => { S.foto = i; S.dx = S.dy = 0; render(); }; i.src = fr.result; };
+  fr.readAsDataURL(file);
+});
+
+let arrasto = null;
+cv.addEventListener('pointerdown', e => {
+  if (S.fundo !== 'foto' || !S.foto) return;
+  arrasto = { x:e.clientX, y:e.clientY, dx:S.dx, dy:S.dy };
+  cv.setPointerCapture(e.pointerId); cv.classList.add('drag');
+});
+cv.addEventListener('pointermove', e => {
+  if (!arrasto) return;
+  const k = FORMATOS[S.fmt].W / cv.getBoundingClientRect().width;
+  S.dx = arrasto.dx + (e.clientX - arrasto.x) * k;
+  S.dy = arrasto.dy + (e.clientY - arrasto.y) * k;
+  render();
+});
+['pointerup','pointercancel'].forEach(ev =>
+  cv.addEventListener(ev, () => { arrasto = null; cv.classList.remove('drag'); }));
+window.addEventListener('resize', render);
+
+/* ---- downloads ------------------------------------------------------- */
+function nomeArquivo(ext){
+  const n = document.getElementById('nome').value.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'certificado';
+  return 'certificado-nb2026-' + n + '-' + S.fmt + '.' + ext;
+}
+document.getElementById('btnPng').addEventListener('click', () => {
+  cv.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = nomeArquivo('png'); a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, 'image/png');
+});
+document.getElementById('btnPdf').addEventListener('click', async () => {
+  const btn = document.getElementById('btnPdf');
+  btn.disabled = true; btn.textContent = 'gerando…';
+  try{
+    const jpg = cv.toDataURL('image/jpeg', 0.94);
+    const doc = await PDFLib.PDFDocument.create();
+    doc.setTitle('Certificado · Nutrição Brasil 2026 · Brasília');
+    doc.setAuthor('Science Play Cursos LTDA');
+    const img = await doc.embedJpg(jpg);
+    const pg = doc.addPage([841.89, 595.28]);          // A4 paisagem
+    pg.drawImage(img, { x:0, y:0, width:841.89, height:595.28 });
+    const bytes = await doc.save();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([bytes], { type:'application/pdf' }));
+    a.download = nomeArquivo('pdf'); a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } finally { btn.disabled = false; btn.textContent = 'Baixar PDF (A4 paisagem)'; }
+});
+
+/* ---- boot ------------------------------------------------------------ */
+(async function(){
+  const sel = document.getElementById('mod');
+  Object.entries(MODULOS).forEach(([k, m]) => {
+    const o = document.createElement('option');
+    o.value = k; o.textContent = m.nome + ' · ' + m.horas + 'h';
+    o.dataset.nome = m.nome; o.dataset.dias = m.dias;
+    sel.appendChild(o);
+  });
+  aplicaFormato('a4');
+  const m0 = MODULOS.plenaria;
+  document.getElementById('dExt').value = m0.extenso;
+  document.getElementById('dCur').value = m0.curta;
+  document.getElementById('hrs').value  = m0.horas;
+
+  try{
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('400 40px Poppins'), document.fonts.load('600 60px Poppins'), document.fonts.load('700 40px Poppins')
+    ]);
+    const [a4, fL, fP, fB, sL, sP, sB] = await Promise.all([
+      carrega(CDN + ART.a4.limpo),
+      carrega(CDN + ART.feed.limpo),  carrega(CDN + ART.feed.preto),  carrega(CDN + ART.feed.branco),
+      carrega(CDN + ART.story.limpo), carrega(CDN + ART.story.preto), carrega(CDN + ART.story.branco)
+    ]);
+    imgs.a4 = a4; imgs.feed = fL; imgs.story = sL;
+    over.feed  = montaOverlay(fP, fB);
+    over.story = montaOverlay(sP, sB);
+    document.getElementById('load').classList.add('hide');
+    cv.classList.remove('hide');
+    document.getElementById('meta').classList.remove('hide');
+    render();
+  } catch(e){
+    document.getElementById('load').innerHTML =
+      'Não consegui carregar as artes.<br><small style="color:#8b78ad">' + e.message + '</small>';
+  }
+})();
+</script>
+</body>
+</html>

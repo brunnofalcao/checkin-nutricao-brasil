@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência de certificado · Nutrição Brasil</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0618;--card:#1b0f2d;--line:#2f1d4a;--t1:#f4f0fa;--t2:#c3b4dd;--t3:#8b78ad;--ok:#34d399;--al:#fbbf24;--roxo:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 500px at 80% -10%,#2a1247,var(--bg) 62%) fixed;
+  color:var(--t1);font-family:Poppins,-apple-system,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.caixa{max-width:560px;width:100%;background:linear-gradient(180deg,var(--card),#160c26);
+  border:1px solid var(--line);border-radius:20px;padding:30px}
+.kicker{font-size:10.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--roxo);margin-bottom:12px}
+h1{font-size:23px;font-weight:700;letter-spacing:-.5px;margin:0 0 6px;line-height:1.25}
+h1.ok{color:var(--ok)} h1.nao{color:var(--al)}
+p{line-height:1.6;color:var(--t2);margin:0 0 14px}
+.linhas{margin:20px 0 6px;border-top:1px solid var(--line)}
+.l{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.l span:first-child{color:var(--t3);font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;padding-top:3px}
+.l span:last-child{font-weight:600;text-align:right}
+.pe{margin-top:22px;font-size:12px;color:var(--t3);line-height:1.55}
+.busca{display:flex;gap:8px;margin-top:18px}
+.busca input{flex:1;background:#0f0720;border:1px solid var(--line);color:var(--t1);border-radius:11px;
+  padding:12px;font-family:inherit;font-size:14px;outline:none;text-transform:uppercase}
+.busca input:focus{border-color:var(--roxo)}
+.busca button{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:0;border-radius:11px;
+  padding:12px 20px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="caixa">
+  <div class="kicker">Nutrição Brasil · Science Play</div>
+  <div id="alvo"><h1>Conferindo…</h1></div>
+  <div class="busca" id="busca">
+    <input id="cod" placeholder="NB26-XXXXXX" maxlength="12" autocomplete="off">
+    <button id="ir">Conferir</button>
+  </div>
+  <p class="pe">Todo certificado do Nutrição Brasil sai com um código impresso no rodapé.
+     Digite o código para confirmar o nome do participante, o módulo cursado e a carga horária
+     exatamente como foram emitidos.<br><br>
+     Science Play Cursos LTDA · CNPJ 33.612.911/0001-29</p>
+</div>
+
+<script>
+const URL_SB = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
+const $ = i => document.getElementById(i);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function pegaCodigo(){
+  const q = new URLSearchParams(location.search).get('c');
+  if (q) return q;
+  const p = location.pathname.replace(/\/+$/,'').split('/').pop();
+  return (p && /^NB\d{2}-[A-Z0-9]{4,10}$/i.test(p)) ? p : (location.hash || '').replace('#','');
+}
+function linha(r, v){ return '<div class="l"><span>' + r + '</span><span>' + esc(v) + '</span></div>'; }
+
+async function confere(cod){
+  cod = String(cod || '').trim().toUpperCase();
+  if (!cod){ $('alvo').innerHTML = '<h1>Conferência de certificado</h1><p>Digite o código impresso no rodapé do certificado.</p>'; return; }
+  $('alvo').innerHTML = '<h1>Conferindo…</h1>';
+  try{
+    const r = await fetch(URL_SB + '/rest/v1/rpc/cert_verifica', {
+      method:'POST',
+      headers:{ apikey:ANON, Authorization:'Bearer ' + ANON, 'Content-Type':'application/json' },
+      body: JSON.stringify({ p_codigo: cod })
+    });
+    const d = await r.json();
+    if (!d || !d.valido) throw new Error('nao');
+    const dt = new Date(d.emitido_em).toLocaleDateString('pt-BR');
+    $('alvo').innerHTML =
+      '<h1 class="ok">Certificado autêntico</h1>' +
+      '<p>Este código corresponde a um certificado emitido pela Science Play.</p>' +
+      '<div class="linhas">' + linha('Participante', d.nome) + linha('Módulo', d.modulo) +
+      linha('Realização', d.data) + linha('Carga horária', d.horas + ' horas-aula') +
+      linha('Emitido em', dt) + linha('Código', cod) + '</div>';
+    $('busca').classList.add('hide');
+  } catch(e){
+    $('alvo').innerHTML = '<h1 class="nao">Código não encontrado</h1>' +
+      '<p>Nenhum certificado foi emitido com o código <b>' + esc(cod) + '</b>. ' +
+      'Confira se digitou exatamente como está no rodapé do documento.</p>';
+    $('busca').classList.remove('hide');
+  }
+}
+$('ir').addEventListener('click', () => confere($('cod').value));
+$('cod').addEventListener('keydown', e => { if (e.key === 'Enter') confere($('cod').value); });
+const c0 = pegaCodigo();
+if (c0) $('cod').value = c0.toUpperCase();
+confere(c0);
+</script>
+</body>
+</html>
