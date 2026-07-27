@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NB Brasília 2026 · Mapa de Postagem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0618; --bg2:#160c28; --bg3:#241540; --card:#140a24; --bd:#32224a; --bd2:#4a3568;
+  --t1:#ffffff; --t2:#c9bcde; --t3:#8a7aa5;
+  --brand:#6f4d89; --cta:#8b5fbf; --gold:#ffc800;
+  --green:#5ab78e; --red:#ff6b6b; --cyan:#80c0ff; --nude:#e0b3a1;
+  --headerH:58px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--t1);font-family:Poppins,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.5;padding-top:var(--headerH)}
+button,input,select{font-family:inherit;font-size:14px;color:var(--t1)}
+header.app{position:fixed;top:0;left:0;right:0;height:var(--headerH);z-index:80;background:rgba(13,6,24,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:0 16px;display:flex;align-items:center;gap:14px}
+header.app img{height:22px}
+header.app .tt{font-size:13px;font-weight:700;line-height:1.2}
+header.app .tt span{display:block;font-size:9.5px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:1.4px}
+header.app a.back{margin-left:auto;color:var(--t3);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--bd);border-radius:8px;padding:6px 11px}
+header.app a.back:hover{color:var(--t1);border-color:var(--bd2)}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 16px 90px}
+h1{font-size:24px;letter-spacing:-.4px;margin-bottom:4px}
+.sub{color:var(--t3);font-size:13px;margin-bottom:20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:22px;color:var(--gold);line-height:1.1}
+.kpi span{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px}
+.bar{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar select{background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:9px 11px;cursor:pointer}
+.btn{border:1px solid var(--bd);background:var(--bg2);border-radius:10px;padding:9px 14px;font-size:12.5px;font-weight:700;color:var(--t2);cursor:pointer}
+.btn:hover{border-color:var(--bd2);color:var(--t1)}
+.btn.pri{background:var(--green);color:#07130d;border-color:var(--green)}
+.btn.acc{background:var(--cyan);color:#0d1b30;border-color:var(--cyan)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.day{margin:26px 0 10px;display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--bd);padding-bottom:7px}
+.day b{font-size:16px}
+.day span{font-size:11.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px}
+.day em{margin-left:auto;font-style:normal;font-size:10.5px;color:var(--gold);text-transform:uppercase;letter-spacing:.8px}
+.post{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.post.done{opacity:.5}
+.phead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:9px}
+.tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:3px 9px;border-radius:11px}
+.t-hora{background:rgba(255,255,255,.08);color:var(--t2)}
+.t-ger{background:rgba(90,183,142,.18);color:#7fd6ac}
+.t-ext{background:rgba(255,200,0,.16);color:var(--gold)}
+.t-fmt{background:rgba(128,192,255,.16);color:var(--cyan)}
+.t-fase{background:rgba(139,95,191,.22);color:#cbb0ee}
+.ptitle{font-size:15px;font-weight:700;margin-bottom:3px}
+.pint{font-size:12.5px;color:var(--t3);margin-bottom:9px}
+.pend{background:rgba(255,200,0,.09);border:1px solid rgba(255,200,0,.32);border-radius:9px;padding:8px 11px;font-size:12px;color:#ffe08a;margin-bottom:9px}
+.pend b{color:var(--gold)}
+.cap{background:#08040f;border:1px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:12.5px;color:var(--t2);white-space:pre-wrap;max-height:118px;overflow:auto;margin-bottom:9px;font-family:ui-monospace,Menlo,monospace;line-height:1.6}
+.acts{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3);cursor:pointer;margin-left:auto}
+.chk input{width:auto;accent-color:var(--green)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--cyan);padding:11px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+.prog{position:fixed;inset:0;background:rgba(5,2,10,.94);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.prog.show{display:flex}
+.prog b{font-size:19px}
+.prog small{color:var(--t3);font-size:12.5px;max-width:440px;display:block}
+.pbar{width:min(420px,90vw);height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--green);transition:width .2s}
+#ghost{position:fixed;left:-9999px;top:0;width:1200px;height:1700px;border:0}
+.note{background:rgba(128,192,255,.07);border-left:3px solid var(--cyan);padding:11px 14px;border-radius:0 9px 9px 0;font-size:12.5px;color:var(--t2);margin-bottom:18px}
+@media(max-width:640px){.wrap{padding:16px 12px 80px}.acts .btn{flex:1}}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <img src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png" alt="Nutrição Brasil">
+  <div class="tt">Mapa de Postagem<span>Brasília · 27–29 AGO 2026</span></div>
+  <a class="back" href="./gerador">Gerador →</a>
+</header>
+
+<div class="wrap">
+  <h1>Mapa de postagem · 30 dias finais</h1>
+  <p class="sub">27 de julho a 26 de agosto de 2026 · @nutricaobrasil.expo</p>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="note">
+    <b>Como funciona.</b> Peças marcadas como <b style="color:var(--green)">GERADOR</b> são montadas automaticamente com a IDV oficial: o painel abre o gerador num quadro oculto, injeta a configuração e baixa o PNG. Peças <b style="color:var(--gold)">EXTERNA</b> são carrossel ou vídeo, que o gerador não produz: a legenda e o roteiro ficam aqui para o design montar.
+  </div>
+
+  <div class="bar">
+    <select id="fFase"><option value="">Todas as fases</option></select>
+    <select id="fTipo"><option value="">Gerador e externa</option><option value="ger">Só gerador</option><option value="ext">Só externa</option></select>
+    <select id="fPend"><option value="">Com e sem pendência</option><option value="1">Só com pendência</option><option value="0">Só sem pendência</option></select>
+    <select id="fStatus"><option value="">Publicadas e pendentes</option><option value="0">Só não publicadas</option><option value="1">Só publicadas</option></select>
+    <button class="btn pri" id="btnLote">⬇ Gerar e baixar em lote</button>
+    <button class="btn" id="btnCsv">Exportar CSV do mapa</button>
+    <button class="btn" id="btnJson">Baixar JSON de todas</button>
+    <button class="btn" id="btnSaved">Enviar para “Peças salvas”</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<iframe id="ghost" src="./gerador.html"></iframe>
+<div class="toast" id="toast"></div>
+<div class="prog" id="prog">
+  <b id="progT">Gerando peças…</b>
+  <div class="pbar"><i id="progB"></i></div>
+  <small id="progS"></small>
+  <button class="btn" id="progC">Cancelar</button>
+</div>
+
+<script>
+/* =========================================================
+   NB BRASÍLIA 2026 · MAPA DE POSTAGEM
+   Fonte da verdade da programação: nutricaobrasil.com.br (26/07/2026)
+   O painel NÃO altera o gerador. Ele usa o mesmo localStorage e o
+   escopo global do gerador carregado em iframe de mesma origem.
+   ========================================================= */
+
+const EV = {data:'27 A 29 DE AGOSTO', cidade:'BRASÍLIA-DF', local:'CENTRO DE CONVENÇÕES ULYSSES GUIMARÃES'};
+
+/* Base de snapshot compatível com o gerador */
+function snap(o){
+  return Object.assign({
+    type:'chamada', fmt:'vert', bg:'oficial', variant:0,
+    fields:{}, logoBox:true, showLogoNB:true, showLogoSP:true, showFooterBar:true,
+    fotoZoom:100, fotoX:0, fotoY:0, fotoDark:30,
+    bgZoom:100, bgX:0, bgY:0, bgDark:55,
+    fotoSrc:null, logoEmpSrc:null, bgImgSrc:null
+  }, o);
+}
+/* Atalho para card de palestrante em collab */
+function pal(nome, cargo, tema, data){
+  return {
+    ger:snap({type:'palestrante', bg:'oficial', variant:0, fields:{
+      eyebrow:'PALESTRANTE CONFIRMADO', nome:nome, cargo:cargo, tema:tema, cta:''
+    }}),
+    pend:['Foto do palestrante','Convite de collab aceito']
+  };
+}
+function capPal(tema, nome, modulo, dia, gancho){
+  return '"'+tema+'"\n\n'+nome+' sobe ao palco do '+modulo+' no dia '+dia+' de agosto.\n\n'+gancho+'\n\nMarque quem precisa ouvir isso.\n\nNutrição Brasil 2026 · Brasília · 27 a 29 de agosto\nIngressos em nutricaobrasil.com.br';
+}
+
+/* ============ MAPA ============ */
+const POSTS = [
+
+/* ---------- FASE 1 · DIMENSÃO ---------- */
+{d:'2026-07-27',h:'09:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'FALTA 1 MÊS',int:'Instalar o relógio. Único post do mês sem CTA na arte.',
+ ger:snap({type:'countdown',bg:'photo',variant:0,bgDark:55,fields:{numero:'1',unidade:'MÊS',h2:'para o Nutrição Brasil',h3:'27 a 29 de agosto · Ulysses Guimarães · Brasília',cta:''}}),
+ pend:['Foto de acervo do Ulysses lotado, plano aberto, sem rosto nítido em primeiro plano'],
+ cap:'FALTA 1 MÊS.\n\nEm 27 de agosto, o Centro de Convenções Ulysses Guimarães abre as portas para o maior congresso de nutrição do Brasil.\n\n42 nomes no palco. 4 módulos. 3 dias.\n\nE uma pergunta que atravessa todos eles: o consultório mudou de era, o seu repertório acompanhou?\n\nO paciente que chega hoje já usou análogo de GLP-1. Já emagreceu rápido. Já perdeu massa magra sem perceber. Já voltou ao peso e culpou a si mesmo.\n\nNenhuma dessas conversas estava na sua graduação.\n\nNutrição Brasil 2026\n27 a 29 de agosto · Ulysses Guimarães · Brasília\n2º lote aberto, a partir de R$ 97\n\nLink na bio.'},
+
+{d:'2026-07-27',h:'19:00',fase:'1 · Dimensão',fmt:'Carrossel 4:5',ext:1,
+ t:'Os 42 nomes',int:'Dimensionar o tamanho da grade antes de vender qualquer coisa.',
+ pend:['Carrossel de 6 slides, montar fora do gerador'],
+ cap:'Quatro módulos acontecendo dentro do mesmo evento.\n\nPlenária Principal, três dias inteiros.\nNutrição Esportiva, dia 28.\nMedBrasil, dia 29.\nNB Universitário, dia 29.\n\nVocê escolhe onde quer estar. E não precisa escolher só um.\n\nSalve esse post e volte nele quando for decidir.\n\nNutrição Brasil 2026 · Brasília · 27 a 29 de agosto'},
+
+{d:'2026-07-28',h:'09:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'D-30',int:'Abrir a contagem numérica.',
+ ger:snap({type:'countdown',bg:'oficial',variant:0,fields:{numero:'30',unidade:'DIAS',h2:'para o Nutrição Brasil',h3:'27 a 29 de agosto · Brasília-DF',cta:'GARANTA SUA VAGA'}}),
+ cap:'30 dias.\n\nÉ o tempo que separa você da versão do seu consultório que ainda não existe.\n\nEm 30 dias, 42 profissionais sobem ao palco em Brasília para discutir o que mudou no emagrecimento, no músculo, no comportamento e na estética desde que os análogos de GLP-1 entraram na vida dos seus pacientes.\n\nNão é atualização de rotina. É outra era.\n\n2º lote aberto. A partir de R$ 97.\nLink na bio.'},
+
+Object.assign({d:'2026-07-28',h:'19:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Dra. Ana Paula Pujol',int:'Nome mais forte da noite de abertura.',
+ cap:capPal('Análogos de GLP-1 na saúde feminina: benefícios, riscos e o que a prática clínica precisa saber','Dra. Ana Paula Pujol','Plenária Principal','27','A conversa que está travando consultório inteiro: como conduzir uma paciente que emagreceu com análogo e agora está perdendo cabelo, força e ciclo.')},
+ pal('Dra. Ana Paula Pujol','Plenária Principal · 27 de agosto','Análogos de GLP-1 na saúde feminina')),
+
+Object.assign({d:'2026-07-29',h:'09:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Dra. Roberta Carbonari',int:'Alta tração em comportamento alimentar.',
+ cap:capPal('O abismo entre saber e fazer: neurociência do comportamento alimentar','Dra. Roberta Carbonari','Plenária Principal','28','Seu paciente sabe o que precisa comer. Você já explicou. Ele concorda, anota, sai do consultório decidido, e na quarta-feira à noite não faz. O problema nunca foi informação.')},
+ pal('Dra. Roberta Carbonari','Plenária Principal · 28 de agosto','Neurociência do comportamento alimentar')),
+
+{d:'2026-07-29',h:'19:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Aviso da virada de 13/08',int:'Instalar a data da virada sem pressão ainda.',
+ ger:snap({type:'virada',bg:'oficial',variant:0,fields:{h1:'VIRADA DE LOTE',h2:'DIA 13 DE AGOSTO',h3:'Depois dessa data, o valor de todos os módulos sobe.',cta:'GARANTA O LOTE ATUAL'}}),
+ cap:'Dia 13 de agosto o 2º lote fecha.\n\nHoje:\nPlenária Principal R$ 497\nMedBrasil R$ 397\nNutrição Esportiva R$ 277\nNB Universitário R$ 97\n\nDepois de 13/08, esses valores sobem. É assim desde 2014: quem decide antes paga menos.\n\nNão é pressão de campanha, é como o evento funciona.\n\nLink na bio.'},
+
+{d:'2026-07-30',h:'10:00',fase:'1 · Dimensão',fmt:'Carrossel 4:5',ext:1,
+ t:'Dia da Amizade · Card 1',int:'Alcance por marcação e descoberta do Golden.',
+ pend:['Carrossel de 9 slides, montar fora do gerador','Pedir repost aos palestrantes'],
+ cap:'Você aprende sozinho. Você muda acompanhado.\n\nTodo nutricionista tem aquele colega que puxa pra cima. Que manda o artigo às 23h. Que discute caso clínico no grupo. Que te faz querer estudar mais do que você estudaria por conta própria.\n\nNo Dia da Amizade, nós vamos colocar duas pessoas assim dentro do lugar mais reservado do maior congresso de nutrição do Brasil.\n\nSão 2 Golden Experience, R$ 1.997 cada: lounge exclusivo, assento reservado, os 4 módulos, gravações, NB Run e uma mentoria com o Brunno no dia 27, das 09h às 17h, antes do congresso abrir.\n\nGolden existe por um motivo: o conteúdo você leva do palco, a rede você leva da sala.\n\nMarque o amigo e complete nos comentários: "nós dois precisamos estar em Brasília porque..."\n\nAté 02/08, às 23h59. Regulamento no link da bio.\n\n#NutricaoBrasil2026 #DiaDaAmizade'},
+
+Object.assign({d:'2026-07-30',h:'19:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Dr. Bruno Cesar',int:'Único nome que sobe em dois módulos.',
+ cap:capPal('Testosterona, cortisol e sono: a leitura endócrina da performance','Dr. Bruno Cesar','Nutrição Esportiva e MedBrasil','28 e 29','Seu paciente treina, come certo, dorme mal e não evolui. Você já olhou para o eixo endócrino ou ainda está ajustando macro?')},
+ pal('Dr. Bruno Cesar','Nutrição Esportiva · 28 ago · MedBrasil · 29 ago','Leitura endócrina da performance')),
+
+{d:'2026-07-31',h:'09:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Sexta do Lote · R$ 497',int:'Primeiro post comercial explícito. Preço dentro da arte.',
+ ger:snap({type:'chamada',bg:'oficial',variant:1,fields:{eyebrow:'2º LOTE ATÉ 13 DE AGOSTO',h1:'R$ 497',h2:'PLENÁRIA PRINCIPAL',h3:'3 dias · mais de 20 palestrantes · certificado',cta:'GARANTIR POR R$ 497'}}),
+ cap:'Sexta-feira, contas na mesa.\n\nR$ 497 pela Plenária Principal.\n3 dias de congresso. Mais de 20 palestrantes. Acesso à maior expo de nutrição do país. Homenagem do Dia do Nutricionista. Certificado.\n\nEm 12x, dá R$ 51,40.\n\nVocê gasta mais que isso por mês em coisa que não muda seu consultório.\n\nAté 13/08. Depois sobe.\nLink na bio.'},
+
+Object.assign({d:'2026-07-31',h:'19:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Dra. Karina Al Assal',int:'Um dos temas mais buscados do ano.',
+ cap:capPal('GLP-1 é prejudicial ou benéfico para a microbiota?','Dra. Karina Al Assal','Plenária Principal','28','A pergunta que ninguém quer fazer em voz alta porque a resposta honesta ainda está sendo construída.')},
+ pal('Dra. Karina Al Assal','Plenária Principal · 28 de agosto','GLP-1 e microbiota')),
+
+{d:'2026-08-01',h:'09:00',fase:'1 · Dimensão',fmt:'Carrossel 4:5',ext:1,
+ t:'Prova de Sábado · acervo',int:'Mostrar que o ano inteiro aconteceu.',
+ pend:['Selecionar 6 fotos de Balneário Camboriú e Belo Horizonte'],
+ cap:'Balneário Camboriú, março. Belo Horizonte, maio.\n\nO ano inteiro o Nutrição Brasil rodou o país. Brasília é onde tudo se encontra: 3 dias, 4 módulos, 42 nomes, a maior expo do setor e a corrida no domingo.\n\nSe você acompanhou de longe as outras edições, essa é a que vale atravessar o país para ir.\n\nNutrição Brasil 2026 · 27 a 30 de agosto'},
+
+Object.assign({d:'2026-08-01',h:'19:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Dr. Henrique Freire',int:'A dor prática mais cara da grade.',
+ cap:capPal('Como evitar a queda do metabolismo em usuários de GLP-1','Dr. Henrique Freire','Plenária Principal','29','O paciente emagrece, o gasto energético despenca, e quando ele para a medicação o corpo já não é o mesmo que era antes.')},
+ pal('Dr. Henrique Freire','Plenária Principal · 29 de agosto','Queda do metabolismo em usuários de GLP-1')),
+
+{d:'2026-08-02',h:'10:00',fase:'1 · Dimensão',fmt:'Carrossel 4:5',ext:1,
+ t:'Dia da Amizade · Card 2',int:'Última chamada. Encerra 23h59.',
+ pend:['Carrossel de 6 slides','Número real de duplas concorrendo'],
+ cap:'Último dia.\n\nAté agora são [X] duplas concorrendo a 2 Golden Experience no Nutrição Brasil 2026.\n\nSe você leu o post de quinta, pensou em alguém e não marcou, hoje é o dia. Encerra às 23h59.\n\nComente marcando o amigo e complete: "nós dois precisamos estar em Brasília porque..."\n\nResultado amanhã, ao vivo nos Stories.\n\n#NutricaoBrasil2026 #DiaDaAmizade'},
+
+Object.assign({d:'2026-08-02',h:'19:00',fase:'1 · Dimensão',fmt:'Feed 4:5',
+ t:'Dra. Bettina Moritz',int:'Fecha a semana com o eixo estética responsável.',
+ cap:capPal('Composição corporal, hormônios, fertilidade e longevidade','Dra. Bettina Moritz','Plenária Principal','29','Quatro coisas que a maioria trata em consultas separadas e que o corpo trata como uma coisa só.')},
+ pal('Dra. Bettina Moritz','Plenária Principal · 29 de agosto','Composição corporal, hormônios e longevidade')),
+
+/* ---------- FASE 2 · PRESSÃO ---------- */
+{d:'2026-08-03',h:'09:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dupla vencedora + vagas Golden',int:'Converter 4 dias de desejo acumulado.',
+ ger:snap({type:'chamada',bg:'oficial',variant:3,fields:{eyebrow:'CAMPANHA DIA DA AMIZADE',h1:'Temos uma dupla vencedora',h2:'GOLDEN EXPERIENCE',h3:'Restam vagas. R$ 1.997, em até 12x.',cta:'CONHECER O GOLDEN'}}),
+ pend:['Número real de vagas Golden restantes','Nome da dupla vencedora'],
+ cap:'Nós lemos todas.\n\nForam [X] respostas para a pergunta "por que nós dois precisamos estar em Brasília". Teve dupla de faculdade que não se vê há seis anos. Teve sócia de consultório. Teve mãe e filha, as duas nutricionistas.\n\nA resposta vencedora foi essa: [resposta]\n\n[@vencedora] e [@amiga], vocês duas são Golden no Nutrição Brasil 2026.\n\nPara quem não ganhou: restam [X] vagas Golden.\nMesma sala, mesma mentoria do dia 27, mesmo assento reservado.\nR$ 1.997, em até 12x.\n\nnutricaobrasil.com.br/golden'},
+
+Object.assign({d:'2026-08-03',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Andréia Naves',int:'Eixo músculo, um dos nomes de maior autoridade.',
+ cap:capPal('Conexão intestino, músculo e cérebro','Dra. Andréia Naves','Plenária Principal','28','Três sistemas que a graduação ensinou separados e que decidem juntos se o seu paciente sustenta ou perde o resultado.')},
+ pal('Dra. Andréia Naves','Plenária Principal · 28 de agosto','Conexão intestino, músculo e cérebro')),
+
+{d:'2026-08-04',h:'09:00',fase:'2 · Pressão',fmt:'Reels 9:16',ext:1,
+ t:'Tese da Terça',int:'Reels do lote pré-produzido. Recorte + camada preta + texto.',
+ pend:['Sair do lote de 10 Reels produzido entre 01 e 03/08'],
+ cap:'Emagrecer rápido virou fácil. Sustentar virou o problema.\n\nO que mudou não foi a fisiologia do seu paciente. Foi a velocidade com que ele chega no número e a ausência de plano para o que vem depois.\n\nNutrição Brasil 2026 · Brasília · 27 a 29 de agosto'},
+
+Object.assign({d:'2026-08-04',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dr. Victor Sorrentino',int:'Comportamento e o custo das escolhas clínicas.',
+ cap:capPal('Burnout: o preço das escolhas e das iatrogenias','Dr. Victor Sorrentino','Plenária Principal','29','Uma palestra sobre o paciente e sobre você. As duas coisas se encontram no mesmo lugar.')},
+ pal('Dr. Victor Sorrentino','Plenária Principal · 29 de agosto','Burnout, escolhas e iatrogenias')),
+
+Object.assign({d:'2026-08-05',h:'09:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Lorena Tomazett',int:'Saúde da mulher como eixo transversal.',
+ cap:capPal('O corpo que a mulher habita: imagem corporal, trauma e comida','Dra. Lorena Tomazett','Plenária Principal','29','A consulta que não cabe em anamnese padrão e que decide a adesão de tudo que vem depois.')},
+ pal('Dra. Lorena Tomazett','Plenária Principal · 29 de agosto','Imagem corporal, trauma e comida')),
+
+Object.assign({d:'2026-08-05',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Aline David',int:'Eixo GLP-1 dentro da Nutrição Esportiva.',
+ cap:capPal('GLP-1 e esporte: preservar massa magra e performance','Dra. Aline David','Nutrição Esportiva','28','O atleta que emagreceu e ficou mais fraco não é exceção. Virou rotina de consultório.')},
+ pal('Dra. Aline David','Nutrição Esportiva · 28 de agosto','GLP-1, massa magra e performance')),
+
+{d:'2026-08-06',h:'09:00',fase:'2 · Pressão',fmt:'Carrossel 4:5',ext:1,
+ t:'Vitrine NB · a expo',int:'Experiência e ecossistema. Quebra o gelo com patrocinador.',
+ pend:['Confirmar lista de marcas confirmadas na expo'],
+ cap:'A maior exposição de nutrição do país acontece dentro do mesmo prédio do congresso.\n\nNão é corredor de estande. É onde a indústria mostra o que vem, você testa produto, conversa com quem desenvolve e sai com repertório que nenhuma bula entrega.\n\nChegue cedo no dia 27. A expo abre antes da primeira palestra.\n\nNutrição Brasil 2026 · Ulysses Guimarães · Brasília'},
+
+Object.assign({d:'2026-08-06',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Denise Carreiro',int:'Eixo metabolismo.',
+ cap:capPal('Hipersensibilidade alimentar no manejo do estresse','Dra. Denise Carreiro','Plenária Principal','27','O paciente que reage a tudo e melhora com nada. Existe caminho, e ele não começa pela dieta de exclusão.')},
+ pal('Dra. Denise Carreiro','Plenária Principal · 27 de agosto','Hipersensibilidade alimentar e estresse')),
+
+{d:'2026-08-07',h:'09:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'D-20',int:'Segundo marco de contagem, colado na pressão de preço.',
+ ger:snap({type:'countdown',bg:'oficial',variant:1,fields:{numero:'20',unidade:'DIAS',h2:'para o Nutrição Brasil',h3:'E 6 dias para o preço subir',cta:'GARANTA SUA VAGA'}}),
+ cap:'20 dias para o evento. 6 dias para o preço subir.\n\nSe você está esperando o momento certo para decidir, ele tem data: 13 de agosto.\n\nDepois disso, o mesmo congresso, a mesma grade e os mesmos 42 nomes custam mais.\n\nA partir de R$ 97. Link na bio.'},
+
+Object.assign({d:'2026-08-07',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dr. Omar de Faria',int:'Pergunta prática de prescrição.',
+ cap:capPal('Preparo metabólico do atleta usuário de GLP-1: proteína ou carboidrato?','Dr. Omar de Faria','Nutrição Esportiva','28','Uma escolha que muda resultado e que a maioria ainda faz por hábito, não por evidência.')},
+ pal('Dr. Omar de Faria','Nutrição Esportiva · 28 de agosto','Preparo metabólico do atleta usuário de GLP-1')),
+
+{d:'2026-08-08',h:'09:00',fase:'2 · Pressão',fmt:'Carrossel 4:5',ext:1,
+ t:'Brasília é vantagem',int:'Quebra da objeção logística.',
+ cap:'"Mas é em Brasília."\n\nSim. E isso é a favor de quem vem de fora.\n\nSegundo maior aeroporto do país em voos domésticos. Hotel mais barato que capital do Sudeste. Ulysses Guimarães a 15 minutos do centro. Cidade que não trava no trânsito num fim de semana de agosto.\n\nSe o congresso fosse em São Paulo, você pagaria mais para chegar e mais para ficar.\n\nNutrição Brasil 2026 · 27 a 30 de agosto'},
+
+Object.assign({d:'2026-08-08',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Samira Lima',int:'Eixo músculo e longevidade.',
+ cap:capPal('Inflammaging na prática clínica','Dra. Samira Lima','Plenária Principal','27','Envelhecer inflamado não é destino. Mas continua sendo o padrão de quase todo paciente que entra no seu consultório.')},
+ pal('Dra. Samira Lima','Plenária Principal · 27 de agosto','Inflammaging na prática clínica')),
+
+{d:'2026-08-09',h:'09:00',fase:'2 · Pressão',fmt:'Reels 9:16',ext:1,
+ t:'Bastidor do Brunno',int:'Primeira gravação do fundador. Ângulo Dia dos Pais.',
+ pend:['Gravar no bloco do CEO'],
+ cap:'Por que eu montei essa grade assim.\n\nNutrição Brasil 2026 · Brasília · 27 a 29 de agosto'},
+
+Object.assign({d:'2026-08-09',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dr. Thiago Castro',int:'Cruzamento comportamento e farmacologia.',
+ cap:capPal('Neurodivergências, metabolismo e GLP-1','Dr. Thiago Castro','Plenária Principal','28','Um recorte que quase ninguém está fazendo e que explica muita não adesão que você atribuiu a falta de disciplina.')},
+ pal('Dr. Thiago Castro','Plenária Principal · 28 de agosto','Neurodivergências, metabolismo e GLP-1')),
+
+Object.assign({d:'2026-08-10',h:'09:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Brunna Boaventura',int:'Ambiente e compulsão.',
+ cap:capPal('Compulsão, ansiedade e ambiente obesogênico','Dra. Brunna Boaventura','Plenária Principal','28','Você trata o paciente uma hora por mês. O ambiente trata ele o resto do tempo.')},
+ pal('Dra. Brunna Boaventura','Plenária Principal · 28 de agosto','Compulsão, ansiedade e ambiente obesogênico')),
+
+{d:'2026-08-10',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'3 dias para a virada',int:'Escalada de urgência antes de 13/08.',
+ ger:snap({type:'virada',bg:'oficial',variant:1,fields:{h1:'FALTAM 3 DIAS',h2:'PARA O PREÇO SUBIR',h3:'O 2º lote fecha dia 13 de agosto, às 23h59.',cta:'GARANTIR POR R$ 497'}}),
+ cap:'Faltam 3 dias.\n\nDia 13 de agosto, às 23h59, o 2º lote fecha e todos os módulos sobem de preço.\n\nPlenária Principal R$ 497 · MedBrasil R$ 397 · Nutrição Esportiva R$ 277 · NB Universitário R$ 97\n\nSe você já decidiu que vai, decidir agora custa menos.\n\nLink na bio.'},
+
+{d:'2026-08-11',h:'09:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dia do Estudante · NB Universitário',int:'Capturar a data com a oferta de menor barreira.',
+ ger:snap({type:'chamada',bg:'oficial',variant:1,fields:{eyebrow:'DIA DO ESTUDANTE',h1:'NB Universitário',h2:'R$ 97',h3:'29 de agosto · dia inteiro · 8 palestrantes · certificado',cta:'GARANTIR POR R$ 97'}}),
+ cap:'Hoje é Dia do Estudante. E o Nutrição Brasil tem um dia inteiro feito para quem ainda está na graduação.\n\nNB Universitário, 29 de agosto. Oito palestrantes falando do consultório que você vai encontrar, não do que está no livro: primeiro atendimento, escuta clínica, ciclo e hormônios, mercado, vendas.\n\nR$ 97. Em 12x, R$ 10,03.\n\nÉ a porta de entrada mais barata do maior congresso de nutrição do país.\n\nLink na bio.'},
+
+Object.assign({d:'2026-08-11',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Patricia Carneiro',int:'Voz do NB Universitário.',
+ cap:capPal('1000 atendimentos depois: o novo corpo não é clínico','Dra. Patricia Carneiro','NB Universitário','29','O que mil consultas ensinam e nenhuma disciplina consegue ensinar.')},
+ pal('Dra. Patricia Carneiro','NB Universitário · 29 de agosto','1000 atendimentos depois')),
+
+{d:'2026-08-12',h:'09:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Último dia do 2º lote',int:'A véspera converte mais que o dia. Começar de manhã.',
+ ger:snap({type:'ultimodia',bg:'oficial',variant:1,fields:{h1:'ÚLTIMO DIA',h2:'DO 2º LOTE',h3:'O valor de todos os módulos sobe amanhã.',cta:'GARANTIR POR R$ 497'}}),
+ cap:'Hoje é o último dia do 2º lote.\n\nAté 23h59 de amanhã, a Plenária Principal sai por R$ 497. Depois, sobe.\n\nNão é gatilho de campanha, é como o evento funciona desde 2014: quem decide antes paga menos. Quem decide depois paga o preço de quem esperou.\n\nSe você já sabe que vai, o cálculo é simples.\n\nLink na bio.'},
+
+{d:'2026-08-12',h:'13:00',fase:'2 · Pressão',fmt:'Carrossel 4:5',ext:1,
+ t:'Golden · o que acontece dia 27',int:'Vender a mentoria, não a sala VIP.',
+ pend:['Carrossel, montar fora do gerador'],
+ cap:'No dia 27 de agosto, antes do congresso abrir, uma sala menor recebe um grupo reduzido para oito horas com o Brunno Falcão.\n\nDas 09h às 17h. Depois disso, todo mundo desce para a abertura.\n\nDos seis itens do Golden Experience, cinco são logística: lounge, assento reservado, credenciamento sem fila, gravações, NB Run. Bons, e copiáveis.\n\nA mentoria do dia 27 não é.\n\nR$ 1.997, em até 12x.\nnutricaobrasil.com.br/golden'},
+
+Object.assign({d:'2026-08-12',h:'19:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'Dra. Juliana Bicca',int:'Saúde da mulher, tema de alta identificação.',
+ cap:capPal('Perimenopausa: a década esquecida da saúde da mulher','Dra. Juliana Bicca','Plenária Principal','29','Dez anos em que a paciente procura ajuda, ouve que está tudo normal no exame e vai embora sem conduta.')},
+ pal('Dra. Juliana Bicca','Plenária Principal · 29 de agosto','Perimenopausa')),
+
+{d:'2026-08-13',h:'09:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'VIRADA · manhã',int:'Pico comercial do mês. Stories de hora em hora.',
+ ger:snap({type:'virada',bg:'oficial',variant:1,fields:{h1:'HOJE O PREÇO SOBE',h2:'ATÉ 23H59',h3:'Depois de hoje, o 2º lote fecha para todos os módulos.',cta:'GARANTIR POR R$ 497'}}),
+ cap:'Hoje é o último dia do 2º lote.\n\nAté 23h59, a Plenária Principal sai por R$ 497. Amanhã, sobe.\n\nNão é gatilho de campanha, é como o evento funciona desde 2014: quem decide antes paga menos. Quem decide depois paga o preço de quem esperou.\n\nO que está incluso nos R$ 497:\n3 dias de congresso, mais de 20 palestrantes na Plenária, acesso à maior expo de nutrição do país, Homenagem do Dia do Nutricionista e certificado.\n\nSe você já sabe que vai, o cálculo é simples.\n\nGarantir por R$ 497 → link na bio.'},
+
+{d:'2026-08-13',h:'13:00',fase:'2 · Pressão',fmt:'Carrossel 4:5',ext:1,
+ t:'VIRADA · tudo que está incluso',int:'Justificar o valor no momento de maior atenção.',
+ cap:'Antes de decidir, veja o que cabe dentro de R$ 497.\n\nTrês dias de congresso na Plenária Principal. Mais de 20 palestrantes. A maior exposição de nutrição do país. A Homenagem do Dia do Nutricionista. Certificado.\n\nE a possibilidade de somar MedBrasil, Nutrição Esportiva ou NB Universitário nos mesmos dias.\n\nAté 23h59.\nLink na bio.'},
+
+{d:'2026-08-13',h:'20:00',fase:'2 · Pressão',fmt:'Feed 4:5',
+ t:'VIRADA · últimas horas',int:'Fechamento do dia de maior conversão.',
+ ger:snap({type:'ultimashoras',bg:'oficial',variant:1,fields:{h1:'ÚLTIMAS HORAS',h2:'DO 2º LOTE',h3:'Encerra hoje, às 23h59.',cta:'GARANTIR POR R$ 497'}}),
+ cap:'Últimas horas.\n\nÀs 23h59 de hoje o 2º lote fecha. A partir de amanhã, o mesmo congresso custa mais.\n\nSe você abriu esse post, você já pensou em ir.\n\nLink na bio.'},
+
+/* ---------- FASE 3 · DECISÃO ---------- */
+{d:'2026-08-14',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'O lote virou',int:'Provar que a escassez é real antes da segunda virada.',
+ ger:snap({type:'chamada',bg:'oficial',variant:0,fields:{eyebrow:'3º LOTE ABERTO',h1:'Quem entrou ontem pagou menos',h2:'PRÓXIMA VIRADA: 24 DE AGOSTO',h3:'Depois do dia 24, só o lote final.',cta:'GARANTA SUA VAGA'}}),
+ pend:['Valor do 3º lote precisa estar definido'],
+ cap:'O lote virou.\n\nQuem decidiu até ontem pagou menos que quem decide hoje. Vai acontecer de novo no dia 24 de agosto, quando abre o lote final.\n\nNós avisamos com antecedência todas as vezes. O que muda é quem escuta.\n\nLink na bio.'},
+
+Object.assign({d:'2026-08-14',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Bruna Pitaluga',int:'Recorte inédito: gestação e agonistas.',
+ cap:capPal('Pré-natal do Século XXI na era dos agonistas de GLP-1','Dra. Bruna Pitaluga','Plenária Principal','29','A paciente que engravidou usando análogo já está no seu consultório. A literatura ainda está correndo atrás.')},
+ pal('Dra. Bruna Pitaluga','Plenária Principal · 29 de agosto','Pré-natal na era dos agonistas de GLP-1')),
+
+{d:'2026-08-15',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'NB Run',int:'Segunda porta de entrada do ecossistema.',
+ ger:snap({type:'experiencia',bg:'oficial',variant:0,fields:{eyebrow:'EXPERIÊNCIA CONFIRMADA',h1:'NB Run',h2:'A corrida oficial do Nutrição Brasil',h3:'30 de agosto · Brasília-DF · 5K e 10K',cta:'SAIBA MAIS'}}),
+ cap:'No domingo, o congresso vira rua.\n\nNB Run acontece dia 30 de agosto, em Brasília, com percursos de 5K e 10K. Kit de atleta retirado dentro da exposição, junto com o credenciamento do congresso.\n\nÉ o encerramento de quatro dias que começam numa plenária e terminam num pódio.\n\nLink na bio.'},
+
+Object.assign({d:'2026-08-15',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Rita Castro',int:'Eixo estética responsável.',
+ cap:capPal('O novo corpo feminino: da saúde de precisão à coerência biológica','Dra. Rita Castro','Plenária Principal','27','Precisão sem coerência vira protocolo bonito que o corpo não sustenta.')},
+ pal('Dra. Rita Castro','Plenária Principal · 27 de agosto','O novo corpo feminino')),
+
+Object.assign({d:'2026-08-16',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Luisa Wolpe',int:'Prescrição prática na era GLP-1.',
+ cap:capPal('Plano dietético na era dos agonistas de GLP-1','Dra. Luisa Wolpe','Plenária Principal','28','Como montar um plano para quem come metade e precisa nutrir o dobro.')},
+ pal('Dra. Luisa Wolpe','Plenária Principal · 28 de agosto','Plano dietético na era dos agonistas')),
+
+Object.assign({d:'2026-08-16',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dr. André Eluan',int:'Fronteira da recomposição corporal.',
+ cap:capPal('Peptídeos e miméticos orais: a nova fronteira da recomposição','Dr. André Eluan','Nutrição Esportiva','28','O que está chegando e o que já está sendo usado sem que ninguém te conte na consulta.')},
+ pal('Dr. André Eluan','Nutrição Esportiva · 28 de agosto','Peptídeos e miméticos orais')),
+
+{d:'2026-08-17',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'D-10',int:'Vira o modo: de "por que ir" para "como ir".',
+ ger:snap({type:'countdown',bg:'oficial',variant:1,fields:{numero:'10',unidade:'DIAS',h2:'para o Nutrição Brasil',h3:'27 a 29 de agosto · Ulysses Guimarães · Brasília',cta:'GARANTA SUA VAGA'}}),
+ cap:'Faltam 10 dias.\n\nA partir de hoje, o assunto aqui muda: menos por que ir, mais como ir. Voo, hotel, deslocamento, o que levar, como montar seus três dias.\n\nSe você ainda não garantiu, garanta antes de organizar o resto.\n\nLink na bio.'},
+
+Object.assign({d:'2026-08-17',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Karen Guimarães',int:'Endurance, ponte com a NB Run.',
+ cap:capPal('Nutrição periodizada no endurance','Dra. Karen Guimarães','Nutrição Esportiva','28','Periodizar treino todo mundo aprendeu. Periodizar comida ainda é onde o resultado se perde.')},
+ pal('Dra. Karen Guimarães','Nutrição Esportiva · 28 de agosto','Nutrição periodizada no endurance')),
+
+Object.assign({d:'2026-08-18',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Aline Zago',int:'Tema de alta identificação com o público esportivo.',
+ cap:capPal('O atleta amador na era dos miméticos: até onde ir com segurança','Dra. Aline Zago','Nutrição Esportiva','28','Ele não é atleta profissional, não tem equipe médica e já está usando. Isso é problema seu agora.')},
+ pal('Dra. Aline Zago','Nutrição Esportiva · 28 de agosto','O atleta amador na era dos miméticos')),
+
+Object.assign({d:'2026-08-18',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Vânia Mattoso',int:'Metabolismo e saúde da mulher.',
+ cap:capPal('O futuro da saúde feminina está no intestino?','Dra. Vânia Mattoso','Plenária Principal','28','Uma pergunta com ponto de interrogação de propósito. A resposta honesta ainda está sendo construída.')},
+ pal('Dra. Vânia Mattoso','Plenária Principal · 28 de agosto','O futuro da saúde feminina')),
+
+Object.assign({d:'2026-08-19',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Giselle Santos',int:'Recuperação e performance.',
+ cap:capPal('A ciência da recuperação e da performance','Dra. Giselle Santos','Nutrição Esportiva','28','Treino não é o que gera resultado. É o que gera o estímulo. O resultado acontece na recuperação.')},
+ pal('Dra. Giselle Santos','Nutrição Esportiva · 28 de agosto','Ciência da recuperação e da performance')),
+
+Object.assign({d:'2026-08-19',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Denise de Carvalho',int:'Comportamento e microbiota.',
+ cap:capPal('Fatores comportamentais que modulam a microbiota','Dra. Denise de Carvalho','Plenária Principal e MedBrasil','28 e 29','Sono, estresse e rotina mudam a microbiota mais rápido do que qualquer suplemento que você prescreveu esta semana.')},
+ pal('Dra. Denise de Carvalho','Plenária Principal e MedBrasil','Comportamento e microbiota')),
+
+{d:'2026-08-20',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Homenagem Dia do Nutricionista',int:'O momento mais emocional e compartilhável do evento.',
+ ger:snap({type:'experiencia',bg:'oficial',variant:3,fields:{eyebrow:'EXPERIÊNCIA CONFIRMADA',h1:'Homenagem',h2:'Dia do Nutricionista',h3:'27 de agosto · abertura oficial · Ulysses Guimarães',cta:'ESTAR PRESENTE'}}),
+ cap:'No dia 27 de agosto, antes da primeira palestra, o Nutrição Brasil para para homenagear a profissão.\n\nNão é protocolo de abertura. É o momento em que uma sala inteira de nutricionistas entende, ao mesmo tempo, o tamanho do que faz.\n\nQuem esteve em alguma edição sabe do que estamos falando.\n\n27 a 29 de agosto · Brasília\nLink na bio.'},
+
+Object.assign({d:'2026-08-20',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dr. Igor Caleb',int:'Eixo mercado e consultório.',
+ cap:capPal('Otimizar a rotina e expandir o faturamento no consultório','Dr. Igor Caleb','Plenária Principal','29','A parte que ninguém ensina na graduação e que decide se o seu consultório dura.')},
+ pal('Dr. Igor Caleb','Plenária Principal · 29 de agosto','Rotina e faturamento no consultório')),
+
+{d:'2026-08-21',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'3 dias para o último aumento',int:'Antecipar a virada de 24/08.',
+ ger:snap({type:'virada',bg:'oficial',variant:1,fields:{h1:'FALTAM 3 DIAS',h2:'PARA O ÚLTIMO AUMENTO',h3:'Dia 24 de agosto abre o lote final.',cta:'GARANTA SUA VAGA'}}),
+ pend:['Valor do 3º lote definido'],
+ cap:'Dia 24 de agosto abre o lote final.\n\nÉ o último degrau de preço antes do evento. Depois dele, não existe mais lote, existe só o que sobrou de vaga.\n\nSe você está esperando, esse é o momento em que esperar custa dinheiro.\n\nLink na bio.'},
+
+Object.assign({d:'2026-08-21',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dra. Andréia Friques e Dr. Cristiano Nader',int:'Origem fetal das doenças metabólicas.',
+ cap:capPal('A origem fetal das doenças metabólicas','Dra. Andréia Friques e Dr. Cristiano Nader','Plenária Principal','29','O paciente que chegou hoje começou a adoecer antes de nascer. Isso muda o que você faz com a gestante da sala ao lado.')},
+ pal('Dra. Andréia Friques e Dr. Cristiano Nader','Plenária Principal · 29 de agosto','A origem fetal das doenças metabólicas')),
+
+{d:'2026-08-22',h:'09:00',fase:'3 · Decisão',fmt:'Carrossel 4:5',ext:1,
+ t:'Os números do NB',int:'Prova social consolidada.',
+ cap:'2014. Foi quando isso começou, em Brasília.\n\nDe lá para cá: 13 capitais, mais de 10 mil participantes, mais de 100 palestrantes nacionais e internacionais e uma corrida que virou parte do evento.\n\nA edição de Brasília é a maior de todas. E ela é daqui a cinco dias.\n\nLink na bio.'},
+
+Object.assign({d:'2026-08-22',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dr. Thiago Cabral',int:'MedBrasil.',
+ cap:capPal('Tema a confirmar','Dr. Thiago Cabral','MedBrasil','29','Mais um nome da medicina no palco do MedBrasil, dia 29 de agosto.')},
+ pal('Dr. Thiago Cabral','MedBrasil · 29 de agosto','Tema a confirmar')),
+
+{d:'2026-08-23',h:'09:00',fase:'3 · Decisão',fmt:'Reels 9:16',ext:1,
+ t:'Convite do Brunno',int:'Voz de fundador na véspera da última virada.',
+ pend:['Gravar no bloco do CEO'],
+ cap:'Faltam quatro dias.\n\nNutrição Brasil 2026 · Brasília · 27 a 29 de agosto'},
+
+Object.assign({d:'2026-08-23',h:'19:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'Dr. Luiz Moreira',int:'Plenária Principal.',
+ cap:capPal('Tema a confirmar','Dr. Luiz Moreira','Plenária Principal','28','Mais um nome confirmado na Plenária Principal.')},
+ pal('Dr. Luiz Moreira','Plenária Principal · 28 de agosto','Tema a confirmar')),
+
+{d:'2026-08-24',h:'09:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'VIRADA 2 · último dia',int:'Último degrau antes do lote final.',
+ ger:snap({type:'ultimodia',bg:'oficial',variant:1,fields:{h1:'ÚLTIMO DIA',h2:'ANTES DO LOTE FINAL',h3:'A partir de amanhã, só o lote final até o dia do evento.',cta:'GARANTA SUA VAGA'}}),
+ cap:'Hoje é o último dia antes do lote final.\n\nA partir de amanhã, o preço não sobe mais porque não existe outro degrau. Existe só o que sobrar de vaga até o dia 27.\n\nSe você chegou até aqui acompanhando, hoje é o dia.\n\nLink na bio.'},
+
+{d:'2026-08-24',h:'20:00',fase:'3 · Decisão',fmt:'Feed 4:5',
+ t:'VIRADA 2 · últimas horas',int:'Fechamento.',
+ ger:snap({type:'ultimashoras',bg:'oficial',variant:1,fields:{h1:'ÚLTIMAS HORAS',h2:'ANTES DO LOTE FINAL',h3:'Encerra hoje, às 23h59.',cta:'GARANTA SUA VAGA'}}),
+ cap:'Últimas horas antes do lote final.\n\nDepois de hoje, o Nutrição Brasil 2026 entra na reta final e o que resta é vaga, não desconto.\n\nLink na bio.'},
+
+/* ---------- FASE 4 · VÉSPERA ---------- */
+{d:'2026-08-25',h:'09:00',fase:'4 · Véspera',fmt:'Carrossel 4:5',ext:1,
+ t:'Guia do congressista',int:'Reduzir fricção de quem já comprou e captar indeciso.',
+ pend:['Confirmar horários de credenciamento e estacionamento'],
+ cap:'Guia rápido para os três dias.\n\nCredenciamento dentro da exposição. Chegue com antecedência no dia 27, a abertura é à noite e a sala enche.\n\nLeve documento com foto, garrafa de água e caderno. Sim, caderno: a grade é densa e você vai querer anotar.\n\nDúvidas de logística, hotel ou acesso: wa.me/5561998318817\n\nNutrição Brasil 2026 · Ulysses Guimarães · Brasília'},
+
+{d:'2026-08-25',h:'19:00',fase:'4 · Véspera',fmt:'Feed 4:5',
+ t:'Últimas vagas Golden',int:'Golden fecha antes dos demais, a mentoria é dia 27.',
+ ger:snap({type:'vagas',bg:'oficial',variant:1,fields:{h1:'ÚLTIMAS VAGAS',h2:'Golden Experience',h3:'A mentoria do dia 27 tem sala limitada e fecha antes do congresso.',cta:'CONHECER O GOLDEN'}}),
+ pend:['Número real de vagas','Data de corte de vendas do Golden'],
+ cap:'O Golden fecha antes de todo o resto.\n\nA mentoria acontece dia 27 de agosto, das 09h às 17h, antes do congresso abrir. A sala é limitada e a lista precisa estar fechada antes.\n\nR$ 1.997, em até 12x. Inclui os 4 módulos, gravações da Plenária, lounge, assento reservado, credenciamento sem fila e a NB Run.\n\nnutricaobrasil.com.br/golden'},
+
+{d:'2026-08-26',h:'09:00',fase:'4 · Véspera',fmt:'Feed 4:5',
+ t:'É amanhã',int:'Montagem, expectativa, últimas vagas.',
+ ger:snap({type:'amanha',bg:'oficial',variant:1,fields:{numero:'É AMANHÃ',unidade:'',h2:'Nutrição Brasil 2026',h3:'Nos vemos no Centro de Convenções Ulysses Guimarães',cta:'ÚLTIMAS INSCRIÇÕES'}}),
+ cap:'É amanhã.\n\nÀs 19h de 27 de agosto, o Ulysses Guimarães abre para três dias com 42 nomes no palco, a maior exposição de nutrição do país e a homenagem à profissão.\n\nSe você ainda não garantiu, ainda dá. Mas hoje é o último dia inteiro.\n\nLink na bio.'},
+
+{d:'2026-08-26',h:'19:00',fase:'4 · Véspera',fmt:'Feed 4:5',
+ t:'Últimas inscrições',int:'Fechamento da campanha de 30 dias.',
+ ger:snap({type:'acabando',bg:'oficial',variant:1,fields:{h1:'INSCRIÇÕES ACABANDO',h2:'Nutrição Brasil 2026',h3:'A capacidade do congresso é limitada. Amanhã às 19h nós abrimos.',cta:'GARANTA SUA VAGA'}}),
+ cap:'Amanhã às 19h abre o Nutrição Brasil 2026.\n\nA montagem está pronta, os palestrantes estão chegando e a exposição já está de pé.\n\nÚltimas inscrições pelo link na bio.\n\n27 a 29 de agosto · Ulysses Guimarães · Brasília'}
+
+];
+
+/* ============ ESTADO ============ */
+const KEY='nb-mapa-status';
+function readStatus(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
+function writeStatus(o){ try{ localStorage.setItem(KEY, JSON.stringify(o)); }catch(e){} }
+let STATUS = readStatus();
+const $ = id => document.getElementById(id);
+function id(p){ return p.d+'_'+p.h; }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
+const DIAS=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+function fmtData(s){
+  const [y,m,d]=s.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  return {label:String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0'), dia:DIAS[dt.getDay()]};
+}
+
+/* ============ FILTROS ============ */
+const fases=[...new Set(POSTS.map(p=>p.fase))];
+fases.forEach(f=>{ const o=document.createElement('option'); o.value=f; o.textContent='Fase '+f; $('fFase').appendChild(o); });
+['fFase','fTipo','fPend','fStatus'].forEach(k=>$(k).onchange=paint);
+
+function filtered(){
+  const fa=$('fFase').value, ti=$('fTipo').value, pe=$('fPend').value, st=$('fStatus').value;
+  return POSTS.filter(p=>{
+    if(fa && p.fase!==fa) return false;
+    if(ti==='ger' && !p.ger) return false;
+    if(ti==='ext' && p.ger) return false;
+    const hasP = !!(p.pend&&p.pend.length);
+    if(pe==='1' && !hasP) return false;
+    if(pe==='0' && hasP) return false;
+    const done = !!STATUS[id(p)];
+    if(st==='1' && !done) return false;
+    if(st==='0' && done) return false;
+    return true;
+  });
+}
+
+/* ============ RENDER ============ */
+function paint(){
+  const list=filtered();
+  const tot=POSTS.length, ger=POSTS.filter(p=>p.ger).length;
+  const pend=POSTS.filter(p=>p.pend&&p.pend.length).length;
+  const done=POSTS.filter(p=>STATUS[id(p)]).length;
+  $('kpis').innerHTML=
+    '<div class="kpi"><b>'+tot+'</b><span>posts no mapa</span></div>'+
+    '<div class="kpi"><b>'+ger+'</b><span>geradas automaticamente</span></div>'+
+    '<div class="kpi"><b>'+(tot-ger)+'</b><span>arte externa</span></div>'+
+    '<div class="kpi"><b>'+pend+'</b><span>com pendência</span></div>'+
+    '<div class="kpi"><b>'+done+'</b><span>publicadas</span></div>'+
+    '<div class="kpi"><b>'+list.length+'</b><span>no filtro atual</span></div>';
+
+  let html='', lastD='';
+  list.forEach((p,i)=>{
+    if(p.d!==lastD){
+      lastD=p.d; const f=fmtData(p.d);
+      html+='<div class="day"><b>'+f.label+'</b><span>'+f.dia+'</span><em>Fase '+p.fase+'</em></div>';
+    }
+    const pid=id(p), done=!!STATUS[pid];
+    html+='<div class="post'+(done?' done':'')+'" data-i="'+POSTS.indexOf(p)+'">'+
+      '<div class="phead">'+
+        '<span class="tag t-hora">'+p.h+'</span>'+
+        '<span class="tag '+(p.ger?'t-ger':'t-ext')+'">'+(p.ger?'Gerador':'Arte externa')+'</span>'+
+        '<span class="tag t-fmt">'+p.fmt+'</span>'+
+      '</div>'+
+      '<div class="ptitle">'+p.t+'</div>'+
+      '<div class="pint">'+p.int+'</div>'+
+      (p.pend&&p.pend.length ? '<div class="pend"><b>Precisa de você:</b> '+p.pend.join(' · ')+'</div>' : '')+
+      '<div class="cap">'+p.cap.replace(/</g,'&lt;')+'</div>'+
+      '<div class="acts">'+
+        (p.ger?'<button class="btn acc" data-a="open">Abrir no gerador</button><button class="btn" data-a="png">Baixar PNG</button>':'')+
+        '<button class="btn" data-a="cap">Copiar legenda</button>'+
+        (p.ger?'<button class="btn" data-a="json">JSON</button>':'')+
+        '<label class="chk"><input type="checkbox" data-a="done" '+(done?'checked':'')+'> publicado</label>'+
+      '</div>'+
+    '</div>';
+  });
+  $('list').innerHTML = html || '<p style="color:var(--t3);padding:20px 0">Nenhum post no filtro atual.</p>';
+}
+
+$('list').addEventListener('click', e=>{
+  const b=e.target.closest('[data-a]'); if(!b) return;
+  const card=e.target.closest('.post'); const p=POSTS[+card.dataset.i];
+  const a=b.dataset.a;
+  if(a==='cap'){ navigator.clipboard.writeText(p.cap).then(()=>toast('Legenda copiada')); }
+  if(a==='json'){ dl(new Blob([JSON.stringify(p.ger,null,2)],{type:'application/json'}), fname(p)+'.json'); }
+  if(a==='open'){
+    try{ localStorage.setItem('nb-current', JSON.stringify(p.ger)); }catch(err){}
+    window.open('./gerador.html','_blank');
+  }
+  if(a==='done'){
+    const pid=id(p);
+    if(b.checked) STATUS[pid]=1; else delete STATUS[pid];
+    writeStatus(STATUS); paint();
+  }
+  if(a==='png'){ gerarUma(p); }
+});
+
+function fname(p){
+  return 'nb-bsb_'+p.d+'_'+p.h.replace(':','')+'_'+p.t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+function dl(blob, name){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},900);
+}
+
+/* ============ GERAÇÃO VIA IFRAME ============ */
+const ghost=$('ghost');
+function gwin(){ return ghost.contentWindow; }
+function pronto(){
+  const w=gwin();
+  return !!(w && typeof w.restore==='function' && w.art);
+}
+function esperar(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function renderNoGhost(p, espera){
+  const w=gwin();
+  if(!pronto()) throw new Error('gerador');
+  /* peça com fundo de foto sem foto disponível cai para a IDV oficial */
+  const cfg=JSON.parse(JSON.stringify(p.ger));
+  if(cfg.bg==='photo' && !cfg.bgImgSrc) cfg.bg='oficial';
+  w.restore(cfg);
+  await esperar(espera||900);
+  try{ w.render(); }catch(e){}
+  await esperar(180);
+  return w.art.toDataURL('image/png');
+}
+async function gerarUma(p){
+  try{
+    toast('Gerando…');
+    const url=await renderNoGhost(p, 1000);
+    const bin=await (await fetch(url)).blob();
+    dl(bin, fname(p)+'.png');
+    toast('Baixado: '+fname(p)+'.png');
+  }catch(err){
+    toast('Não consegui gerar. Abra a peça no gerador e exporte por lá.');
+  }
+}
+
+let cancelar=false;
+$('progC').onclick=()=>{ cancelar=true; };
+$('btnLote').onclick=async ()=>{
+  const alvo=filtered().filter(p=>p.ger);
+  if(!alvo.length){ toast('Nenhuma peça de gerador no filtro atual.'); return; }
+  if(!pronto()){ toast('O gerador ainda está carregando. Tente em alguns segundos.'); return; }
+  cancelar=false;
+  $('prog').classList.add('show');
+  $('progT').textContent='Gerando '+alvo.length+' peças…';
+  let ok=0;
+  for(let i=0;i<alvo.length;i++){
+    if(cancelar) break;
+    const p=alvo[i];
+    $('progS').textContent=p.t+' · '+fmtData(p.d).label+' às '+p.h;
+    $('progB').style.width=Math.round((i/alvo.length)*100)+'%';
+    try{
+      const url=await renderNoGhost(p, 850);
+      const bin=await (await fetch(url)).blob();
+      dl(bin, fname(p)+'.png');
+      ok++;
+      await esperar(320);
+    }catch(err){}
+  }
+  $('progB').style.width='100%';
+  $('prog').classList.remove('show');
+  toast(ok+' de '+alvo.length+' peças baixadas'+(cancelar?' (cancelado)':''));
+};
+
+/* ============ EXPORTAÇÕES ============ */
+$('btnCsv').onclick=()=>{
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const linhas=[['Data','Dia','Hora','Fase','Formato','Origem','Titulo','Intencao','Pendencias','Legenda','Publicado'].map(q).join(',')];
+  filtered().forEach(p=>{
+    const f=fmtData(p.d);
+    linhas.push([p.d,f.dia,p.h,p.fase,p.fmt,p.ger?'Gerador':'Arte externa',p.t,p.int,(p.pend||[]).join(' | '),p.cap,STATUS[id(p)]?'sim':'nao'].map(q).join(','));
+  });
+  dl(new Blob(['\ufeff'+linhas.join('\n')],{type:'text/csv;charset=utf-8'}), 'nb-bsb-mapa-postagem.csv');
+  toast('CSV exportado');
+};
+$('btnJson').onclick=()=>{
+  const out=filtered().filter(p=>p.ger).map(p=>({arquivo:fname(p),data:p.d,hora:p.h,titulo:p.t,config:p.ger}));
+  dl(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}), 'nb-bsb-pecas.json');
+  toast(out.length+' configurações exportadas');
+};
+$('btnSaved').onclick=()=>{
+  let list=[];
+  try{ list=JSON.parse(localStorage.getItem('nb-saved'))||[]; }catch(e){}
+  const novos=filtered().filter(p=>p.ger).map(p=>({name:fmtData(p.d).label+' '+p.h+' · '+p.t, snap:p.ger}));
+  list=novos.concat(list);
+  try{ localStorage.setItem('nb-saved', JSON.stringify(list)); toast(novos.length+' peças enviadas para “Peças salvas” do gerador'); }
+  catch(e){ toast('Não coube no armazenamento. Filtre por fase e envie por partes.'); }
+};
+
+paint();
+</script>
+</body>
+</html>
