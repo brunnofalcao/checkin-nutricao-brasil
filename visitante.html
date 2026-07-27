@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Entrada de visitante · Nutrição Brasil</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d0618">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0618;--card:#1b0f2d;--card2:#160c26;--line:#2f1d4a;
+      --t1:#f4f0fa;--t2:#c3b4dd;--t3:#8b78ad;--roxo:#a78bfa;--verde:#34d399;--al:#fbbf24}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:radial-gradient(1100px 600px at 78% -12%,#2a1247,var(--bg) 62%) fixed;
+  color:var(--t1);font-family:Poppins,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.55;min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;padding:30px 20px 70px}
+@media(max-width:640px){.wrap{padding:22px 16px 60px}}
+
+.kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--verde);margin-bottom:8px}
+h1{font-size:clamp(26px,6vw,34px);font-weight:700;letter-spacing:-1px;margin:0 0 10px;line-height:1.15}
+.lead{color:var(--t2);margin:0 0 4px}
+.onde{font-size:13px;color:var(--t3);margin-top:6px}
+
+.bloco{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+  border-radius:18px;padding:20px 22px;margin-top:20px}
+label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin:0 0 6px}
+input[type=text],input[type=email],input[type=tel]{
+  width:100%;background:#0f0720;border:1px solid var(--line);color:var(--t1);border-radius:11px;
+  padding:13px 12px;font-family:inherit;font-size:16px;outline:none}
+input:focus{border-color:var(--roxo)}
+input.ruim{border-color:#f87171}
+.campo{margin-bottom:14px}
+.op{font-size:11px;font-weight:500;color:var(--t3);text-transform:none;letter-spacing:0}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.dupla{grid-template-columns:1fr}}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 4px}
+.chip{background:#150c26;border:1px solid var(--line);color:var(--t2);border-radius:999px;
+  padding:8px 14px;font-family:inherit;font-size:13px;cursor:pointer;transition:.12s}
+.chip:hover{border-color:var(--roxo)}
+.chip.on{background:rgba(167,139,250,.16);border-color:var(--roxo);color:#e5dbff;font-weight:600}
+
+.btn{display:block;width:100%;text-align:center;border:0;border-radius:12px;padding:16px;
+  font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:.15s}
+.btn.pri{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.erro-msg{color:#fca5a5;font-size:13.5px;margin-top:12px;min-height:18px}
+.aviso{font-size:12px;color:var(--t3);margin-top:14px;line-height:1.5}
+
+.hide{display:none!important}
+.estado{text-align:center;padding:70px 20px;color:var(--t2)}
+.estado h2{font-size:22px;color:var(--t1);margin:0 0 10px}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--roxo);
+  border-radius:50%;margin:0 auto 18px;animation:g .8s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+
+/* Confirmação: é a tela que o visitante mostra no balcão */
+.ok-wrap{text-align:center;padding:30px 0 0}
+.ok-selo{width:64px;height:64px;border-radius:50%;background:rgba(52,211,153,.14);
+  border:1px solid rgba(52,211,153,.35);display:grid;place-items:center;margin:0 auto 18px}
+.ok-selo svg{width:30px;height:30px;stroke:var(--verde);fill:none;stroke-width:2.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.ok-wrap h2{font-size:26px;margin:0 0 8px;letter-spacing:-.5px}
+.ok-wrap p{color:var(--t2);margin:0 auto;max-width:380px}
+.codigo{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:30px;font-weight:700;
+  letter-spacing:3px;color:#fff;background:#150c26;border:1px solid var(--line);
+  border-radius:14px;padding:18px;margin:22px 0 6px}
+.codigo-rot{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--t3)}
+.proximo{background:#150c26;border:1px solid var(--line);border-radius:14px;
+  padding:16px 18px;margin-top:22px;text-align:left}
+.proximo b{display:block;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--t3);margin-bottom:8px}
+.proximo ol{margin:0;padding-left:18px;color:var(--t2);font-size:14px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="carregando" class="estado">
+    <div class="spin"></div>
+    Abrindo…
+  </div>
+
+  <div id="semtoken" class="estado hide">
+    <h2>Link incompleto</h2>
+    <p>Esta página abre pelo QR Code da entrada. Peça ajuda a alguém da equipe no credenciamento.</p>
+  </div>
+
+  <div id="form" class="hide">
+    <div class="kicker">Entrada de visitante</div>
+    <h1 id="ttl">Nutrição Brasil</h1>
+    <p class="lead">Preencha uma vez e retire seu crachá no balcão. Leva menos de um minuto.</p>
+    <div class="onde" id="onde"></div>
+
+    <div class="bloco">
+      <div class="campo">
+        <label for="nome">Nome completo</label>
+        <input id="nome" type="text" autocomplete="name" enterkeyhint="next"
+               placeholder="Como vai sair no seu crachá">
+      </div>
+
+      <div class="campo">
+        <label for="tel">WhatsApp</label>
+        <input id="tel" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next"
+               placeholder="(61) 99999-0000">
+      </div>
+
+      <div class="campo">
+        <label for="mail">E-mail <span class="op">— opcional, é por onde chegam os materiais</span></label>
+        <input id="mail" type="email" inputmode="email" autocomplete="email" enterkeyhint="next"
+               placeholder="voce@email.com">
+      </div>
+
+      <div class="campo">
+        <label>Você é</label>
+        <div class="chips" id="chips"></div>
+        <input id="prof" type="text" class="hide" placeholder="Escreva sua profissão">
+      </div>
+
+      <div class="campo">
+        <label for="onde-trab">Onde você trabalha <span class="op">— opcional</span></label>
+        <input id="onde-trab" type="text" autocomplete="organization" enterkeyhint="done"
+               placeholder="Clínica, empresa, universidade…">
+      </div>
+
+      <button id="enviar" class="btn pri">Entrar no evento</button>
+      <div class="erro-msg" id="erro"></div>
+      <div class="aviso">
+        Ao entrar, você concorda em receber pelo WhatsApp informações sobre este evento
+        e sobre o Nutrição Brasil. Dá para sair a qualquer momento respondendo à mensagem.
+      </div>
+    </div>
+  </div>
+
+  <div id="pronto" class="hide">
+    <div class="ok-wrap">
+      <div class="ok-selo"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h2 id="ok-ttl">Tudo certo!</h2>
+      <p id="ok-sub">Mostre este código no credenciamento para pegar seu crachá.</p>
+      <div class="codigo" id="ok-cod">—</div>
+      <div class="codigo-rot">seu código de entrada</div>
+
+      <div class="proximo">
+        <b>O que fazer agora</b>
+        <ol>
+          <li>Vá até o balcão de credenciamento.</li>
+          <li>Mostre esta tela ou diga seu nome.</li>
+          <li>Pegue o crachá e aproveite a exposição.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SB_URL  = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
+const sb = createClient(SB_URL, SB_ANON, { auth: { persistSession: false } });
+
+const $ = (id) => document.getElementById(id);
+const mostra = (qual) => ['carregando','semtoken','form','pronto']
+  .forEach((k) => $(k).classList.toggle('hide', k !== qual));
+
+// O token vem do QR: /visitante?t=xxxx
+const token = new URLSearchParams(location.search).get('t') || '';
+
+const PROFISSOES = ['Nutricionista', 'Estudante', 'Médico(a)', 'Ed. Física',
+                    'Farmacêutico(a)', 'Indústria', 'Imprensa', 'Outra'];
+let profissao = '';
+
+function desenhaChips() {
+  const box = $('chips');
+  box.replaceChildren();
+  PROFISSOES.forEach((p) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip' + (profissao === p ? ' on' : '');
+    b.textContent = p;
+    b.onclick = () => {
+      profissao = profissao === p ? '' : p;
+      // "Outra" abre o campo livre; as demais escondem.
+      $('prof').classList.toggle('hide', profissao !== 'Outra');
+      if (profissao === 'Outra') setTimeout(() => $('prof').focus(), 60);
+      desenhaChips();
+    };
+    box.appendChild(b);
+  });
+}
+
+// Máscara leve: só formata, nunca impede de digitar.
+function mascaraTel(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+function dataExtensa(ini, fim) {
+  if (!ini) return '';
+  const M = ['janeiro','fevereiro','março','abril','maio','junho',
+             'julho','agosto','setembro','outubro','novembro','dezembro'];
+  const a = new Date(ini);
+  const b = fim ? new Date(fim) : null;
+  const mes = M[a.getUTCMonth()];
+  if (b && b > a) {
+    return b.getUTCMonth() === a.getUTCMonth()
+      ? `${a.getUTCDate()} a ${b.getUTCDate()} de ${mes}`
+      : `${a.getUTCDate()} de ${mes} a ${b.getUTCDate()} de ${M[b.getUTCMonth()]}`;
+  }
+  return `${a.getUTCDate()} de ${mes}`;
+}
+
+async function inicia() {
+  if (!token || token.length < 10) { mostra('semtoken'); return; }
+  const { data, error } = await sb.rpc('visitante_abre', { p_token: token });
+  if (error || !data) { mostra('semtoken'); return; }
+
+  $('ttl').textContent = data.evento || 'Nutrição Brasil';
+  $('onde').textContent = [dataExtensa(data.inicio, data.fim), data.local, data.cidade]
+    .filter(Boolean).join(' · ');
+  desenhaChips();
+  mostra('form');
+  $('nome').focus();
+}
+
+$('tel').addEventListener('input', (e) => { e.target.value = mascaraTel(e.target.value); });
+['nome','tel','mail','onde-trab'].forEach((id) =>
+  $(id).addEventListener('input', () => $(id).classList.remove('ruim')));
+
+$('enviar').addEventListener('click', async () => {
+  const btn = $('enviar');
+  const erro = $('erro');
+  erro.textContent = '';
+
+  const nome = $('nome').value.trim();
+  const tel = $('tel').value.replace(/\D/g, '');
+  const mail = $('mail').value.trim();
+
+  if (nome.split(/\s+/).filter(Boolean).length < 2) {
+    $('nome').classList.add('ruim'); $('nome').focus();
+    erro.textContent = 'Escreva seu nome completo — é ele que vai no crachá.';
+    return;
+  }
+  if (tel.length < 10) {
+    $('tel').classList.add('ruim'); $('tel').focus();
+    erro.textContent = 'Falta o WhatsApp com DDD.';
+    return;
+  }
+  if (mail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
+    $('mail').classList.add('ruim'); $('mail').focus();
+    erro.textContent = 'Esse e-mail não parece certo.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+  try {
+    const { data, error } = await sb.rpc('visitante_cadastra', {
+      p_token: token,
+      p_dados: {
+        nome,
+        whatsapp: tel,
+        email: mail,
+        profissao: profissao === 'Outra' ? $('prof').value.trim() : profissao,
+        onde: $('onde-trab').value.trim()
+      }
+    });
+    if (error) throw error;
+    if (data?.erro) {
+      const msgs = {
+        token: 'Este link não vale mais. Procure a equipe no credenciamento.',
+        nome: 'Escreva seu nome completo.',
+        whatsapp: 'Falta o WhatsApp com DDD.',
+        email: 'Esse e-mail não parece certo.'
+      };
+      throw new Error(msgs[data.erro] || 'Não deu para concluir.');
+    }
+
+    $('ok-cod').textContent = data.codigo || '—';
+    $('ok-ttl').textContent = data.novo
+      ? `Tudo certo, ${data.nome}!`
+      : `Você já estava aqui, ${data.nome}!`;
+    $('ok-sub').textContent = data.novo
+      ? 'Mostre este código no credenciamento para pegar seu crachá.'
+      : 'Atualizamos seus dados. É o mesmo código de antes.';
+    mostra('pronto');
+    window.scrollTo(0, 0);
+  } catch (e) {
+    erro.textContent = e.message || 'Não deu para concluir. Tente de novo.';
+    btn.disabled = false;
+    btn.textContent = 'Entrar no evento';
+  }
+});
+
+inicia();
+</script>
+</body>
+</html>

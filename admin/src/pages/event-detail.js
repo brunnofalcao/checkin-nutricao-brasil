@@ -10,6 +10,7 @@ import { toast } from '../ui/toast.js';
 import { openModal } from '../ui/modal.js';
 import { navigate } from '../core/router.js';
 import { abreAdicionarPessoa } from './pessoa-nova.js';
+import { abreCrachas } from './crachas.js';
 import { agrupaPessoas, eventosComCertificado } from '../data/pessoas.js';
 
 const PAGE_SIZE = 100;
@@ -300,9 +301,10 @@ export async function pageEventDetail(view, { params }) {
       h('button', { class: 'btn btn-secondary', onclick: () => pageEventCertificates(view, event, () => render()) },
         icons.award(), 'Certificado'
       ),
-      h('button', { class: 'btn btn-secondary', onclick: stub('Etiquetas') },
-        icons.tag(), 'Etiquetas'
-      ),
+      h('button', {
+        class: 'btn btn-secondary',
+        onclick: () => abreCrachas({ evento: event, participantes: allParticipants })
+      }, icons.tag(), 'Crachás'),
       h('div', { class: 'spacer' }),
       h('button', {
         class: 'btn btn-ghost',

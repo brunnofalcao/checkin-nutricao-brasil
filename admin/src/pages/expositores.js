@@ -6,10 +6,11 @@
 import { h, setContent } from '../core/dom.js';
 import { supabase } from '../data/supabase.js';
 import { toast } from '../ui/toast.js';
+import { abreLote } from './expo-lote.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
 
-const E = { eventos: [], eventId: null, empresas: [], busca: '', publico: [] };
+const E = { eventos: [], eventId: null, empresas: [], busca: '', publico: [], visitante: null };
 
 // ── dados ────────────────────────────────────────────────────────────
 async function carrega(eventId) {
@@ -26,6 +27,11 @@ async function carrega(eventId) {
     supabase.from('nb_publico').select('*')
   ]);
   if (emp.error) throw emp.error;
+  // O evento de visitantes é irmão do de expositores: mesmo pai, mesma porta física.
+  const vis = await supabase.from('events')
+    .select('id, name, public_token, total_inscritos')
+    .eq('event_type', 'visitor').limit(1).maybeSingle();
+  E.visitante = vis.data || null;
   E.empresas = (emp.data ?? []).map((x) => {
     const time = (x.exhibitor_members ?? []).map((m) => ({
       id: m.id, cargo: m.cargo, pode_retirar: m.pode_retirar,
@@ -41,7 +47,7 @@ async function carrega(eventId) {
 export async function pageExpositores(view) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
   const { data, error } = await supabase
-    .from('events').select('id, name, event_type, slug')
+    .from('events').select('id, name, event_type, slug, event_date, date_start')
     .eq('event_type', 'exhibitor').order('event_date');
   if (error || !data?.length) {
     setContent(view, aviso('Nenhum evento de expositores cadastrado.'));
@@ -80,7 +86,8 @@ function pinta(view) {
               onChange: async (e) => { E.eventId = e.target.value; await recarrega(view); } },
               ...E.eventos.map((e) => h('option', { value: e.id, selected: e.id === E.eventId }, e.name)))
           : null,
-        h('button', { class: 'btn btn-primary', onClick: () => novoConvite(view) }, '+ Novo convite')
+        h('button', { class: 'btn btn-secondary', onClick: () => novoConvite(view) }, '+ Uma empresa'),
+        h('button', { class: 'btn btn-primary', onClick: () => loteDeConvites(view) }, '+ Convites em lote')
       )
     ),
 
@@ -100,6 +107,8 @@ function pinta(view) {
         'congresso, expositores, corrida e visitantes no mesmo número.')
     ),
 
+    blocoVisitante(view),
+
     // ── situação dos expositores ──────────────────────────────────
     h('div', { class: 'table-card', style: { padding: '18px 20px', marginBottom: '16px' } },
       h('div', { class: 'evd-stats' },
@@ -116,6 +125,55 @@ function pinta(view) {
     ),
     h('div', { id: 'lista-exp' }, lista())
   );
+}
+
+// Entrada de visitante: o QR da porta. Quem chega sem inscrição se cadastra
+// sozinho e entra no contador oficial em vez de sumir da conta.
+function blocoVisitante(view) {
+  const v = E.visitante;
+  if (!v) return null;
+  const link = v.public_token
+    ? 'https://checkin.nutricaobrasil.com.br/visitante?t=' + v.public_token
+    : null;
+  return h('div', { class: 'table-card', style: { padding: '18px 20px', marginBottom: '16px' } },
+    h('div', { class: 'evd-stat-label', style: { marginBottom: '6px' } }, 'Entrada de visitantes'),
+    link
+      ? h('div', {},
+          h('div', { class: 'evd-kit-note', style: { marginBottom: '10px' } },
+            'Este é o endereço do QR da porta. Mande para o design colocar na placa de ' +
+            'entrada. Quem chega sem inscrição se cadastra sozinho e entra no contador ' +
+            'oficial — hoje essa gente não é contada por ninguém.'),
+          h('div', { class: 'vis-link mono' }, link),
+          h('div', { class: 'btn-row', style: { display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' } },
+            h('button', { class: 'btn btn-primary btn-sm', onClick: () => copia(link, 'Link do QR copiado.') },
+              'Copiar link do QR'),
+            h('a', { class: 'btn btn-secondary btn-sm', href: link, target: '_blank', rel: 'noopener' },
+              'Ver a página'),
+            h('button', { class: 'btn btn-ghost btn-sm', onClick: () => rotacionaToken(view) },
+              'Gerar novo link')),
+          h('div', { class: 'evd-kit-note', style: { marginTop: '10px' } },
+            (v.total_inscritos || 0) + ' visitantes cadastrados até agora.'))
+      : h('div', {},
+          h('div', { class: 'evd-kit-note', style: { marginBottom: '10px' } },
+            'Ainda não existe link de entrada. Sem ele, o QR da porta não abre e ' +
+            'quem chega na hora não entra na contagem.'),
+          h('button', { class: 'btn btn-primary btn-sm', onClick: () => rotacionaToken(view) },
+            'Gerar link de entrada'))
+  );
+}
+
+async function rotacionaToken(view) {
+  const v = E.visitante;
+  if (!v) return;
+  if (v.public_token &&
+      !confirm('Gerar um link novo invalida o QR que já estiver impresso. Continuar?')) return;
+  const { data, error } = await supabase.rpc('evento_public_token', {
+    p_event_id: v.id, p_rotaciona: !!v.public_token
+  });
+  if (error) { toast.danger('Não deu: ' + error.message); return; }
+  v.public_token = data;
+  toast.success('Link de entrada pronto.');
+  pinta(view);
 }
 
 function curto(n) { return String(n || '').split('–')[0].trim(); }
@@ -217,7 +275,36 @@ function cartao(x) {
 
 // ── ações ────────────────────────────────────────────────────────────
 function copia(txt, msg) {
-  navigator.clipboard.writeText(txt).then(() => toast(msg)).catch(() => toast('Não consegui copiar.', 'error'));
+  navigator.clipboard.writeText(txt).then(() => toast(msg)).catch(() => toast.danger('Não consegui copiar.'));
+}
+
+function loteDeConvites(view) {
+  const ev = E.eventos.find((e) => e.id === E.eventId);
+  abreLote({
+    eventId: E.eventId,
+    evento: rotuloEvento(ev),
+    jaExistentes: E.empresas,
+    prazoPadrao: prazoSugerido(ev),
+    aoTerminar: () => recarrega(view)
+  });
+}
+
+// "Expositores – Brasília" → "Nutrição Brasil Brasília", que é como a empresa
+// conhece o evento. Ninguém comprou estande no "evento de expositores".
+function rotuloEvento(ev) {
+  const cidade = String(ev?.name || '').split('–').pop().trim();
+  return cidade ? 'Nutrição Brasil ' + cidade : '';
+}
+
+// Uma semana antes do evento: é o corte real para o crachá sair impresso.
+function prazoSugerido(ev) {
+  const d = ev?.event_date || ev?.date_start;
+  if (!d) return '';
+  const dt = new Date(d);
+  dt.setDate(dt.getDate() - 7);
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho',
+                 'julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${dt.getUTCDate()} de ${meses[dt.getUTCMonth()]}`;
 }
 
 async function novoConvite(view) {
@@ -237,7 +324,7 @@ async function novoConvite(view) {
     toast('Convite ' + data.codigo + ' criado. Link copiado.');
     await recarrega(view);
   } catch (e) {
-    toast('Não deu: ' + (e.message || e), 'error');
+    toast.danger('Não deu: ' + (e.message || e));
   }
 }
 
@@ -247,7 +334,7 @@ async function mudaLimite(x) {
   const n = Math.max(1, parseInt(v, 10) || x.limite_credenciais);
   const { error } = await supabase.from('exhibitors')
     .update({ limite_credenciais: n, updated_at: new Date().toISOString() }).eq('id', x.id);
-  if (error) { toast('Não deu: ' + error.message, 'error'); return; }
+  if (error) { toast.danger('Não deu: ' + error.message); return; }
   x.limite_credenciais = n;
   toast('Limite atualizado para ' + n + '.');
   redesenha();

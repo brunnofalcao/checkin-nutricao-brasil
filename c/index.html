@@ -134,13 +134,15 @@ label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-
     <h2 id="erroTt">Esta página abre pelo link do seu e-mail</h2>
     <p id="erroDs">Enviamos para você um link pessoal, terminado num código de 22 letras.
        Abra por ele — ou cole o link (ou só o código) aqui embaixo.</p>
-    <div class="entrada">
-      <input id="tk" placeholder="cole aqui o link ou o código" autocomplete="off" spellcheck="false">
-      <button id="irTk">Abrir</button>
+    <div id="entradaBox">
+      <div class="entrada">
+        <input id="tk" placeholder="cole aqui o link ou o código" autocomplete="off" spellcheck="false">
+        <button id="irTk">Abrir</button>
+      </div>
+      <p style="margin-top:20px;color:var(--t3);font-size:13px">
+        Não achou o e-mail? Confira a caixa de promoções e o spam. Se não estiver lá,
+        responda o e-mail da sua inscrição que a gente reenvia.</p>
     </div>
-    <p style="margin-top:20px;color:var(--t3);font-size:13px">
-      Não achou o e-mail? Confira a caixa de promoções e o spam. Se não estiver lá,
-      responda o e-mail da sua inscrição que a gente reenvia.</p>
   </div>
 
   <div id="pagina" class="hide">
@@ -531,6 +533,21 @@ function mostraEntrada(errou){
   $('erro').classList.remove('hide');
   $('tk').focus();
 }
+
+// O link é válido e a inscrição existe — o que falta é a presença. Isso não é
+// erro do link, então não oferece o campo de colar código: só explica.
+function mostraSemCheckin(d){
+  $('carregando').classList.add('hide');
+  $('pagina').classList.add('hide');
+  $('erroTt').textContent = 'Seu certificado ainda não está liberado';
+  $('erroDs').textContent = (d && d.nome ? String(d.nome).split(' ')[0] + ', o' : 'O') +
+    ' certificado do ' + ((d && d.evento) || 'evento') + ' fica disponível depois que ' +
+    'seu check-in é registrado no credenciamento. Se você esteve no evento e isso não ' +
+    'apareceu, fale com a equipe pelo WhatsApp do Nutrição Brasil que a gente resolve.';
+  const cx = $('entradaBox');
+  if (cx) cx.classList.add('hide');
+  $('erro').classList.remove('hide');
+}
 function abrePorCodigo(){
   const v = ($('tk').value || '').trim();
   const m = v.match(/[A-Za-z0-9]{16,40}(?=[^A-Za-z0-9]*$)/);
@@ -554,6 +571,7 @@ document.getElementById('tk').addEventListener('keydown', e => { if (e.key === '
       body: JSON.stringify({ p_token: token })
     });
     const dados = await r.json();
+    if (r.ok && dados && dados.bloqueado === 'sem_checkin') { mostraSemCheckin(dados); return; }
     if (!r.ok || !dados || !dados.nome || !dados.modulos || !dados.modulos.length) throw new Error('sem dados');
     dados.modulos.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
     S.dados = dados;
