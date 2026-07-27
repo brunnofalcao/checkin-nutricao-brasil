@@ -25,6 +25,11 @@
       }
     }
   </script>
+<script>
+  /* Tema antes da primeira pintura — sem piscar branco no escuro. */
+  (function(){try{var t=localStorage.getItem('nb-tema');
+    if(t==='claro'||t==='escuro')document.documentElement.setAttribute('data-tema',t);}catch(e){}})();
+  </script>
 </head>
 <body>
   <div id="root"></div>

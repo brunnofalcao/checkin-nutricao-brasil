@@ -2,41 +2,82 @@ import { h, setContent } from '../core/dom.js';
 import { icons } from './icons.js';
 import { signOut, getProfile } from '../data/auth.js';
 import { navigate } from '../core/router.js';
+import { controleTema, ouveSistema } from './tema.js';
 const NAV = [
   {
     label: 'Operação',
     items: [
       { path: '/', icon: 'home', label: 'Início' },
       { path: '/eventos', icon: 'calendar', label: 'Eventos' },
-      { path: '/expositores', icon: 'briefcase', label: 'Expositores' },
+      { path: '/expositores', icon: 'briefcase', label: 'Exposição' },
       { path: '/pessoas', icon: 'people', label: 'Pessoas' }
     ]
   },
   {
     label: 'Comunicação',
-    items: [
-      { path: '/disparos', icon: 'send', label: 'Disparos' },
-      { path: '/divulgacao', icon: 'send', label: 'Divulgação' },
-      { path: '/templates', icon: 'message', label: 'Templates WhatsApp' },
-      { path: '/base-conhecimento', icon: 'book', label: 'Base de Conhecimento' },
-      { href: 'gerador.html', icon: 'edit', label: 'Gerador de Peças', external: true }
-    ]
+    items: [{ path: '/disparos', icon: 'send', label: 'Marketing' }]
   },
   {
-    label: 'Saída',
-    items: [
-      { path: '/certificados', icon: 'award', label: 'Certificados' },
-      { path: '/certificados/entrega', icon: 'send', label: 'Entrega de certificados' },
-      { path: '/etiquetas', icon: 'tag', label: 'Etiquetas' }
-    ]
+    label: 'Entrega',
+    items: [{ path: '/certificados', icon: 'award', label: 'Certificados' }]
   },
   {
-    label: 'Sistema',
+    label: 'Gestão',
     items: [{ path: '/configuracoes', icon: 'settings', label: 'Configurações' }]
   }
 ];
+// Subnavegação por workspace. O menu principal é por função; as telas que
+// pertencem à mesma jornada viram abas aqui dentro, em vez de item de menu.
+const SUBNAV = {
+  marketing: {
+    raiz: ['/disparos', '/divulgacao', '/templates', '/base-conhecimento'],
+    abas: [
+      { path: '/disparos', label: 'Disparos' },
+      { path: '/divulgacao', label: 'Divulgação' },
+      { path: '/templates', label: 'Templates' },
+      { path: '/base-conhecimento', label: 'Base de Conhecimento' },
+      { href: 'gerador.html', label: 'Gerador de Peças', external: true }
+    ]
+  },
+  certificados: {
+    raiz: ['/certificados'],
+    abas: [
+      { path: '/certificados', label: 'Configuração', exato: true },
+      { path: '/certificados/entrega', label: 'Entrega e links' }
+    ]
+  },
+  exposicao: {
+    raiz: ['/expositores'],
+    abas: [{ path: '/expositores', label: 'Empresas e convites', exato: true }]
+  }
+};
+
+// Chamado a cada troca de rota. Desenha as abas do workspace atual, ou nada.
+export function atualizaSubnav(path) {
+  const alvo = document.getElementById('subnav');
+  if (!alvo) return;
+  const ws = Object.values(SUBNAV).find((w) =>
+    w.raiz.some((r) => path === r || path.startsWith(r + '/')));
+  alvo.replaceChildren();
+  if (!ws || ws.abas.length < 2) { alvo.classList.add('vazio'); return; }
+  alvo.classList.remove('vazio');
+  const lista = h('div', { class: 'subnav-lista', role: 'tablist' });
+  ws.abas.forEach((a) => {
+    const ativo = a.path && (a.exato ? path === a.path : path.startsWith(a.path));
+    lista.appendChild(a.external
+      ? h('a', { class: 'subnav-aba', href: a.href, target: '_blank', rel: 'noopener' },
+          a.label, h('span', { class: 'subnav-ext', 'aria-hidden': 'true' }, '↗'))
+      : h('button', {
+          class: 'subnav-aba' + (ativo ? ' on' : ''),
+          role: 'tab', 'aria-selected': ativo ? 'true' : 'false',
+          onClick: () => navigate(a.path)
+        }, a.label));
+  });
+  alvo.appendChild(lista);
+}
+
 // Em construção (telas que ainda não foram implementadas).
-const STUB_PATHS = ['/pessoas', '/etiquetas', '/configuracoes'];
+const STUB_PATHS = ['/pessoas', '/configuracoes'];
 export async function renderShell(rootEl) {
   const profile = await getProfile();
   const app = h(
@@ -48,10 +89,12 @@ export async function renderShell(rootEl) {
       'main',
       { class: 'main' },
       renderTopbar(),
+      h('div', { class: 'subnav vazio', id: 'subnav' }),
       h('div', { class: 'content', id: 'view' })
     )
   );
   setContent(rootEl, app);
+  ouveSistema();
   return document.getElementById('view');
 }
 
@@ -75,6 +118,7 @@ function renderSidebar(profile) {
     h(
       'div',
       { class: 'sidebar-foot' },
+      controleTema(),
       h(
         'div',
         { class: 'user-mini' },

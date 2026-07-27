@@ -71,8 +71,11 @@ async function dispatch() {
         if (typeof result === 'function') currentDispose = result;
       } catch (e) {
         console.error('Route render error:', e);
-        mount.innerHTML = `<div style="padding:40px;color:#b91c1c">Erro ao carregar página: ${e.message}</div>`;
+        mostraAviso(mount, 'Erro ao carregar a página', String(e && e.message || e), true);
       }
+
+      // Abas do workspace atual.
+      import('../ui/chrome.js').then((m) => m.atualizaSubnav(path)).catch(() => {});
 
       // Marca nav-item ativo.
       document.querySelectorAll('.nav-item[data-path]').forEach((n) => {
@@ -86,5 +89,23 @@ async function dispatch() {
   }
 
   // 404.
-  mount.innerHTML = `<div style="padding:40px">Página não encontrada: ${path}</div>`;
+  mostraAviso(mount, 'Página não encontrada', path, false);
+}
+
+
+// Nunca interpolar dado externo em innerHTML. `path` vem do hash da URL e
+// `detalhe` vem de mensagem de erro — os dois são controlados por terceiros.
+function mostraAviso(mount, titulo, detalhe, erro) {
+  mount.replaceChildren();
+  const cx = document.createElement('div');
+  cx.style.cssText = 'padding:40px;max-width:640px';
+  const h = document.createElement('div');
+  h.style.cssText = 'font-size:18px;font-weight:700;margin-bottom:8px' +
+    (erro ? ';color:var(--red)' : '');
+  h.textContent = titulo;
+  const p = document.createElement('div');
+  p.style.cssText = 'color:var(--ink-mute);font-size:13px;word-break:break-all';
+  p.textContent = detalhe;
+  cx.append(h, p);
+  mount.appendChild(cx);
 }

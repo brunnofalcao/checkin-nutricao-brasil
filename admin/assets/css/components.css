@@ -281,10 +281,10 @@
   transform: translateY(0);
 }
 .toast.success {
-  background: #15803d;
+  background: var(--green);
 }
 .toast.danger {
-  background: #b91c1c;
+  background: var(--red);
 }
 
 /* ===== Modal ===== */
@@ -401,4 +401,30 @@
   padding: 40px;
   text-align: center;
   color: var(--ink-mute);
+}
+
+/* ── Controle de tema (barra lateral) ──────────────────────────────── */
+.tema-switch {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 3px;
+  margin: 0 var(--s-3) var(--s-3);
+}
+.tema-opt {
+  flex: 1;
+  padding: 6px 4px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.tema-opt:hover { color: var(--ink-soft); }
+.tema-opt.on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
 }

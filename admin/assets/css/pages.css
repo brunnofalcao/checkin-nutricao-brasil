@@ -130,8 +130,8 @@
   font-weight: 600;
 }
 .source-pill.hotmart {
-  background: #fff3eb;
-  color: #ef4926;
+  background: var(--amber-soft);
+  color: var(--amber);
 }
 .source-pill.import {
   background: var(--violet-soft);
@@ -364,8 +364,8 @@
 }
 .cert-slot.hidden-ghost {
   background: rgba(0, 0, 0, 0.06);
-  border: 2px dashed #aaa;
-  color: #aaa;
+  border: 2px dashed var(--line-strong);
+  color: var(--ink-mute);
   cursor: grab;
   opacity: 0.6;
   font-size: 12px !important;
@@ -378,7 +378,7 @@
 .cert-warn {
   background: var(--amber-soft);
   color: var(--amber);
-  border: 1px solid #f6d860;
+  border: 1px solid var(--amber);
   border-radius: var(--r-sm);
   padding: 12px 16px;
   font-size: 13px;
@@ -475,12 +475,12 @@
 }
 .payment-pill.payment-partial {
   background: rgba(234, 179, 8, 0.12);
-  color: #b45309;
+  color: var(--amber);
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
 .payment-pill.payment-canceled {
   background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  color: var(--red);
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
@@ -580,7 +580,7 @@
 }
 .disp-grid > .card-block::-webkit-scrollbar { width: 8px; }
 .disp-grid > .card-block::-webkit-scrollbar-thumb {
-  background: var(--line-strong, #d8d8e0);
+  background: var(--line-strong);
   border-radius: 100px;
 }
 .disp-grid > .card-block::-webkit-scrollbar-track { background: transparent; }
@@ -706,7 +706,7 @@
 
 /* ── Prévia estilo WhatsApp ──────────────────────────────────── */
 .preview-box {
-  background: #e7ded5;
+  background: var(--bg-2);
   background-image: radial-gradient(rgba(0,0,0,0.018) 1px, transparent 1px);
   background-size: 16px 16px;
   border-radius: var(--r-sm);
@@ -730,6 +730,8 @@
   border-top-color: #fff;
   border-right: none;
 }
+/* Prévia do WhatsApp: cores do próprio WhatsApp, de propósito.
+   Não trocar por token — a tela simula o app do destinatário. */
 .wa-header { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #111b21; }
 .wa-body { font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: #111b21; }
 .wa-footer { font-size: 12px; color: #8696a0; margin-top: 6px; }
@@ -840,7 +842,7 @@
 .tpl-btn-chip svg { width: 12px; height: 12px; }
 .tpl-card-error {
   font-size: 12px;
-  color: #c0392b;
+  color: var(--red);
   margin-top: 10px;
   padding: 8px 11px;
   background: rgba(239, 68, 68, 0.06);
@@ -855,7 +857,7 @@
   border-top: 1px solid var(--line);
 }
 .btn-sm { padding: 6px 14px; font-size: 13px; height: auto; }
-.tpl-del { color: #c0392b; }
+.tpl-del { color: var(--red); }
 .tpl-del:hover { background: rgba(239, 68, 68, 0.08); }
 
 /* ── Modal ───────────────────────────────────────────────────── */
@@ -949,7 +951,7 @@
 }
 
 /* Status danger (reprovado) */
-.status.danger { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+.status.danger { background: rgba(239, 68, 68, 0.1); color: var(--red); }
 
 /* ════════════════════════════════════════════════════════════
    DIVULGAÇÃO · upload de lista + lotes
@@ -1126,7 +1128,7 @@
 }
 .prog-fill {
   height: 100%;
-  background: var(--green, #1ea54c);
+  background: var(--green);
   border-radius: var(--r-pill);
   transition: width 0.5s ease;
 }
@@ -1370,9 +1372,9 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: #e0f6fa;
-  color: #0e7490;
-  border: 1px solid #b5e7f0;
+  background: var(--violet-soft);
+  color: var(--cyan);
+  border: 1px solid var(--violet-border);
   flex-shrink: 0;
 }
 .race-chips {
@@ -1391,8 +1393,8 @@
   white-space: nowrap;
 }
 .race-chip.dist {
-  background: #e0f6fa;
-  color: #0e7490;
+  background: var(--violet-soft);
+  color: var(--cyan);
 }
 .race-chip.shirt {
   background: var(--bg-2);
@@ -1564,7 +1566,7 @@
 .kb-del { color: var(--red); }
 .kb-del:hover:not(:disabled) { background: var(--red-soft); color: var(--red); }
 .kb-del-confirm { background: var(--red); }
-.kb-del-confirm:hover:not(:disabled) { background: #991b1b; }
+.kb-del-confirm:hover:not(:disabled) { background: var(--red); }
 .kb-del-warn {
   font-size: 14px;
   line-height: 1.6;

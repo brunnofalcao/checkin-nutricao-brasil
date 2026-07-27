@@ -1,66 +1,158 @@
+/* =============================================================
+   DESIGN SYSTEM · Nutrição Brasil
+   Fonte única da verdade: brandbook oficial (Julho 2026).
+   Dois temas com os mesmos nomes de token — nenhuma outra folha
+   de estilo precisa saber qual está ativo.
+
+   Tema: <html data-tema="escuro"> ou "claro". Sem atributo, segue
+   a preferência do sistema operacional.
+
+   Contraste medido (WCAG 2.2):
+     escuro  ink 19.9 · ink-soft 11.1 · ink-mute 5.1 · violet 7.3 · cyan 10.3
+     claro   ink 18.6 · ink-soft 9.7  · ink-mute 5.5 · violet 8.9 · cyan 5.7
+   Nenhum par de texto abaixo de 4.5.
+   ============================================================= */
+
 :root {
   /* ----- Tipografia ----- */
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* ----- Cores (light mode, papel quente) ----- */
-  --bg: #f7f5f0;
-  --bg-2: #efece5;
-  --surface: #ffffff;
-  --surface-hover: #faf9f5;
-
-  --line: #e8e3d8;
-  --line-strong: #d4cfc0;
-  --line-focus: #6b4ce6;
-
-  --ink: #1a1610;
-  --ink-strong: #0a0805;
-  --ink-soft: #5c574a;
-  --ink-mute: #8c8472;
-  --ink-dim: #b3ab97;
-
-  --violet: #6b4ce6;
-  --violet-hover: #5a3dd1;
-  --violet-soft: #f0ecfc;
-  --violet-border: #d9d0f8;
-
-  --green: #15803d;
-  --green-soft: #e6f4ea;
-  --amber: #b45309;
-  --amber-soft: #fdf3df;
-  --red: #b91c1c;
-  --red-soft: #fce8e8;
-
   /* ----- Escala ----- */
-  --s-1: 4px;
-  --s-2: 8px;
-  --s-3: 12px;
-  --s-4: 16px;
-  --s-5: 24px;
-  --s-6: 32px;
-  --s-7: 48px;
-  --s-8: 64px;
+  --s-1: 4px;   --s-2: 8px;   --s-3: 12px;  --s-4: 16px;
+  --s-5: 24px;  --s-6: 32px;  --s-7: 48px;  --s-8: 64px;
 
-  --r-sm: 8px;
-  --r: 12px;
-  --r-lg: 16px;
-  --r-pill: 999px;
+  --r-sm: 8px;  --r: 12px;    --r-lg: 16px; --r-pill: 999px;
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  /* ----- Breakpoints (referência; media queries usam o valor) -----
+     mobile <560 · tablet 560-859 · notebook 860-1279 · desktop 1280-1679 · amplo 1680+ */
+
+  --dur-1: .12s; --dur-2: .2s; --ease: cubic-bezier(.4, 0, .2, 1);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ═══════════════════════ TEMA ESCURO (padrão da marca) ═══════════════════════ */
+:root,
+[data-tema='escuro'] {
+  color-scheme: dark;
+
+  --bg: #0d0618;
+  --bg-2: #150b26;
+  --surface: #1a0f2e;
+  --surface-hover: #241540;
+  --surface-2: #241540;
+
+  --line: #3a2a52;
+  --line-strong: #4b3868;
+  --line-focus: #a78bfa;
+
+  --ink: #ffffff;
+  --ink-strong: #ffffff;
+  --ink-soft: #c9bcde;
+  --ink-mute: #8a7aa5;
+  --ink-dim: #6b5c85;
+
+  --violet: #a78bfa;          /* texto e ícone */
+  --violet-hover: #c4b5fd;
+  --violet-fill: #6b2d8b;     /* fundo de botão primário */
+  --violet-fill-hover: #7d3aa0;
+  --violet-soft: #241540;
+  --violet-border: #4b3868;
+
+  --cyan: #80c0ff;
+  --gold: #ffc800;
+
+  --green: #5ab78e;
+  --green-soft: #14301f;
+  --amber: #ffc800;
+  --amber-soft: #33260a;
+  --red: #ff6b6b;
+  --red-soft: #331515;
+
+  --on-fill: #ffffff;         /* texto sobre violet-fill */
+  --on-gold: #16101f;         /* texto sobre gold */
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+  --scrim: rgba(6, 2, 12, .82);
 }
 
-html,
-body {
-  height: 100%;
+/* ═══════════════════════ TEMA CLARO ═══════════════════════ */
+[data-tema='claro'] {
+  color-scheme: light;
+
+  --bg: #f7f5fa;
+  --bg-2: #eeeaf4;
+  --surface: #ffffff;
+  --surface-hover: #faf8fd;
+  --surface-2: #f3effa;
+
+  --line: #e4dced;
+  --line-strong: #cec2dd;
+  --line-focus: #6b2d8b;
+
+  --ink: #16101f;
+  --ink-strong: #0a0610;
+  --ink-soft: #4a3f5c;
+  --ink-mute: #6f6383;
+  --ink-dim: #9a90ab;
+
+  --violet: #6b2d8b;
+  --violet-hover: #5a2475;
+  --violet-fill: #6b2d8b;
+  --violet-fill-hover: #5a2475;
+  --violet-soft: #f4edf9;
+  --violet-border: #ddd0e9;
+
+  --cyan: #0b6d9e;
+  --gold: #8a6300;
+
+  --green: #1a7a52;
+  --green-soft: #e7f4ee;
+  --amber: #8a6300;
+  --amber-soft: #fdf3df;
+  --red: #b4232b;
+  --red-soft: #fceaea;
+
+  --on-fill: #ffffff;
+  --on-gold: #16101f;
+
+  --shadow-1: 0 1px 2px rgba(22, 16, 31, .05);
+  --shadow-2: 0 6px 20px rgba(22, 16, 31, .08), 0 1px 3px rgba(22, 16, 31, .05);
+  --scrim: rgba(22, 16, 31, .5);
 }
+
+/* Sem escolha salva, segue o sistema. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema]) {
+    color-scheme: light;
+    --bg: #f7f5fa; --bg-2: #eeeaf4; --surface: #ffffff;
+    --surface-hover: #faf8fd; --surface-2: #f3effa;
+    --line: #e4dced; --line-strong: #cec2dd; --line-focus: #6b2d8b;
+    --ink: #16101f; --ink-strong: #0a0610; --ink-soft: #4a3f5c;
+    --ink-mute: #6f6383; --ink-dim: #9a90ab;
+    --violet: #6b2d8b; --violet-hover: #5a2475;
+    --violet-fill: #6b2d8b; --violet-fill-hover: #5a2475;
+    --violet-soft: #f4edf9; --violet-border: #ddd0e9;
+    --cyan: #0b6d9e; --gold: #8a6300;
+    --green: #1a7a52; --green-soft: #e7f4ee;
+    --amber: #8a6300; --amber-soft: #fdf3df;
+    --red: #b4232b; --red-soft: #fceaea;
+    --shadow-1: 0 1px 2px rgba(22, 16, 31, .05);
+    --shadow-2: 0 6px 20px rgba(22, 16, 31, .08), 0 1px 3px rgba(22, 16, 31, .05);
+    --scrim: rgba(22, 16, 31, .5);
+  }
+}
+
+/* A troca de tema não deve piscar nem animar cor por 300ms. */
+html.trocando-tema *,
+html.trocando-tema *::before,
+html.trocando-tema *::after {
+  transition: none !important;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 
 body {
   background: var(--bg);
@@ -72,55 +164,43 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-::selection {
-  background: var(--violet-soft);
-  color: var(--violet);
-}
+::selection { background: var(--violet-soft); color: var(--violet); }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: var(--line-strong);
   border-radius: 5px;
   border: 2px solid var(--bg);
 }
 
-input,
-select,
-textarea,
-button {
-  font: inherit;
-  color: inherit;
-}
-input,
-select,
-textarea {
-  background: none;
-  border: none;
-  outline: none;
-}
-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-a {
-  color: inherit;
-  text-decoration: none;
+input, select, textarea, button { font: inherit; color: inherit; }
+input, select, textarea { background: none; border: none; outline: none; }
+button { background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+/* Foco visível e consistente — requisito de acessibilidade, não enfeite. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--line-focus);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
 }
 
-.mono {
-  font-family: var(--font-mono);
-  font-feature-settings: 'tnum';
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-.muted {
-  color: var(--ink-mute);
-}
-.text-soft {
-  color: var(--ink-soft);
+
+.mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
+.muted { color: var(--ink-mute); }
+.text-soft { color: var(--ink-soft); }
+
+/* Só para leitor de tela. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }

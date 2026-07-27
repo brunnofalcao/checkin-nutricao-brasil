@@ -349,3 +349,31 @@
   .content { padding: var(--s-4) 12px var(--s-6); }
   .page-title { font-size: 21px; }
 }
+
+/* ── Subnavegação de workspace ─────────────────────────────────────── */
+.subnav {
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0 var(--s-6);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subnav::-webkit-scrollbar { display: none; }
+.subnav.vazio { display: none; }
+.subnav-lista { display: flex; gap: var(--s-1); min-width: max-content; }
+.subnav-aba {
+  padding: 12px var(--s-4) 11px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+.subnav-aba:hover { color: var(--ink); }
+.subnav-aba.on { color: var(--violet); border-bottom-color: var(--violet); }
+.subnav-ext { font-size: 11px; opacity: .6; }
+@media (max-width: 860px) { .subnav { padding: 0 var(--s-4); } }
