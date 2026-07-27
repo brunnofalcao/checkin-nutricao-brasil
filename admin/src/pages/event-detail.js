@@ -11,6 +11,7 @@ import { openModal } from '../ui/modal.js';
 import { navigate } from '../core/router.js';
 import { abreAdicionarPessoa } from './pessoa-nova.js';
 import { abreCrachas } from './crachas.js';
+import { abreImportar } from './importar.js';
 import { agrupaPessoas, eventosComCertificado } from '../data/pessoas.js';
 
 const PAGE_SIZE = 100;
@@ -289,15 +290,24 @@ export async function pageEventDetail(view, { params }) {
 
   function actions() {
     return h('div', { class: 'evd-actions' },
-      h('button', { class: 'btn btn-primary', onclick: stub('Importar lista') },
-        icons.upload(), 'Importar lista'
-      ),
+      h('button', {
+        class: 'btn btn-primary',
+        onclick: () => abreImportar({
+          evento: event,
+          participantes: allParticipants,
+          aoImportar: async () => {
+            allParticipants = await listAllParticipants(eventId);
+            render();
+          }
+        })
+      }, icons.upload(), 'Importar lista'),
       h('button', { class: 'btn btn-secondary', onclick: adicionarPessoa },
         icons.plus(), 'Adicionar pessoa'
       ),
-      h('button', { class: 'btn btn-secondary', onclick: stub('Disparar mensagem') },
-        icons.send(), 'Disparar mensagem'
-      ),
+      h('button', {
+        class: 'btn btn-secondary',
+        onclick: () => navigate('/disparos')
+      }, icons.send(), 'Disparar mensagem'),
       h('button', { class: 'btn btn-secondary', onclick: () => pageEventCertificates(view, event, () => render()) },
         icons.award(), 'Certificado'
       ),
@@ -594,10 +604,6 @@ function infoRow(label, value) {
     h('div', { style: { fontSize: '12px', color: 'var(--ink-mute)', minWidth: '140px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' } }, label),
     h('div', { class: 'mono', style: { fontSize: '13px', color: 'var(--ink)' } }, String(value))
   );
-}
-
-function stub(label) {
-  return () => toast.info(`${label} — em construção (próxima entrega)`);
 }
 
 function openEditModal(event, onSave) {

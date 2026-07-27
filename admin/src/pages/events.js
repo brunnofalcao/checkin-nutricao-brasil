@@ -4,6 +4,7 @@ import { listEvents } from '../data/events.js';
 import { navigate } from '../core/router.js';
 import { fmtDate } from '../core/utils.js';
 import { toast } from '../ui/toast.js';
+import { abreNovoEvento } from './evento-novo.js';
 
 export async function pageEvents(view) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
@@ -40,7 +41,13 @@ export async function pageEvents(view) {
           h('div', { class: 'page-sub' }, 'O calendário Nutrição Brasil. Clique em qualquer evento para abrir.')
         ),
         h('div', { class: 'page-actions' },
-          h('button', { class: 'btn btn-primary', onclick: () => toast.info('Novo evento — em construção (próxima entrega)') },
+          h('button', { class: 'btn btn-primary', onclick: () => abreNovoEvento({
+              eventos: events,
+              aoCriar: (novo) => {
+                events.push(novo);
+                navigate('/eventos/' + novo.id);
+              }
+            }) },
             icons.plus(), 'Novo evento'
           )
         )

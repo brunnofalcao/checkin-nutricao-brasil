@@ -9,6 +9,7 @@ import { pageCertificates } from './pages/certificates.js';
 import { pageCertEntrega } from './pages/cert-entrega.js';
 import { pageExpositores } from './pages/expositores.js';
 import { pagePessoas } from './pages/pessoas.js';
+import { pageConfiguracoes } from './pages/configuracoes.js';
 import { pageDisparos } from './pages/disparos.js';
 import { pageTemplates } from './pages/templates.js';
 import { pageDivulgacao } from './pages/divulgacao.js';
@@ -38,6 +39,7 @@ async function bootstrap() {
   route('/certificados/:id', pageCertificates);
   route('/expositores', pageExpositores);
   route('/pessoas', pagePessoas);
+  route('/configuracoes', pageConfiguracoes);
   route('/disparos', pageDisparos);
   route('/templates', pageTemplates);
   route('/divulgacao', pageDivulgacao);

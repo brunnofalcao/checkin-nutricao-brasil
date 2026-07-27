@@ -86,8 +86,7 @@ function pinta(view) {
               onChange: async (e) => { E.eventId = e.target.value; await recarrega(view); } },
               ...E.eventos.map((e) => h('option', { value: e.id, selected: e.id === E.eventId }, e.name)))
           : null,
-        h('button', { class: 'btn btn-secondary', onClick: () => novoConvite(view) }, '+ Uma empresa'),
-        h('button', { class: 'btn btn-primary', onClick: () => loteDeConvites(view) }, '+ Convites em lote')
+        h('button', { class: 'btn btn-primary', onClick: () => loteDeConvites(view) }, '+ Gerar convites')
       )
     ),
 
@@ -305,27 +304,6 @@ function prazoSugerido(ev) {
   const meses = ['janeiro','fevereiro','março','abril','maio','junho',
                  'julho','agosto','setembro','outubro','novembro','dezembro'];
   return `${dt.getUTCDate()} de ${meses[dt.getUTCMonth()]}`;
-}
-
-async function novoConvite(view) {
-  const empresa = prompt('Nome da empresa (pode deixar em branco e a própria empresa preenche):', '');
-  if (empresa === null) return;
-  const lim = prompt('Quantas credenciais essa cota dá?', '5');
-  if (lim === null) return;
-  try {
-    const { data, error } = await supabase.rpc('expo_gera_convite', {
-      p_event_id: E.eventId,
-      p_empresa: empresa.trim() || null,
-      p_limite: Math.max(1, parseInt(lim, 10) || 5),
-      p_cota: null
-    });
-    if (error) throw error;
-    await navigator.clipboard.writeText(BASE_FORM + data.codigo).catch(() => {});
-    toast('Convite ' + data.codigo + ' criado. Link copiado.');
-    await recarrega(view);
-  } catch (e) {
-    toast.danger('Não deu: ' + (e.message || e));
-  }
 }
 
 async function mudaLimite(x) {
