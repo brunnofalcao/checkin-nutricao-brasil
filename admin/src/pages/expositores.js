@@ -15,10 +15,12 @@ const E = { eventos: [], eventId: null, empresas: [], busca: '', publico: [] };
 async function carrega(eventId) {
   const [emp, pub] = await Promise.all([
     supabase.from('exhibitors')
+      // exhibitor_members tem DUAS ligações com participants (o dono do crachá e quem
+      // retirou). Sem nomear a constraint, o PostgREST não sabe qual seguir.
       .select('id, codigo, token, empresa, cnpj, estande, cota, limite_credenciais, status, ' +
               'resp_nome, resp_whatsapp, cad_nome, preenchido_em, ' +
               'exhibitor_members(id, cargo, pode_retirar, retirado_em, retirado_por_nome, ' +
-              'participants(id, name, phone, email))')
+              'participants!exhibitor_members_participant_id_fkey(id, name, phone, email))')
       .eq('event_id', eventId)
       .order('empresa'),
     supabase.from('nb_publico').select('*')
