@@ -3,6 +3,7 @@ import { icons } from '../ui/icons.js';
 import { listEvents } from '../data/events.js';
 import { navigate } from '../core/router.js';
 import { fmtDate } from '../core/utils.js';
+import { toast } from '../ui/toast.js';
 
 export async function pageEvents(view) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
@@ -39,7 +40,7 @@ export async function pageEvents(view) {
           h('div', { class: 'page-sub' }, 'O calendário Nutrição Brasil. Clique em qualquer evento para abrir.')
         ),
         h('div', { class: 'page-actions' },
-          h('button', { class: 'btn btn-primary', onclick: () => alert('Em construção — próxima entrega') },
+          h('button', { class: 'btn btn-primary', onclick: () => toast.info('Novo evento — em construção (próxima entrega)') },
             icons.plus(), 'Novo evento'
           )
         )

@@ -22,6 +22,9 @@ const state = {
   raceProfiles: {},     // participant_id -> race_profile (só em eventos de corrida)
   raceStock: {},        // tamanho -> qtd cadastrada no estoque (só em eventos de corrida)
   kitTab: "operacao",   // aba ativa do painel do kit
+  exhibitors: [],       // empresas expositoras (só em eventos de exposição)
+  expoModo: "empresas", // "empresas" (retirada em lote) ou "pessoas" (lista corrida)
+  retirada: null,       // rascunho da retirada aberta no balcão
   filter: "all",
   search: "",
   view: "loading",
@@ -74,6 +77,13 @@ function haptic(type = "light") {
 // =============================================================
 // NB RUN · Helpers de corrida
 // =============================================================
+function isExpoEvent(e) {
+  return (e?.event_type || "") === "exhibitor";
+}
+// Empresa de um participante do evento de exposição.
+function empresaDe(participantId) {
+  return state.exhibitors.find(x => x.time.some(m => m.participant_id === participantId)) || null;
+}
 function isRaceEvent(e) {
   return e?.event_type === "race";
 }
@@ -270,6 +280,31 @@ async function loadRaceStock(eventId) {
     const size = raceShirtLabel(r.size) || String(r.size || "").toUpperCase();
     if (size) state.raceStock[size] = Number(r.qty) || 0;
   });
+}
+
+// exhibitor_members aponta duas vezes para participants (dono do crachá e quem
+// retirou). A foreign key precisa ser nomeada, senão o PostgREST recusa.
+async function loadExhibitors(eventId) {
+  try {
+    const { data, error } = await sb
+      .from("exhibitors")
+      .select("id, codigo, empresa, estande, cota, limite_credenciais, status, resp_nome, " +
+              "exhibitor_members(id, participant_id, cargo, pode_retirar, retirado_em, retirado_por_nome)")
+      .eq("event_id", eventId)
+      .order("empresa");
+    if (error) throw error;
+    state.exhibitors = (data ?? []).map(x => ({
+      ...x,
+      time: (x.exhibitor_members ?? []).map(m => ({
+        ...m,
+        pessoa: state.participants.find(p => p.id === m.participant_id) || null
+      })).filter(m => m.pessoa)
+       .sort((a, b) => a.pessoa.name.localeCompare(b.pessoa.name, "pt-BR"))
+    }));
+  } catch (e) {
+    console.warn("expositores:", e.message);
+    state.exhibitors = [];
+  }
 }
 
 async function toggleCheckIn(participantId) {
@@ -786,11 +821,15 @@ async function openCheckin(event) {
   state.raceProfiles = {};
   state.raceStock = {};
   state.kitTab = "operacao";
+  state.exhibitors = [];
+  state.expoModo = "empresas";
+  state.retirada = null;
   await loadParticipants(event.id);
   if (isRaceEvent(event)) {
     await loadRaceProfiles(event.id);
     await loadRaceStock(event.id);
   }
+  if (isExpoEvent(event)) await loadExhibitors(event.id);
   subscribeToParticipants(event.id);
   renderCheckinScreen();
 }
@@ -798,6 +837,7 @@ async function openCheckin(event) {
 function renderCheckinScreen() {
   const e = state.currentEvent;
   const isRace = isRaceEvent(e);
+  const isExpo = isExpoEvent(e);
   const d = new Date(e.event_date + "T00:00:00");
   const dateDisplay = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   const locked = e.status === "encerrado" && !isEditable(e);
@@ -821,9 +861,14 @@ function renderCheckinScreen() {
           </div>
           <div class="search-wrap">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome ou código…" autocomplete="off" autocapitalize="off" autocorrect="off" value="${esc(state.search)}">
+            <input type="text" class="search-input" id="searchInput" placeholder="${isExpo ? 'Buscar empresa, estande ou pessoa…' : 'Buscar por nome ou código…'}" autocomplete="off" autocapitalize="off" autocorrect="off" value="${esc(state.search)}">
             <button class="search-clear ${state.search ? 'show' : ''}" id="searchClear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></button>
           </div>
+          ${isExpo ? `
+          <div class="expo-modos" role="tablist" aria-label="Modo de credenciamento">
+            <button class="expo-modo ${state.expoModo === 'empresas' ? 'on' : ''}" data-modo="empresas" role="tab" aria-selected="${state.expoModo === 'empresas'}">Por empresa</button>
+            <button class="expo-modo ${state.expoModo === 'pessoas' ? 'on' : ''}" data-modo="pessoas" role="tab" aria-selected="${state.expoModo === 'pessoas'}">Por pessoa</button>
+          </div>` : ''}
         </div>
 
         ${state.editOverride ? `
@@ -853,7 +898,7 @@ function renderCheckinScreen() {
         ` : ''}
 
         <div class="stats">
-          <div class="stat"><div class="stat-label">${isRace ? 'Corredores' : 'Total'}</div><div class="stat-value" id="statTotal">0</div></div>
+          <div class="stat"><div class="stat-label">${isRace ? 'Corredores' : isExpo ? 'Credenciais' : 'Total'}</div><div class="stat-value" id="statTotal">0</div></div>
           <div class="stat success"><div class="stat-label">${isRace ? 'Kits retirados' : 'Check-in'}</div><div class="stat-value" id="statChecked">0</div></div>
           <div class="stat violet"><div class="stat-label">${isRace ? 'Kits pendentes' : 'Pendente'}</div><div class="stat-value" id="statPending">0</div></div>
         </div>
@@ -862,7 +907,7 @@ function renderCheckinScreen() {
         <div class="filters" id="filters">
           <button class="filter active" data-filter="all">Todos <span class="filter-count" id="cAll">0</span></button>
           <button class="filter" data-filter="pending">Pendentes <span class="filter-count" id="cPending">0</span></button>
-          <button class="filter" data-filter="checked">${isRace ? 'Kit retirado' : 'Já fizeram'} <span class="filter-count" id="cChecked">0</span></button>
+          <button class="filter" data-filter="checked">${isRace ? 'Kit retirado' : isExpo ? 'Retirados' : 'Já fizeram'} <span class="filter-count" id="cChecked">0</span></button>
         </div>
       </div>
       <div class="list" id="list"></div>
@@ -887,6 +932,18 @@ function renderCheckinScreen() {
     renderEvents();
   });
   $("btnDashboard").addEventListener("click", openDashboard);
+  document.querySelectorAll("[data-modo]").forEach(b => {
+    b.addEventListener("click", () => {
+      state.expoModo = b.dataset.modo;
+      document.querySelectorAll("[data-modo]").forEach(o => {
+        const lig = o.dataset.modo === state.expoModo;
+        o.classList.toggle("on", lig);
+        o.setAttribute("aria-selected", String(lig));
+      });
+      haptic("light");
+      renderCheckinList();
+    });
+  });
   if ($("btnDashboard2")) $("btnDashboard2").addEventListener("click", openDashboard);
   if ($("btnImport")) $("btnImport").addEventListener("click", openImport);
   if ($("btnSettings")) $("btnSettings").addEventListener("click", openSettings);
@@ -979,6 +1036,11 @@ function renderCheckinList() {
   $("progressFill").style.width = total ? (checked / total * 100) + "%" : "0%";
   document.querySelectorAll(".filter").forEach(f => f.classList.toggle("active", f.dataset.filter === state.filter));
   if (isRace) renderKitSizes();
+
+  if (isExpoEvent(state.currentEvent) && state.expoModo === "empresas") {
+    renderExpoList();
+    return;
+  }
 
   const q = norm(state.search);
   let arr = state.participants;
@@ -1158,6 +1220,223 @@ function renderKitSizes() {
 // SWIPE
 // =============================================================
 let swipeState = null;
+
+// =============================================================
+// EXPOSIÇÃO · retirada de crachá em lote
+// No balcão, quem chega é a empresa, não a pessoa. Por isso a busca é por
+// empresa e a retirada acontece de uma vez, com quem retirou registrado.
+// =============================================================
+function renderExpoList() {
+  const q = norm(state.search);
+  let arr = state.exhibitors.filter(x => x.time.length);
+  if (q) {
+    arr = arr.filter(x =>
+      norm(x.empresa || "").includes(q) ||
+      norm(x.codigo || "").includes(q) ||
+      norm(x.estande || "").includes(q) ||
+      x.time.some(m => norm(m.pessoa.name).includes(q)));
+  }
+  if (state.filter === "pending") arr = arr.filter(x => x.time.some(m => !m.retirado_em));
+  else if (state.filter === "checked") arr = arr.filter(x => x.time.every(m => m.retirado_em));
+
+  arr = arr.slice().sort((a, b) => {
+    const fa = a.time.every(m => m.retirado_em), fb = b.time.every(m => m.retirado_em);
+    if (fa !== fb) return fa ? 1 : -1;
+    return (a.empresa || "").localeCompare(b.empresa || "", "pt-BR");
+  });
+
+  const list = $("list");
+  if (!state.exhibitors.length) {
+    list.innerHTML = `
+      <div class="list-empty">
+        <div class="list-empty-title">Nenhuma empresa cadastrada</div>
+        <div class="list-empty-sub">As empresas aparecem aqui depois de preencherem o formulário de equipe.</div>
+      </div>`;
+    return;
+  }
+  if (!arr.length) {
+    list.innerHTML = `
+      <div class="list-empty">
+        <div class="list-empty-title">Nada encontrado</div>
+        <div class="list-empty-sub">Tente o nome da empresa, o estande ou o nome de alguém da equipe.</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = arr.map((x, i) => {
+    const total = x.time.length;
+    const feitos = x.time.filter(m => m.retirado_em).length;
+    const completo = feitos === total;
+    const quem = x.time.find(m => m.retirado_em)?.retirado_por_nome;
+    return `
+      <button class="empresa-card ${completo ? 'completo' : ''}" data-exib="${esc(x.id)}"
+              style="animation-delay:${Math.min(i * 20, 200)}ms">
+        <div class="empresa-topo">
+          <div class="empresa-nome">${esc(x.empresa || 'Empresa sem nome')}</div>
+          <div class="empresa-placar ${completo ? 'ok' : ''}">${feitos}<span>/${total}</span></div>
+        </div>
+        <div class="empresa-meta">
+          ${x.estande ? `<span class="empresa-chip">Estande ${esc(x.estande)}</span>` : ''}
+          ${x.cota ? `<span class="empresa-chip">${esc(x.cota)}</span>` : ''}
+          <span class="empresa-chip codigo">${esc(x.codigo)}</span>
+        </div>
+        <div class="empresa-time">${x.time.slice(0, 6).map(m =>
+          `<span class="empresa-pessoa ${m.retirado_em ? 'ret' : ''}">${esc(m.pessoa.name.split(' ')[0])}</span>`
+        ).join('')}${total > 6 ? `<span class="empresa-pessoa mais">+${total - 6}</span>` : ''}</div>
+        ${completo && quem ? `<div class="empresa-quem">Retirado por ${esc(quem)}</div>` : ''}
+      </button>`;
+  }).join('');
+}
+
+// ── folha de retirada ────────────────────────────────────────────────
+function openRetirada(exibId) {
+  const x = state.exhibitors.find(e => e.id === exibId);
+  if (!x) return;
+  const pendentes = x.time.filter(m => !m.retirado_em);
+  if (!pendentes.length) {
+    toast("Toda a equipe já retirou o crachá", "success");
+    haptic("light");
+    return;
+  }
+  // Começa com todo mundo marcado: o caso comum é levar tudo de uma vez.
+  state.retirada = {
+    exibId,
+    marcados: new Set(pendentes.map(m => m.participant_id)),
+    retiranteId: (pendentes.find(m => m.pode_retirar) || pendentes[0]).participant_id,
+    outroNome: "", outroFone: ""
+  };
+  desenhaRetirada();
+}
+
+function desenhaRetirada() {
+  const r = state.retirada;
+  const x = state.exhibitors.find(e => e.id === r.exibId);
+  const pendentes = x.time.filter(m => !m.retirado_em);
+  const jaFeitos = x.time.filter(m => m.retirado_em);
+  const n = r.marcados.size;
+  const outro = r.retiranteId === "__outro__";
+
+  openModal(`
+    <div class="modal retirada">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">${esc(x.empresa || 'Empresa')}</div>
+          <div class="modal-sub">${pendentes.length} crachá${pendentes.length > 1 ? 's' : ''} no balcão${x.estande ? ' · estande ' + esc(x.estande) : ''}</div>
+        </div>
+        <button class="modal-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="ret-secao">
+          <div class="ret-rotulo">Quem está levando o crachá</div>
+          <div class="ret-pessoas">
+            ${pendentes.map(m => `
+              <button class="ret-pessoa ${r.marcados.has(m.participant_id) ? 'on' : ''}" data-marca="${esc(m.participant_id)}">
+                <span class="ret-box">${r.marcados.has(m.participant_id) ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</span>
+                <span class="ret-info">
+                  <span class="ret-nome">${esc(m.pessoa.name)}</span>
+                  ${m.cargo ? `<span class="ret-cargo">${esc(m.cargo)}</span>` : ''}
+                </span>
+                ${m.pode_retirar ? '<span class="ret-autor">autorizado</span>' : ''}
+              </button>`).join('')}
+          </div>
+          <div class="ret-atalhos">
+            <button class="ret-atalho" id="retTodos">Marcar todos</button>
+            <button class="ret-atalho" id="retNenhum">Limpar</button>
+          </div>
+        </div>
+
+        ${jaFeitos.length ? `
+        <div class="ret-secao">
+          <div class="ret-rotulo">Já retiraram</div>
+          <div class="ret-feitos">${jaFeitos.map(m =>
+            `<span class="ret-feito">${esc(m.pessoa.name)}${m.retirado_por_nome && m.retirado_por_nome !== m.pessoa.name ? ` <em>com ${esc(m.retirado_por_nome)}</em>` : ''}</span>`
+          ).join('')}</div>
+        </div>` : ''}
+
+        <div class="ret-secao">
+          <div class="ret-rotulo">Quem está retirando agora</div>
+          <select class="ret-select" id="retQuem">
+            ${x.time.map(m => `<option value="${esc(m.participant_id)}" ${r.retiranteId === m.participant_id ? 'selected' : ''}>${esc(m.pessoa.name)}${m.pode_retirar ? ' · autorizado' : ''}</option>`).join('')}
+            <option value="__outro__" ${outro ? 'selected' : ''}>Outra pessoa…</option>
+          </select>
+          ${outro ? `
+            <input class="ret-input" id="retNome" placeholder="Nome de quem está retirando" value="${esc(r.outroNome)}" autocomplete="off">
+            <input class="ret-input" id="retFone" placeholder="WhatsApp (para receber o aviso)" inputmode="tel" value="${esc(r.outroFone)}">` : ''}
+          ${!outro && !x.time.find(m => m.participant_id === r.retiranteId)?.pode_retirar
+            ? '<div class="ret-alerta">Esta pessoa não está marcada como autorizada. A retirada é registrada mesmo assim.</div>' : ''}
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-retirar" id="btnRetirar" ${n ? '' : 'disabled'}>
+          ${n ? `Entregar ${n} crachá${n > 1 ? 's' : ''}` : 'Marque quem vai levar'}
+        </button>
+      </div>
+    </div>
+  `);
+
+  document.querySelectorAll("[data-marca]").forEach(b => {
+    b.addEventListener("click", () => {
+      const id = b.dataset.marca;
+      r.marcados.has(id) ? r.marcados.delete(id) : r.marcados.add(id);
+      haptic("light");
+      desenhaRetirada();
+    });
+  });
+  $("retTodos").addEventListener("click", () => {
+    pendentes.forEach(m => r.marcados.add(m.participant_id)); desenhaRetirada();
+  });
+  $("retNenhum").addEventListener("click", () => { r.marcados.clear(); desenhaRetirada(); });
+  $("retQuem").addEventListener("change", e => { r.retiranteId = e.target.value; desenhaRetirada(); });
+  if (outro) {
+    $("retNome").addEventListener("input", e => { r.outroNome = e.target.value; });
+    $("retFone").addEventListener("input", e => { r.outroFone = e.target.value; });
+  }
+  $("btnRetirar").addEventListener("click", confirmaRetirada);
+}
+
+async function confirmaRetirada() {
+  const r = state.retirada;
+  if (!r || !r.marcados.size) return;
+  const x = state.exhibitors.find(e => e.id === r.exibId);
+  const outro = r.retiranteId === "__outro__";
+  if (outro && r.outroNome.trim().length < 3) {
+    toast("Escreva o nome de quem está retirando", "error");
+    haptic("error");
+    return;
+  }
+  const btn = $("btnRetirar");
+  btn.disabled = true;
+  btn.textContent = "Entregando…";
+  try {
+    const { data, error } = await sb.rpc("expo_retirada", {
+      p_exhibitor_id: r.exibId,
+      p_participants: [...r.marcados],
+      p_retirante_id: outro ? null : r.retiranteId,
+      p_retirante_nome: outro ? r.outroNome.trim() : null,
+      p_retirante_whatsapp: outro ? r.outroFone.trim() : null
+    });
+    if (error) throw error;
+    if (!data || data.erro) throw new Error(data?.erro || "falhou");
+
+    closeModal();
+    haptic("success");
+    const msg = data.retirados >= data.total
+      ? `${esc(x.empresa || 'Empresa')} completa · ${data.total} crachás`
+      : `${r.marcados.size} crachá${r.marcados.size > 1 ? 's entregues' : ' entregue'} · faltam ${data.total - data.retirados}`;
+    toast(msg.replace(/<[^>]*>/g, ""), "success");
+    state.retirada = null;
+    await loadParticipants(state.currentEvent.id);
+    await loadExhibitors(state.currentEvent.id);
+    renderCheckinList();
+  } catch (e) {
+    haptic("error");
+    toast("Não deu para registrar: " + (e.message || e), "error");
+    btn.disabled = false;
+    btn.textContent = "Tentar de novo";
+  }
+}
+
 function initSwipe() {
   const list = $("list");
   if (!list) return;
@@ -1218,6 +1497,16 @@ function onSwipeEnd() {
   swipeState = null;
 }
 function onListClick(e) {
+  const cartao = e.target.closest(".empresa-card");
+  if (cartao) {
+    if (!isEditable(state.currentEvent)) {
+      toast("Período de edição encerrado — apenas visualização", "error");
+      haptic("error");
+      return;
+    }
+    openRetirada(cartao.dataset.exib);
+    return;
+  }
   const action = e.target.closest(".row-action");
   if (action) {
     const row = action.closest(".row");
@@ -1572,6 +1861,15 @@ function openSettings() {
       <div class="modal-header"><div class="modal-title">Mais ações</div><button class="modal-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
       <div class="modal-body">
         <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="tema-app" role="radiogroup" aria-label="Tema">
+            <span class="tema-app-rot">Tema</span>
+            <div class="tema-app-opts">
+              ${["auto","claro","escuro"].map(v => {
+                const atual = (localStorage.getItem("nb-tema") || "auto");
+                return `<button class="tema-app-opt ${atual === v ? 'on' : ''}" data-tema="${v}" role="radio" aria-checked="${atual === v}">${v === 'auto' ? 'Auto' : v === 'claro' ? 'Claro' : 'Escuro'}</button>`;
+              }).join('')}
+            </div>
+          </div>
           <button class="btn-modal ghost" id="btnAddOne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Adicionar manualmente</button>
           <button class="btn-modal ghost" id="btnEditEvent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar dados do evento</button>
           <button class="btn-modal ghost" id="btnResetCheckins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Resetar check-ins</button>
@@ -1580,6 +1878,22 @@ function openSettings() {
       </div>
     </div>
   `);
+  document.querySelectorAll("[data-tema]").forEach(b => {
+    b.addEventListener("click", () => {
+      const v = b.dataset.tema;
+      const raiz = document.documentElement;
+      raiz.classList.add("trocando-tema");
+      if (v === "auto") raiz.removeAttribute("data-tema"); else raiz.setAttribute("data-tema", v);
+      try { localStorage.setItem("nb-tema", v); } catch (err) {}
+      document.querySelectorAll("[data-tema]").forEach(o => {
+        const lig = o.dataset.tema === v;
+        o.classList.toggle("on", lig);
+        o.setAttribute("aria-checked", String(lig));
+      });
+      requestAnimationFrame(() => raiz.classList.remove("trocando-tema"));
+      haptic("light");
+    });
+  });
   $("btnAddOne").addEventListener("click", () => { closeModal(); setTimeout(() => openAddOne(), 250); });
   $("btnEditEvent").addEventListener("click", () => { closeModal(); setTimeout(() => openEventEditor(state.currentEvent), 250); });
   $("btnResetCheckins").addEventListener("click", async () => {

@@ -1,170 +1,388 @@
+// =====================================================================
+// INÍCIO · centro de comando
+//
+// A pergunta que essa tela responde em três segundos é uma só:
+// "onde está o evento âncora e o que ainda depende de mim?"
+//
+// Brasília não é um evento, são quatro públicos no mesmo lugar: congresso,
+// corrida, exposição e visitante. Por isso o card de cima soma os quatro e
+// mostra o contador oficial — crachá retirado é presença.
+// =====================================================================
 import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { listEvents } from '../data/events.js';
 import { supabase } from '../data/supabase.js';
 import { getProfile } from '../data/auth.js';
 import { navigate } from '../core/router.js';
-import { firstName, fmtRelative } from '../core/utils.js';
+import { firstName } from '../core/utils.js';
+
+const TIPO = {
+  congress: { rot: 'Congresso', ordem: 1 },
+  race: { rot: 'Corrida', ordem: 2 },
+  exhibitor: { rot: 'Exposição', ordem: 3 },
+  visitor: { rot: 'Visitantes', ordem: 4 }
+};
+
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 export async function pageHome(view) {
-  // Loading state.
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
 
-  const [profile, events] = await Promise.all([getProfile(), listEvents()]);
+  const [profile, eventos] = await Promise.all([getProfile(), listEvents()]);
 
-  // Próximo evento (status='ativo' ou data futura).
-  const now = new Date();
-  const upcoming = events
-    .filter((e) => e.status !== 'encerrado' && (!e.date_start || new Date(e.date_start) >= now))
-    .sort((a, b) => new Date(a.date_start || 0) - new Date(b.date_start || 0));
-  const nextEvent = upcoming[0];
+  // Consultas de apoio. Nenhuma delas pode derrubar a tela.
+  const [expositores, comCert, semContato] = await Promise.all([
+    supabase.from('exhibitors').select('id,status,empresa,preenchido_em')
+      .then((r) => r.data ?? []).catch(() => []),
+    supabase.from('cert_modulos').select('event_id')
+      .then((r) => new Set((r.data ?? []).map((x) => x.event_id))).catch(() => new Set()),
+    supabase.from('participants').select('id,event_id')
+      .is('email', null).is('phone', null)
+      .then((r) => r.data ?? []).catch(() => [])
+  ]);
 
-  // Templates pendentes no Meta.
-  const { data: pendingTpls } = await supabase
+  const quando = (e) => e.date_start || e.event_date || null;
+
+  // ── O evento âncora ────────────────────────────────────────────────────────
+  // Só congressos-raiz disputam: sub-evento é público, não é evento.
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const candidatos = eventos
+    .filter((e) => !e.parent_event_id && e.status !== 'encerrado' && quando(e))
+    .filter((e) => new Date(quando(e)) >= hoje)
+    .sort((a, b) => new Date(quando(a)) - new Date(quando(b)));
+  const ancora = candidatos[0] || null;
+
+  const publicos = ancora
+    ? [ancora, ...eventos.filter((e) => e.parent_event_id === ancora.id)]
+        .sort((a, b) => (TIPO[a.event_type]?.ordem || 9) - (TIPO[b.event_type]?.ordem || 9))
+    : [];
+  const inscritosTotal = publicos.reduce((s, e) => s + (e.total_inscritos || 0), 0);
+  const presentesTotal = publicos.reduce((s, e) => s + (e.total_checkins || 0), 0);
+  const dias = ancora ? Math.ceil((new Date(quando(ancora)) - hoje) / 86400000) : null;
+
+  // ── Pendências reais ───────────────────────────────────────────────────────
+  const pend = [];
+
+  const expoPendentes = expositores.filter((x) => !x.preenchido_em);
+  if (expositores.length && expoPendentes.length) {
+    pend.push({
+      tom: 'urgent',
+      icone: 'briefcase',
+      etiqueta: 'Exposição',
+      titulo: `${expoPendentes.length} de ${expositores.length} empresas ainda não cadastraram o time`,
+      corpo: 'Sem o time cadastrado não dá para imprimir crachá antes do evento — vira fila no balcão.',
+      acao: 'Ver empresas',
+      caminho: '/expositores'
+    });
+  }
+  if (!expositores.length && ancora) {
+    pend.push({
+      tom: 'urgent',
+      icone: 'briefcase',
+      etiqueta: 'Exposição',
+      titulo: 'Nenhum convite de expositor gerado',
+      corpo: 'O código de cadastro é gerado aqui e enviado para cada empresa. Sem ele o formulário não abre.',
+      acao: 'Gerar convites',
+      caminho: '/expositores'
+    });
+  }
+
+  const semCert = candidatos.filter((e) => !comCert.has(e.id));
+  if (semCert.length) {
+    pend.push({
+      tom: 'urgent',
+      icone: 'award',
+      etiqueta: 'Certificado',
+      titulo:
+        semCert.length === 1
+          ? `${semCert[0].city || semCert[0].name} sem módulos de certificado`
+          : `${semCert.length} eventos sem módulos de certificado`,
+      corpo: 'Sem módulo configurado, o participante não recebe link nenhum depois do evento.',
+      acao: 'Configurar',
+      caminho: '/certificados'
+    });
+  }
+
+  const semContatoAncora = ancora
+    ? semContato.filter((p) => publicos.some((e) => e.id === p.event_id)).length
+    : 0;
+  if (semContatoAncora) {
+    pend.push({
+      tom: '',
+      icone: 'people',
+      etiqueta: 'Base',
+      titulo: `${semContatoAncora} ${semContatoAncora > 1 ? 'inscritos' : 'inscrito'} sem e-mail e sem WhatsApp`,
+      corpo: semContatoAncora > 1
+        ? 'Essas pessoas entram no evento, mas não recebem confirmação, lembrete nem certificado.'
+        : 'Essa pessoa entra no evento, mas não recebe confirmação, lembrete nem certificado.',
+      acao: 'Ver na base',
+      caminho: '/pessoas'
+    });
+  }
+
+  const { data: tplPendentes } = await supabase
     .from('whatsapp_templates')
-    .select('*')
-    .eq('status', 'PENDING');
+    .select('id')
+    .eq('status', 'PENDING')
+    .then((r) => r, () => ({ data: [] }));
+  if (tplPendentes?.length) {
+    pend.push({
+      tom: 'urgent',
+      icone: 'message',
+      etiqueta: 'Marketing',
+      titulo: `${tplPendentes.length} template${tplPendentes.length > 1 ? 's' : ''} aguardando a Meta`,
+      corpo: 'A Meta costuma responder em até 48h. Sem aprovação, o disparo não sai.',
+      acao: 'Ver status',
+      caminho: '/templates'
+    });
+  }
 
-  // Eventos sem certificado configurado.
-  const eventsWithoutCert = upcoming.filter((e) => !e.certificate_template_url).slice(0, 3);
-
+  // ── Desenho ────────────────────────────────────────────────────────────────
   setContent(
     view,
-    h('div', { class: 'page-head' },
-      h('div', {},
-        h('h1', { class: 'page-title' }, `Olá, ${firstName(profile?.email?.split('@')[0] || '')}`),
-        h('div', { class: 'page-sub' }, buildSubtitle(eventsWithoutCert.length, pendingTpls?.length || 0))
+    h(
+      'div',
+      { class: 'page-head' },
+      h(
+        'div',
+        {},
+        h('h1', { class: 'page-title' }, `Olá, ${nomeDe(profile)}`),
+        h('div', { class: 'page-sub' }, resumo(ancora, dias, inscritosTotal, pend.length))
       )
     ),
 
-    h('div', { class: 'todo-grid' },
-      // Card: Próximo evento
-      nextEvent ? cardNextEvent(nextEvent) : null,
-      // Card: Templates aguardando aprovação
-      pendingTpls && pendingTpls.length > 0 ? cardPendingTemplates(pendingTpls) : null,
-      // Card: Eventos sem certificado
-      eventsWithoutCert.length > 0 ? cardCertPending(eventsWithoutCert[0]) : null,
-      // Card: tudo em ordem (se vazio)
-      !nextEvent && (!pendingTpls || pendingTpls.length === 0) && eventsWithoutCert.length === 0
-        ? cardEmpty()
-        : null
-    ),
+    ancora ? cardAncora(ancora, publicos, dias, inscritosTotal, presentesTotal) : null,
 
-    h('h2', { style: { fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: '700', color: 'var(--ink-strong)', marginBottom: '14px', letterSpacing: '-0.015em' } }, 'Ações rápidas'),
-    quickActions()
+    h('h2', { class: 'home-secao' }, pend.length ? 'Precisa de você' : 'Nada travado'),
+    pend.length
+      ? h('div', { class: 'todo-grid' }, ...pend.map(cardPendencia))
+      : h(
+          'div',
+          { class: 'todo-card ready' },
+          h(
+            'div',
+            { class: 'todo-head' },
+            h('div', { class: 'todo-icon ready' }, icons.check()),
+            h('div', { class: 'todo-status' }, 'Em ordem')
+          ),
+          h('div', { class: 'todo-title' }, 'Nenhuma pendência operacional'),
+          h('div', { class: 'todo-body' }, 'Convites, certificados e base de contatos estão configurados.')
+        ),
+
+    h('h2', { class: 'home-secao' }, 'Calendário 2026'),
+    calendario(eventos),
+
+    h('h2', { class: 'home-secao' }, 'Ir direto para'),
+    atalhos(eventos, expositores)
   );
 }
 
-function buildSubtitle(certCount, tplCount) {
-  const issues = [];
-  if (certCount > 0) issues.push(`${certCount} evento${certCount > 1 ? 's' : ''} sem certificado`);
-  if (tplCount > 0) issues.push(`${tplCount} template${tplCount > 1 ? 's' : ''} aguardando Meta`);
-  if (issues.length === 0) return 'Tudo operacional. Bom dia.';
-  return issues.join(' · ') + '.';
+// ── Peças ───────────────────────────────────────────────────────────────────
+
+function nomeDe(profile) {
+  const bruto = profile?.email?.split('@')[0] || '';
+  return firstName(bruto.replace(/[._-]+/g, ' ')).replace(/^./, (c) => c.toUpperCase()) || 'time';
 }
 
-function cardNextEvent(ev) {
-  const days = ev.date_start ? Math.ceil((new Date(ev.date_start) - Date.now()) / 86400000) : null;
-  return h('div', { class: 'todo-card ready' },
-    h('div', { class: 'todo-head' },
-      h('div', { class: 'todo-icon info' }, icons.calendar()),
-      h('div', { class: 'todo-status' }, 'Próximo evento')
+function resumo(ancora, dias, inscritos, pendencias) {
+  if (!ancora) return 'Nenhum evento em aberto no calendário.';
+  const quantos = inscritos.toLocaleString('pt-BR');
+  const prazo =
+    dias === 0 ? 'é hoje' : dias === 1 ? 'é amanhã' : `em ${dias} dias`;
+  const p = pendencias
+    ? ` ${pendencias} ponto${pendencias > 1 ? 's' : ''} aguardando decisão.`
+    : ' Nada travado.';
+  return `${ancora.city || ancora.name} ${prazo}, com ${quantos} pessoas garantidas.` + p;
+}
+
+function dataExtensa(e) {
+  const ini = e.date_start || e.event_date;
+  if (!ini) return 'data a definir';
+  const a = new Date(ini);
+  const b = e.event_end_date ? new Date(e.event_end_date) : null;
+  const mes = MESES[a.getUTCMonth()];
+  if (b && b > a) {
+    const mesB = MESES[b.getUTCMonth()];
+    return mes === mesB
+      ? `${a.getUTCDate()} a ${b.getUTCDate()} de ${mes}`
+      : `${a.getUTCDate()} de ${mes} a ${b.getUTCDate()} de ${mesB}`;
+  }
+  return `${a.getUTCDate()} de ${mes}`;
+}
+
+function cardAncora(ev, publicos, dias, inscritos, presentes) {
+  return h(
+    'div',
+    { class: 'ancora' },
+    h(
+      'div',
+      { class: 'ancora-topo' },
+      h(
+        'div',
+        {},
+        h('div', { class: 'ancora-tag' }, 'Próximo evento'),
+        h('div', { class: 'ancora-nome' }, ev.name),
+        h(
+          'div',
+          { class: 'ancora-onde' },
+          [dataExtensa(ev), ev.venue || ev.location].filter(Boolean).join(' · ')
+        )
+      ),
+      h(
+        'div',
+        { class: 'ancora-conta' },
+        h('div', { class: 'ancora-conta-num' }, dias === null ? '—' : Math.max(dias, 0)),
+        h('div', { class: 'ancora-conta-rot' }, dias === 1 ? 'dia' : 'dias')
+      )
     ),
-    h('div', { class: 'todo-title' }, ev.name || ev.slug),
-    h('div', { class: 'todo-body' },
-      [
-        ev.location || null,
-        days !== null && days >= 0 ? `em ${days} dia${days !== 1 ? 's' : ''}` : null,
-        `${ev.total_inscritos || 0} inscritos`
-      ].filter(Boolean).join(' · ')
+
+    h(
+      'div',
+      { class: 'ancora-publicos' },
+      ...publicos.map((p) =>
+        h(
+          'button',
+          {
+            class: 'ancora-publico',
+            onclick: () =>
+              navigate(p.event_type === 'exhibitor' ? '/expositores' : `/eventos/${p.id}`)
+          },
+          h('div', { class: 'ancora-publico-rot' }, TIPO[p.event_type]?.rot || p.name),
+          h('div', { class: 'ancora-publico-num' }, (p.total_inscritos || 0).toLocaleString('pt-BR')),
+          h(
+            'div',
+            { class: 'ancora-publico-sub' },
+            (p.total_inscritos || 0) === 0 ? 'ainda sem inscritos' : `${p.total_checkins || 0} no local`
+          )
+        )
+      )
     ),
-    h('div', { class: 'todo-action' },
-      h('button', {
-        class: 'btn btn-primary',
-        onclick: () => navigate(`/eventos/${ev.id}`)
-      }, 'Abrir evento →')
+
+    h(
+      'div',
+      { class: 'ancora-rodape' },
+      h(
+        'div',
+        { class: 'ancora-oficial' },
+        h('strong', {}, presentes.toLocaleString('pt-BR')),
+        ` de ${inscritos.toLocaleString('pt-BR')} já com crachá retirado — esse é o contador oficial do evento.`
+      ),
+      h(
+        'div',
+        { class: 'ancora-acoes' },
+        h('button', { class: 'btn btn-primary', onclick: () => navigate(`/eventos/${ev.id}`) },
+          'Abrir ' + (ev.city || 'evento')),
+        h('button', { class: 'btn btn-secondary', onclick: () => navigate('/expositores') }, 'Exposição'),
+        h('button', { class: 'btn btn-ghost', onclick: () => navigate('/pessoas') }, 'Pessoas')
+      )
     )
   );
 }
 
-function cardPendingTemplates(tpls) {
-  return h('div', { class: 'todo-card urgent' },
-    h('div', { class: 'todo-head' },
-      h('div', { class: 'todo-icon urgent' }, icons.message()),
-      h('div', { class: 'todo-status' }, 'Aguardando Meta')
+function cardPendencia(p) {
+  return h(
+    'div',
+    { class: 'todo-card ' + (p.tom || '') },
+    h(
+      'div',
+      { class: 'todo-head' },
+      h('div', { class: 'todo-icon ' + (p.tom === 'urgent' ? 'urgent' : 'info') }, icons[p.icone]()),
+      h('div', { class: 'todo-status' }, p.etiqueta)
     ),
-    h('div', { class: 'todo-title' },
-      `${tpls.length} template${tpls.length > 1 ? 's' : ''} em análise`
-    ),
-    h('div', { class: 'todo-body' },
-      'A Meta geralmente aprova em até 48h. Você precisa do template aprovado antes de disparar.'
-    ),
-    h('div', { class: 'todo-action' },
-      h('button', { class: 'btn btn-secondary', onclick: () => navigate('/templates') }, 'Ver status →')
+    h('div', { class: 'todo-title' }, p.titulo),
+    h('div', { class: 'todo-body' }, p.corpo),
+    h(
+      'div',
+      { class: 'todo-action' },
+      h('button', { class: 'btn btn-secondary', onclick: () => navigate(p.caminho) }, p.acao + ' →')
     )
   );
 }
 
-function cardCertPending(ev) {
-  return h('div', { class: 'todo-card urgent' },
-    h('div', { class: 'todo-head' },
-      h('div', { class: 'todo-icon urgent' }, icons.alert()),
-      h('div', { class: 'todo-status' }, 'Pendente')
-    ),
-    h('div', { class: 'todo-title' }, `${ev.name} sem template de certificado`),
-    h('div', { class: 'todo-body' }, 'Sem isso, os participantes não recebem nada após o check-in.'),
-    h('div', { class: 'todo-action' },
-      h('button', { class: 'btn btn-secondary', onclick: () => navigate(`/eventos/${ev.id}`) }, 'Configurar →')
+function calendario(eventos) {
+  const raizes = eventos
+    .filter((e) => !e.parent_event_id)
+    .sort((a, b) => new Date(a.date_start || a.event_date || 0) - new Date(b.date_start || b.event_date || 0));
+
+  return h(
+    'div',
+    { class: 'table-card' },
+    h(
+      'table',
+      { class: 'table' },
+      h(
+        'thead',
+        {},
+        h(
+          'tr',
+          {},
+          h('th', { style: { width: '30%' } }, 'Cidade'),
+          h('th', {}, 'Data'),
+          h('th', {}, 'Local'),
+          h('th', { style: { width: '110px' } }, 'Inscritos'),
+          h('th', { style: { width: '120px' } }, 'Situação')
+        )
+      ),
+      h(
+        'tbody',
+        {},
+        ...raizes.map((e) =>
+          h(
+            'tr',
+            {
+              tabindex: '0',
+              role: 'button',
+              onclick: () => navigate(`/eventos/${e.id}`),
+              onkeydown: (ev) => {
+                if (ev.key === 'Enter') navigate(`/eventos/${e.id}`);
+              }
+            },
+            h('td', {}, h('div', { class: 'row-name' }, e.city || e.name)),
+            h('td', { class: 'muted' }, dataExtensa(e)),
+            h('td', { class: 'muted' }, e.venue || e.location || '—'),
+            h(
+              'td',
+              {},
+              (e.total_inscritos || 0) === 0
+                ? h('span', { class: 'muted' }, '—')
+                : h('strong', {}, (e.total_inscritos || 0).toLocaleString('pt-BR'))
+            ),
+            h('td', {}, situacao(e))
+          )
+        )
+      )
     )
   );
 }
 
-function cardEmpty() {
-  return h('div', { class: 'todo-card ready' },
-    h('div', { class: 'todo-head' },
-      h('div', { class: 'todo-icon ready' }, icons.check()),
-      h('div', { class: 'todo-status' }, 'Em ordem')
-    ),
-    h('div', { class: 'todo-title' }, 'Tudo configurado'),
-    h('div', { class: 'todo-body' }, 'Nenhuma pendência operacional no momento.')
-  );
+function situacao(e) {
+  if (e.status === 'encerrado') return h('span', { class: 'status done' }, 'Encerrado');
+  if (e.status === 'ativo') return h('span', { class: 'status live' }, 'Em andamento');
+  return h('span', { class: 'status soon' }, 'Em breve');
 }
 
-function quickActions() {
-  const actions = [
-    { icon: 'calendar', title: 'Eventos', sub: 'Calendário NB completo', path: '/eventos' },
-    { icon: 'people', title: 'Pessoas', sub: 'CRM cruzado · 209 contatos', path: '/pessoas' },
-    { icon: 'send', title: 'Disparos', sub: 'WhatsApp em massa', path: '/disparos' },
-    { icon: 'message', title: 'Templates', sub: 'Modelos aprovados Meta', path: '/templates' }
+function atalhos(eventos, expositores) {
+  const inscritos = eventos.reduce((s, e) => s + (e.total_inscritos || 0), 0);
+  const itens = [
+    { icone: 'calendar', titulo: 'Eventos', sub: `${eventos.filter((e) => !e.parent_event_id).length} no calendário`, caminho: '/eventos' },
+    { icone: 'people', titulo: 'Pessoas', sub: `${inscritos.toLocaleString('pt-BR')} inscrições na base`, caminho: '/pessoas' },
+    { icone: 'briefcase', titulo: 'Exposição', sub: expositores.length ? `${expositores.length} empresas` : 'sem convites ainda', caminho: '/expositores' },
+    { icone: 'send', titulo: 'Marketing', sub: 'disparos e divulgação', caminho: '/disparos' },
+    { icone: 'award', titulo: 'Certificados', sub: 'módulos e links pessoais', caminho: '/certificados' }
   ];
 
-  return h('div', {
-    class: 'quick-actions-grid'
-  },
-    ...actions.map((a) =>
-      h('button', {
-        style: {
-          background: 'var(--surface)',
-          border: '1px solid var(--line)',
-          borderRadius: 'var(--r)',
-          padding: '18px',
-          cursor: 'pointer',
-          textAlign: 'left',
-          transition: 'all 0.15s'
-        },
-        onmouseover: (e) => { e.currentTarget.style.borderColor = 'var(--violet)'; e.currentTarget.style.background = 'var(--violet-soft)'; },
-        onmouseout: (e) => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.background = 'var(--surface)'; },
-        onclick: () => navigate(a.path)
-      },
-        h('div', {
-          style: {
-            width: '32px', height: '32px', borderRadius: 'var(--r-sm)',
-            background: 'var(--bg-2)', color: 'var(--violet)',
-            display: 'grid', placeItems: 'center', marginBottom: '12px'
-          }
-        }, icons[a.icon]()),
-        h('div', { style: { fontWeight: '700', fontSize: '14px', color: 'var(--ink-strong)', marginBottom: '2px' } }, a.title),
-        h('div', { style: { fontSize: '12px', color: 'var(--ink-mute)' } }, a.sub)
+  return h(
+    'div',
+    { class: 'atalhos' },
+    ...itens.map((a) =>
+      h(
+        'button',
+        { class: 'atalho', onclick: () => navigate(a.caminho) },
+        h('div', { class: 'atalho-icone' }, icons[a.icone]()),
+        h('div', { class: 'atalho-titulo' }, a.titulo),
+        h('div', { class: 'atalho-sub' }, a.sub)
       )
     )
   );

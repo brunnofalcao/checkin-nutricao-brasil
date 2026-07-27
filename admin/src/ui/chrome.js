@@ -77,7 +77,7 @@ export function atualizaSubnav(path) {
 }
 
 // Em construção (telas que ainda não foram implementadas).
-const STUB_PATHS = ['/pessoas', '/configuracoes'];
+const STUB_PATHS = ['/configuracoes'];
 export async function renderShell(rootEl) {
   const profile = await getProfile();
   const app = h(

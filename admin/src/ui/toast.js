@@ -16,3 +16,4 @@ export function toast(msg, opts = {}) {
 toast.success = (m, o) => toast(m, { ...o, kind: 'success' });
 toast.danger = (m, o) => toast(m, { ...o, kind: 'danger' });
 toast.info = (m, o) => toast(m, { ...o, kind: 'info' });
+toast.warn = (m, o) => toast(m, { ...o, kind: 'warn', ms: 5000 });

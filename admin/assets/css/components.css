@@ -286,6 +286,10 @@
 .toast.danger {
   background: var(--red);
 }
+.toast.warn {
+  background: var(--amber);
+  color: var(--on-amber);
+}
 
 /* ===== Modal ===== */
 .modal-overlay {

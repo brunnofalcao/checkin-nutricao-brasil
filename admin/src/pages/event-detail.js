@@ -9,6 +9,8 @@ import { fmtDate, fmtRelative, debounce } from '../core/utils.js';
 import { toast } from '../ui/toast.js';
 import { openModal } from '../ui/modal.js';
 import { navigate } from '../core/router.js';
+import { abreAdicionarPessoa } from './pessoa-nova.js';
+import { agrupaPessoas, eventosComCertificado } from '../data/pessoas.js';
 
 const PAGE_SIZE = 100;
 
@@ -289,7 +291,7 @@ export async function pageEventDetail(view, { params }) {
       h('button', { class: 'btn btn-primary', onclick: stub('Importar lista') },
         icons.upload(), 'Importar lista'
       ),
-      h('button', { class: 'btn btn-secondary', onclick: stub('Adicionar pessoa') },
+      h('button', { class: 'btn btn-secondary', onclick: adicionarPessoa },
         icons.plus(), 'Adicionar pessoa'
       ),
       h('button', { class: 'btn btn-secondary', onclick: stub('Disparar mensagem') },
@@ -312,6 +314,27 @@ export async function pageEventDetail(view, { params }) {
         })
       }, icons.edit(), 'Editar evento')
     );
+  }
+
+  // Adiciona alguém direto neste evento. A checagem de duplicata usa só a
+  // lista deste evento — é a que importa aqui e já está carregada.
+  async function adicionarPessoa() {
+    let comCert = new Set();
+    try {
+      comCert = await eventosComCertificado();
+    } catch (e) {
+      // Sem isso o cadastro segue; só não gera token de certificado.
+    }
+    abreAdicionarPessoa({
+      eventos: [event],
+      eventoId: eventId,
+      pessoas: agrupaPessoas(allParticipants, new Map([[eventId, event]])),
+      comCertificado: comCert,
+      aoCriar: (linha) => {
+        allParticipants.unshift(linha);
+        render();
+      }
+    });
   }
 
   function render() {
