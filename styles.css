@@ -1474,3 +1474,45 @@ input, textarea { user-select: text; -webkit-user-select: text; font-family: inh
   font-weight: 700; cursor: pointer;
 }
 .tema-app-opt.on { background: var(--violet-deep); color: #fff; }
+
+/* ── Fila offline do credenciamento ──────────────────────────────────── */
+/* Barra que só existe quando há algo represado. Fica no rodapé porque o
+   polegar mora ali e porque o topo já tem busca e filtros. */
+.rede-bar {
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 90;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 11px 16px; width: calc(100% - 24px);
+  border: 0; border-radius: 12px; font: inherit; font-size: 13.5px; font-weight: 600;
+  text-align: center; cursor: pointer; color: #fff;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .28);
+  animation: redeSobe .22s ease;
+}
+.rede-bar[hidden] { display: none; }
+.rede-bar:disabled { cursor: default; }
+.rede-bar.off   { background: #8a6300; }
+.rede-bar.sync  { background: #6b2d8b; }
+.rede-bar.erro  { background: #b4232b; }
+@keyframes redeSobe { from { transform: translateY(10px); opacity: 0 } to { transform: none; opacity: 1 } }
+
+.rede-bar.sync::before {
+  content: ''; width: 13px; height: 13px; flex: none; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.35); border-top-color: #fff;
+  animation: redeGira .8s linear infinite;
+}
+@keyframes redeGira { to { transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce) {
+  .rede-bar { animation: none }
+  .rede-bar.sync::before { animation: none; border-top-color: rgba(255,255,255,.35) }
+}
+
+/* Linha marcada mas ainda não confirmada pelo banco: fica visível que o
+   registro está no aparelho, não no sistema. */
+.row.pendente-envio { position: relative; }
+.row.pendente-envio::after {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: #8a6300; border-radius: 0 2px 2px 0;
+}
+.pend-tag { color: #8a6300; font-weight: 700; }
+
+/* a lista precisa de espaço para a barra não cobrir a última pessoa */
+body:has(.rede-bar:not([hidden])) #list { padding-bottom: 68px; }

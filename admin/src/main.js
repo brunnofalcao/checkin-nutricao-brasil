@@ -14,6 +14,7 @@ import { pageDisparos } from './pages/disparos.js';
 import { pageTemplates } from './pages/templates.js';
 import { pageDivulgacao } from './pages/divulgacao.js';
 import { pageKb } from './pages/kb.js';
+import { pageAtendimento } from './pages/atendimento.js';
 import { h, setContent } from './core/dom.js';
 import { toast } from './ui/toast.js';
 const root = document.getElementById('root');
@@ -44,6 +45,7 @@ async function bootstrap() {
   route('/templates', pageTemplates);
   route('/divulgacao', pageDivulgacao);
   route('/base-conhecimento', pageKb);
+  route('/atendimento', pageAtendimento);
   start(view);
 }
 function renderAccessDenied(profile) {

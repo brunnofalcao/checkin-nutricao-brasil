@@ -30,12 +30,13 @@ const NAV = [
 // pertencem à mesma jornada viram abas aqui dentro, em vez de item de menu.
 const SUBNAV = {
   marketing: {
-    raiz: ['/disparos', '/divulgacao', '/templates', '/base-conhecimento'],
+    raiz: ['/disparos', '/divulgacao', '/templates', '/base-conhecimento', '/atendimento'],
     abas: [
       { path: '/disparos', label: 'Disparos' },
       { path: '/divulgacao', label: 'Divulgação' },
       { path: '/templates', label: 'Templates' },
       { path: '/base-conhecimento', label: 'Base de Conhecimento' },
+      { path: '/atendimento', label: 'Atendimento' },
       { href: 'gerador.html', label: 'Gerador de Peças', external: true }
     ]
   },

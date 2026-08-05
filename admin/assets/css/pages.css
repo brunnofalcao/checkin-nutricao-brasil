@@ -2300,3 +2300,66 @@
   .mod-valor { grid-area: valor; }
   .mod-trilho { grid-area: barra; height: 14px; }
 }
+
+/* ── Atendimento: a fila que a Kcal passou para humano ───────────────── */
+.at-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.at-card { padding: 13px 15px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.at-card.alerta { border-color: var(--amber); background: var(--amber-soft); }
+.at-card-rot { font-size: 11.5px; font-weight: 700; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .04em; }
+.at-card-num { font-size: 24px; font-weight: 800; color: var(--ink-strong); margin-top: 4px; }
+.at-card.alerta .at-card-num { color: var(--amber); }
+
+.at-filtros { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+.at-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer;
+}
+.at-chip:hover { border-color: var(--line-strong); }
+.at-chip.on { background: var(--violet-fill); border-color: var(--violet-fill); color: var(--on-fill); }
+.at-chip-n { font-size: 11px; opacity: .75; font-variant-numeric: tabular-nums; }
+
+.at-lista { display: flex; flex-direction: column; gap: 9px; }
+.at-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 13px 15px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+}
+/* barra na lateral, não fundo colorido: a linha inteira tingida cansa
+   quando 18 de 20 estão atrasadas */
+.at-item.urgente { border-left: 3px solid var(--amber); }
+.at-item-corpo { flex: 1; min-width: 260px; cursor: pointer; }
+.at-item-topo { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.at-nome { font-size: 13.5px; font-weight: 700; color: var(--ink-strong); }
+.at-motivo {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--violet); background: var(--violet-soft); border-radius: 4px; padding: 2px 6px;
+}
+.at-espera { font-size: 12px; color: var(--ink-mute); }
+.at-espera.urgente { color: var(--amber); font-weight: 700; }
+.at-pergunta {
+  font-size: 13px; color: var(--ink-soft); margin-top: 5px; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.at-tel { font-size: 11.5px; color: var(--ink-mute); margin-top: 4px; }
+.at-item-acoes { display: flex; gap: 7px; flex: none; }
+
+.at-modal-topo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.at-link { color: var(--violet); font-size: 12.5px; }
+.at-conversa {
+  display: flex; flex-direction: column; gap: 8px; max-height: 46vh; overflow: auto;
+  padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-1);
+}
+.at-bolha { max-width: 82%; padding: 8px 11px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
+.at-bolha.deles { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.at-bolha.nossa { align-self: flex-end; background: var(--violet-soft); color: var(--ink); }
+.at-bolha-txt { white-space: pre-wrap; }
+.at-bolha-hora { font-size: 10.5px; color: var(--ink-mute); margin-top: 3px; }
+
+/* botão dentro do toast (Desfazer) */
+.toast-acao {
+  margin-left: 12px; flex: none; padding: 4px 10px; border-radius: 7px;
+  border: 1px solid currentColor; background: transparent; color: inherit;
+  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; opacity: .9;
+}
+.toast-acao:hover { opacity: 1; }
+.toast-msg { flex: 1; }

@@ -13,6 +13,10 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 // ----- App State -----
+import {
+  enfileira, pendentes, temPendentes, sincroniza, estaOnline,
+  travados, limpaTravado, reenfileira
+} from "./fila-offline.js";
 const state = {
   user: null,
   profile: null,
@@ -29,7 +33,11 @@ const state = {
   search: "",
   view: "loading",
   realtimeChannels: [],
-  editOverride: false   // desbloqueio manual temporário (só sessão atual)
+  editOverride: false,  // desbloqueio manual temporário (só sessão atual)
+  pendentesFila: 0,     // check-ins gravados no aparelho e ainda não no banco
+  travadosFila: 0,      // os que desistiram e precisam de decisão
+  online: true,
+  sincronizando: false
 };
 
 // =============================================================
@@ -122,21 +130,74 @@ function hasStock() {
 
 // =============================================================
 // JANELA DE EDIÇÃO
-// Evento ativo → sempre editável.
-// Evento encerrado → editável só dentro de 7 dias antes ou após a data.
-// Fora desse período → somente leitura (visualização permitida).
+//
+// Evento ativo        → sempre editável.
+// Evento "em breve"   → abre SOZINHO 2 dias antes de começar.
+// Evento encerrado    → editável dentro de 7 dias da data.
+//
+// A abertura automática existe porque depender de alguém lembrar de virar
+// o status é um ponto único de falha no dia mais importante do ano: se
+// ninguém virar, o app recusa todo check-in. E porque expositor e equipe
+// chegam antes para montagem — precisam de crachá na véspera.
 // =============================================================
+const DIA = 24 * 60 * 60 * 1000;
+const ABRE_ANTES = 2 * DIA;      // credenciamento libera 2 dias antes
+const JANELA_DEPOIS = 7 * DIA;   // evento passado continua editável 7 dias
+
+// Início do evento em horário local, tolerando os dois formatos que o
+// banco usa (date_start com fuso, event_date só com a data).
+function inicioDoEvento(event) {
+  const d = event.event_date || (event.date_start || "").slice(0, 10);
+  if (!d) return null;
+  const t = new Date(d + "T00:00:00").getTime();
+  return Number.isFinite(t) ? t : null;
+}
+
+function fimDoEvento(event) {
+  const d = event.event_end_date || event.event_date || (event.date_start || "").slice(0, 10);
+  if (!d) return null;
+  const t = new Date(d + "T23:59:59").getTime();
+  return Number.isFinite(t) ? t : null;
+}
+
 function isEditable(event) {
   if (!event) return false;
   if (state.editOverride) return true;   // desbloqueio manual pelo admin
   if (event.status === "ativo") return true;
-  if (event.status === "embreve") return false; // futuro: bloqueado até abrir
-  const dateRef = event.event_end_date || event.event_date;
-  if (!dateRef) return true;
-  const now = Date.now();
-  const ev = new Date(dateRef + "T00:00:00").getTime();
-  const WEEK = 7 * 24 * 60 * 60 * 1000;
-  return Math.abs(now - ev) <= WEEK;
+
+  const inicio = inicioDoEvento(event);
+  const fim = fimDoEvento(event);
+  const agora = Date.now();
+
+  if (event.status === "embreve") {
+    // sem data cadastrada não dá para calcular a abertura: segue fechado
+    if (inicio === null) return false;
+    return agora >= inicio - ABRE_ANTES && agora <= (fim ?? inicio) + JANELA_DEPOIS;
+  }
+
+  // encerrado
+  if (fim === null) return true;
+  return agora >= (inicio ?? fim) - ABRE_ANTES && agora <= fim + JANELA_DEPOIS;
+}
+
+// A mesma trava tem duas causas opostas, e dizer a errada faz o atendente
+// achar que o evento acabou quando ele nem começou.
+function motivoBloqueio(event) {
+  const faltam = diasParaAbrir(event);
+  if (faltam === null) return "Período de edição encerrado — apenas visualização";
+  if (faltam === 1) return "O credenciamento abre amanhã — por enquanto, só visualização";
+  return `O credenciamento abre em ${faltam} dias — por enquanto, só visualização`;
+}
+
+// Quantos dias faltam para o credenciamento abrir. null = já está aberto
+// ou não dá para saber.
+function diasParaAbrir(event) {
+  if (!event || isEditable(event)) return null;
+  const inicio = inicioDoEvento(event);
+  if (inicio === null) return null;
+  const abre = inicio - ABRE_ANTES;
+  if (Date.now() >= abre) return null;
+  return Math.ceil((abre - Date.now()) / DIA);
 }
 
 let toastTimer;
@@ -307,40 +368,212 @@ async function loadExhibitors(eventId) {
   }
 }
 
+// =============================================================
+// CHECK-IN
+//
+// Ordem invertida de propósito: grava no aparelho, marca PENDENTE na tela,
+// e só então tenta a rede. Antes o app dizia "check-in feito" antes do
+// await — numa queda de Wi-Fi o operador via ✓, a pessoa entrava e o
+// registro se perdia sem ninguém notar.
+// =============================================================
 async function toggleCheckIn(participantId) {
   const p = state.participants.find(x => x.id === participantId);
   if (!p) return;
 
-  // Bloquear se fora da janela de edição
   if (!isEditable(state.currentEvent)) {
-    toast("Período de edição encerrado — apenas visualização", "error");
+    toast(motivoBloqueio(state.currentEvent), "error");
     haptic("error");
     return;
   }
 
-  const newChecked = !p.checked;
-  const patch = {
-    checked: newChecked,
-    checked_at: newChecked ? new Date().toISOString() : null,
-    checked_by: newChecked ? state.user.id : null
-  };
-  Object.assign(p, patch);
-  renderCheckinList();
-  haptic(newChecked ? "success" : "light");
-  const isRace = isRaceEvent(state.currentEvent);
-  toast(
-    newChecked
-      ? `✓ ${p.name.split(" ")[0]} — ${isRace ? "kit entregue" : "check-in feito"}`
-      : `Desfeito: ${p.name.split(" ")[0]}`,
-    "success"
-  );
+  const novoChecked = !p.checked;
+  const agora = new Date().toISOString();
 
-  const { error } = await sb.from("participants").update(patch).eq("id", participantId);
-  if (error) {
-    Object.assign(p, { checked: !newChecked, checked_at: !newChecked ? new Date().toISOString() : null });
-    renderCheckinList();
-    toast("Erro ao gravar: " + error.message, "error");
+  // 1. aparelho primeiro — isto não pode falhar por causa de rede
+  await enfileira({
+    participantId,
+    eventId: state.currentEvent?.id,
+    checked: novoChecked,
+    userId: state.user?.id
+  });
+
+  // 2. tela reflete o estado real: marcado, porém ainda não confirmado
+  Object.assign(p, {
+    checked: novoChecked,
+    checked_at: novoChecked ? agora : null,
+    checked_by: novoChecked ? state.user?.id : null,
+    _pendente: true
+  });
+  await atualizaContadorFila();
+  renderCheckinList();
+  haptic(novoChecked ? "success" : "light");
+
+  const isRace = isRaceEvent(state.currentEvent);
+  const nome = (p.name || "").split(" ")[0];
+  if (!estaOnline()) {
+    toast(`${nome} — salvo no aparelho, envia quando a rede voltar`, "success");
+  } else {
+    toast(
+      novoChecked
+        ? `✓ ${nome} — ${isRace ? "kit entregue" : "check-in feito"}`
+        : `Desfeito: ${nome}`,
+      "success"
+    );
   }
+
+  // 3. tenta subir agora; se não der, a fila cuida depois
+  sincronizaFila();
+}
+
+// Envia um item da fila. Fica aqui porque é a única parte que conhece o
+// Supabase — a fila em si não conhece.
+function enviaItem(item) {
+  return sb.from("participants").update({
+    checked: item.checked,
+    checked_at: item.checked ? item.checkedAt : null,
+    checked_by: item.checked ? item.userId : null
+  }).eq("id", item.participantId);
+}
+
+let sincronizando = false;
+async function sincronizaFila({ silencioso = true } = {}) {
+  if (sincronizando || !estaOnline()) return;
+  sincronizando = true;
+  state.sincronizando = true;
+  renderStatusRede();
+  try {
+    const r = await sincroniza(enviaItem, ({ tipo, item }) => {
+      if (tipo === "enviado") {
+        const p = state.participants.find(x => x.id === item.participantId);
+        if (p) delete p._pendente;
+      }
+    });
+    await atualizaContadorFila();
+    if (r.enviados > 0) {
+      renderCheckinList();
+      if (!silencioso) {
+        toast(`${r.enviados} check-in${r.enviados > 1 ? "s" : ""} sincronizado${r.enviados > 1 ? "s" : ""}`, "success");
+      }
+    }
+    if (state.travadosFila > 0) {
+      toast(`${state.travadosFila} check-in não subiu — toque no aviso para ver`, "error");
+    }
+  } finally {
+    sincronizando = false;
+    state.sincronizando = false;
+    renderStatusRede();
+  }
+}
+
+// =============================================================
+// AVISO DE REDE E DE FILA
+// Fica calado quando está tudo online e vazio — barra permanente vira
+// papel de parede e ninguém lê. Só fala quando há algo represado.
+// =============================================================
+function renderStatusRede() {
+  const el = $("redeBar");
+  if (!el) return;
+  const pend = state.pendentesFila || 0;
+  const trav = state.travadosFila || 0;
+  const off = !state.online;
+
+  if (!off && !pend && !trav) { el.hidden = true; return; }
+
+  let classe = "rede-bar", texto = "", clicavel = false;
+  if (trav) {
+    classe += " erro";
+    texto = `${trav} check-in não subiu — toque para resolver`;
+    clicavel = true;
+  } else if (off) {
+    classe += " off";
+    texto = pend
+      ? `Sem conexão · ${pend} salvo${pend > 1 ? "s" : ""} no aparelho`
+      : "Sem conexão · os check-ins ficam salvos no aparelho";
+  } else if (state.sincronizando) {
+    classe += " sync";
+    texto = `Enviando ${pend}…`;
+  } else if (pend) {
+    classe += " sync";
+    texto = `${pend} aguardando envio`;
+    clicavel = true;
+  }
+
+  el.className = classe;
+  el.textContent = texto;
+  el.hidden = false;
+  el.disabled = !clicavel;
+}
+
+// Lista o que travou e deixa tentar de novo ou descartar. Sem isso o
+// operador só sabe que "algo não subiu", que é pior que não avisar.
+async function abreFilaTravada() {
+  const itens = await travados();
+  const pend = (await pendentes()).filter(i => !i.desistiu);
+
+  if (!itens.length && pend.length) {
+    toast("Tentando enviar de novo…", "success");
+    sincronizaFila({ silencioso: false });
+    return;
+  }
+  if (!itens.length) return;
+
+  const linhas = itens.map(i => {
+    const p = state.participants.find(x => x.id === i.participantId);
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--line);">
+      <div style="font-weight:600;color:var(--ink);">${esc(p?.name || i.participantId)}</div>
+      <div style="font-size:12px;color:var(--ink-mute);margin-top:2px;">
+        ${i.checked ? "check-in" : "desfazer"} · ${i.tentativas} tentativa${i.tentativas > 1 ? "s" : ""}
+      </div>
+      <div style="font-size:12px;color:var(--red);margin-top:2px;">${esc(i.erro || "erro desconhecido")}</div>
+    </div>`;
+  }).join("");
+
+  openModal(`
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Check-ins que não subiram</div>
+        <button class="modal-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">
+          Estes ficaram salvos no aparelho mas o banco recusou. A pessoa
+          <strong>já entrou</strong> — o que falta é o registro.
+        </div>
+        <div style="max-height:40vh;overflow:auto;margin-bottom:16px;">${linhas}</div>
+        <div class="btn-row">
+          <button class="btn-modal ghost" id="btnDescartaFila">Descartar</button>
+          <button class="btn-modal primary" id="btnTentaFila">Tentar de novo</button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  $("btnTentaFila").addEventListener("click", async () => {
+    for (const i of itens) await reenfileira(i.id);
+    closeModal();
+    await atualizaContadorFila();
+    sincronizaFila({ silencioso: false });
+  });
+  $("btnDescartaFila").addEventListener("click", async () => {
+    if (!confirm("Descartar esses registros? O check-in some do sistema.")) return;
+    for (const i of itens) await limpaTravado(i.id);
+    closeModal();
+    await atualizaContadorFila();
+    renderCheckinList();
+  });
+}
+
+async function atualizaContadorFila() {
+  const [pend, trav] = await Promise.all([pendentes(), travados()]);
+  state.pendentesFila = pend.filter(i => !i.desistiu).length;
+  state.travadosFila = trav.length;
+  // marca na lista quem ainda não confirmou, inclusive depois de recarregar
+  const porId = new Set(pend.map(i => i.participantId));
+  state.participants.forEach(p => {
+    if (porId.has(p.id)) p._pendente = true; else delete p._pendente;
+  });
+  renderStatusRede();
 }
 
 async function importParticipants(eventId, rows) {
@@ -551,7 +784,14 @@ function renderEvents() {
             ${e.status === 'ativo'
               ? '<span class="status-pill ativo">AO VIVO</span>'
               : e.status === 'embreve'
-                ? '<span class="status-pill embreve">Em breve</span>'
+                // "em breve" que já entrou na janela de 2 dias está aberto de
+                // fato — o cartão precisa dizer isso, senão ninguém tenta.
+                ? (isEditable(e)
+                    ? '<span class="status-pill ativo">CREDENCIAMENTO ABERTO</span>'
+                    : `<span class="status-pill embreve">${(() => {
+                        const f = diasParaAbrir(e);
+                        return f === null ? 'Em breve' : f === 1 ? 'Abre amanhã' : `Abre em ${f} dias`;
+                      })()}</span>`)
                 : locked
                   ? '<span class="status-pill encerrado">🔒 Encerrado</span>'
                   : '<span class="status-pill encerrado">Encerrado</span>'}
@@ -633,7 +873,9 @@ function renderEvents() {
       const id = c.dataset.eventId;
       const ev = state.events.find(x => x.id === id);
 
-      if (ev?.status === "ativo") {
+      // A trava é a janela de edição, não o rótulo do status: evento "em
+      // breve" dentro dos 2 dias de abertura entra direto no credenciamento.
+      if (ev && isEditable(ev)) {
         openCheckin(ev);
 
       } else if (ev?.status === "encerrado") {
@@ -686,10 +928,15 @@ function renderEvents() {
             </div>
             <div class="modal-body">
               <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.65;color:var(--ink-soft);">
-                <strong style="display:block;color:var(--ink);margin-bottom:6px;">Somente visualização</strong>
-                Este evento ainda não aconteceu.<br><br>
-                Você pode <strong>buscar participantes</strong> e verificar inscrições, mas check-ins estão bloqueados até o evento ser iniciado.<br><br>
-                ${admin ? 'Para habilitar check-in, use o botão Desbloquear dentro do evento ou mude o status para Ativo.' : 'Entre em contato com o admin para habilitar check-ins.'}
+                <strong style="display:block;color:var(--ink);margin-bottom:6px;">O credenciamento ainda não abriu</strong>
+                ${(() => {
+                  const faltam = diasParaAbrir(ev);
+                  return faltam === null
+                    ? 'Este evento ainda não tem data para abrir o credenciamento.'
+                    : `Ele libera <strong>sozinho, 2 dias antes</strong> do evento — ${faltam === 1 ? 'falta <strong>1 dia</strong>' : `faltam <strong>${faltam} dias</strong>`}. Ninguém precisa virar chave nenhuma.`;
+                })()}<br><br>
+                Até lá você pode <strong>buscar participantes</strong> e conferir inscrições, mas check-ins ficam bloqueados.<br><br>
+                ${admin ? 'Se precisar credenciar antes disso, use Desbloquear dentro do evento.' : 'Se precisar credenciar antes disso, fale com o admin.'}
               </div>
               <div class="btn-row">
                 <button class="btn-modal ghost" data-close>Cancelar</button>
@@ -1097,7 +1344,7 @@ function renderCheckinList() {
             ${rp.bib_number ? `<span class="race-chip bib">#${esc(rp.bib_number)}</span>` : ''}
           </div>` : '';
     return `
-    <div class="row ${p.checked ? 'checked' : ''}" data-id="${p.id}" style="animation-delay:${Math.min(i * 15, 200)}ms">
+    <div class="row ${p.checked ? 'checked' : ''} ${p._pendente ? 'pendente-envio' : ''}" data-id="${p.id}" style="animation-delay:${Math.min(i * 15, 200)}ms">
       <div class="row-action" data-action="toggle">
         <div class="row-action-inner">
           ${p.checked
@@ -1109,7 +1356,7 @@ function renderCheckinList() {
         <div class="row-main">
           <div class="row-name">${esc(p.name)}</div>
           ${raceChips || (p.lote ? `<div class="row-meta"><span class="lot-tag">${esc(p.lote)}</span></div>` : '')}
-          <div class="row-code">${esc(p.code || "")}${p.checked ? ` · ${fmtTime(p.checked_at)}` : ''}</div>
+          <div class="row-code">${esc(p.code || "")}${p.checked ? ` · ${fmtTime(p.checked_at)}` : ''}${p._pendente ? ' · <span class="pend-tag">no aparelho</span>' : ''}</div>
         </div>
         <div class="row-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
       </div>
@@ -1485,7 +1732,7 @@ function onSwipeEnd() {
           if (isEditable(state.currentEvent)) {
             toggleCheckIn(row.dataset.id);
           } else {
-            toast("Período de edição encerrado — apenas visualização", "error");
+            toast(motivoBloqueio(state.currentEvent), "error");
             haptic("error");
           }
         } else {
@@ -1500,7 +1747,7 @@ function onListClick(e) {
   const cartao = e.target.closest(".empresa-card");
   if (cartao) {
     if (!isEditable(state.currentEvent)) {
-      toast("Período de edição encerrado — apenas visualização", "error");
+      toast(motivoBloqueio(state.currentEvent), "error");
       haptic("error");
       return;
     }
@@ -1515,7 +1762,7 @@ function onListClick(e) {
       if (isEditable(state.currentEvent)) {
         toggleCheckIn(row.dataset.id);
       } else {
-        toast("Período de edição encerrado — apenas visualização", "error");
+        toast(motivoBloqueio(state.currentEvent), "error");
         haptic("error");
       }
     }
@@ -2022,12 +2269,18 @@ async function init() {
     return;
   }
 
+  ligaRede();
+
   try {
     const hasSession = await loadSession();
     if (hasSession) {
       await loadEvents();
       subscribeToEvents();
       renderEvents();
+      // Fila que sobrou de uma sessão anterior sobe antes de qualquer coisa:
+      // se o app fechou com a rede fora, é aqui que os check-ins chegam.
+      await atualizaContadorFila();
+      sincronizaFila({ silencioso: false });
     } else {
       renderLogin();
     }
@@ -2035,6 +2288,45 @@ async function init() {
     console.error("Init error", err);
     renderLogin();
   }
+}
+
+// =============================================================
+// GATILHOS DE SINCRONIZAÇÃO
+// Rede voltou, aba voltou ao primeiro plano, ou a cada 20s com fila parada.
+// O intervalo existe porque navigator.onLine mente: em Wi-Fi de evento o
+// aparelho continua "conectado" a um roteador que não sai para a internet.
+// =============================================================
+function ligaRede() {
+  state.online = estaOnline();
+
+  addEventListener("online", () => {
+    state.online = true;
+    renderStatusRede();
+    sincronizaFila({ silencioso: false });
+  });
+
+  addEventListener("offline", () => {
+    state.online = false;
+    renderStatusRede();
+    toast("Sem conexão — os check-ins continuam sendo salvos", "error");
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) { state.online = estaOnline(); sincronizaFila(); }
+  });
+
+  setInterval(async () => {
+    state.online = estaOnline();
+    if (state.pendentesFila > 0) sincronizaFila();
+    else renderStatusRede();
+  }, 20000);
+
+  $("redeBar")?.addEventListener("click", abreFilaTravada);
+
+  // Fechar a aba com fila pendente é perda silenciosa: avisa antes.
+  addEventListener("beforeunload", (e) => {
+    if ((state.pendentesFila || 0) > 0) { e.preventDefault(); e.returnValue = ""; }
+  });
 }
 
 init();

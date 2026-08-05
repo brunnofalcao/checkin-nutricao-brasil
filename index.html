@@ -39,6 +39,11 @@
     <span id="toastText"></span>
   </div>
 
+  <!-- Estado da rede e da fila de check-in.
+       Fica fora do #app porque a tela inteira é reconstruida a cada render;
+       aqui ele sobrevive e não pisca. Só aparece quando há o que dizer. -->
+  <button class="rede-bar" id="redeBar" hidden aria-live="polite"></button>
+
   <!-- Modal mount -->
   <div id="modal-mount"></div>
 
