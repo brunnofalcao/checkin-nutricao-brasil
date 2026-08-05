@@ -2227,3 +2227,76 @@
 }
 .kb-diff-fonte { font-size: 11.5px; color: var(--ink-mute); }
 .kb-diff-fonte a { color: var(--violet); }
+
+/* ── Inscritos por módulo (detalhe do evento) ────────────────────────── */
+/* Duas etapas do mesmo tom: mais escuro = lote atual, mais claro = pré-venda.
+   Os passos foram validados contra a superfície de cada tema — não é o
+   mesmo par com opacidade, que perderia contraste no escuro. */
+.mod-strip {
+  --mod-atual: #6b2d8b;
+  --mod-pre: #a066c2;
+  margin-top: 14px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+}
+[data-tema='escuro'] .mod-strip { --mod-atual: #a78bfa; --mod-pre: #8452b0; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema]) .mod-strip { --mod-atual: #a78bfa; --mod-pre: #8452b0; }
+}
+
+.mod-topo {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.mod-titulo {
+  font-size: 11.5px; font-weight: 700; color: var(--ink-mute);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.mod-legenda { display: flex; gap: 14px; }
+.mod-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+.mod-key { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.mod-key.atual { background: var(--mod-atual); }
+.mod-key.pre { background: var(--mod-pre); }
+
+.mod-barras { display: flex; flex-direction: column; gap: 9px; }
+.mod-linha { display: grid; grid-template-columns: minmax(120px, 168px) 1fr auto; gap: 12px; align-items: center; }
+.mod-nome {
+  font-size: 12.5px; font-weight: 600; color: var(--ink);
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+}
+.mod-nome > :first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mod-tag {
+  flex: none; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--amber); background: var(--amber-soft); border-radius: 4px; padding: 2px 5px;
+}
+
+/* trilho é só espaço: sem fundo, sem borda — a barra é a única tinta */
+.mod-trilho { display: flex; align-items: center; height: 18px; min-width: 0; }
+/* base reta, ponta de dado arredondada — a barra cresce de uma linha só */
+.mod-seg { height: 100%; display: block; min-width: 3px; border-radius: 0; }
+.mod-seg.atual { background: var(--mod-atual); }
+.mod-seg.pre   { background: var(--mod-pre); }
+.mod-seg.fim   { border-radius: 0 4px 4px 0; }
+/* 2px de superfície separando os dois pedaços — nunca um contorno */
+.mod-seg.atual:not(:first-child) { margin-left: 2px; }
+
+.mod-valor {
+  font-size: 13px; font-weight: 700; color: var(--ink-strong);
+  text-align: right; min-width: 74px; font-variant-numeric: tabular-nums;
+}
+.mod-valor small { font-weight: 500; color: var(--ink-mute); font-size: 11.5px; }
+
+.mod-nota {
+  display: flex; align-items: flex-start; gap: 8px; margin-top: 12px;
+  font-size: 12.5px; line-height: 1.5; color: var(--ink-soft);
+}
+.mod-nota svg { flex: none; width: 16px; height: 16px; margin-top: 1px; color: var(--amber); }
+.mod-nota strong { color: var(--ink); }
+.mod-nota.muted { color: var(--ink-mute); }
+.mod-nota.muted svg { color: var(--ink-dim); }
+
+@media (max-width: 620px) {
+  .mod-linha { grid-template-columns: 1fr auto; grid-template-areas: 'nome valor' 'barra barra'; row-gap: 5px; }
+  .mod-nome { grid-area: nome; }
+  .mod-valor { grid-area: valor; }
+  .mod-trilho { grid-area: barra; height: 14px; }
+}

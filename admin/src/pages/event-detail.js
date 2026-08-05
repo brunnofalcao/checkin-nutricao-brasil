@@ -13,6 +13,7 @@ import { abreAdicionarPessoa } from './pessoa-nova.js';
 import { abreCrachas } from './crachas.js';
 import { abreImportar } from './importar.js';
 import { agrupaPessoas, eventosComCertificado } from '../data/pessoas.js';
+import { listModulos, agrupaPorModulo } from '../data/modulos.js';
 
 const PAGE_SIZE = 100;
 
@@ -52,6 +53,13 @@ export async function pageEventDetail(view, { params }) {
       h('button', { class: 'btn btn-secondary', onclick: () => location.reload() }, 'Recarregar')
     ));
     return;
+  }
+
+  // Lista oficial de módulos (a mesma do certificado). Sem ela a tela ainda
+  // funciona: os lotes viram grupos pelo nome cru.
+  let modulos = [];
+  if (!isRace) {
+    try { modulos = await listModulos(eventId); } catch { modulos = []; }
   }
 
   if (isRace) {
@@ -164,8 +172,109 @@ export async function pageEventDetail(view, { params }) {
           null
         )
       ),
-      isRace ? kitSizesStrip() : null
+      isRace ? kitSizesStrip() : modulosStrip()
     );
+  }
+
+  // ── Inscritos por módulo ──────────────────────────────────────────────────
+  // Barra por módulo, maior primeiro, com pré-venda e lote atual separados —
+  // pré-venda é receita fechada, lote atual é o que ainda está se mexendo.
+  // Uma barra sozinha não vira gráfico: com um módulo só, o número do topo
+  // já responde, e a faixa não aparece.
+  function modulosStrip() {
+    const grupos = agrupaPorModulo(allParticipants, modulos);
+    if (grupos.length < 2) return null;
+
+    const total = grupos.reduce((a, g) => a + g.total, 0);
+    if (!total) return null;
+
+    const teto = Math.max(...grupos.map((g) => g.total)) || 1;
+    const temPreVenda = grupos.some((g) => g.preVenda > 0);
+    const soltos = grupos.filter((g) => !g.cadastrado && g.total > 0);
+    const vazios = grupos.filter((g) => g.cadastrado && g.total === 0);
+    // Evento sem nenhum módulo cadastrado: aí TODO lote fica "sem módulo" e
+    // marcar linha por linha só polui. O problema é outro — falta cadastrar.
+    const semRegistro = !modulos.length;
+
+    return h('div', { class: 'mod-strip' },
+      h('div', { class: 'mod-topo' },
+        h('div', { class: 'mod-titulo' }, 'Inscritos por módulo'),
+        temPreVenda
+          // mesma ordem em que os pedaços aparecem na barra
+          ? h('div', { class: 'mod-legenda' },
+              h('span', { class: 'mod-chip' }, h('i', { class: 'mod-key pre' }), 'Pré-venda'),
+              h('span', { class: 'mod-chip' }, h('i', { class: 'mod-key atual' }), 'Lote atual'))
+          : null),
+
+      h('div', { class: 'mod-barras', role: 'table', 'aria-label': 'Inscritos por módulo' },
+        ...grupos.map((g) => linhaModulo(g, teto, total, semRegistro))),
+
+      semRegistro
+        ? h('div', { class: 'mod-nota' },
+            icons.alert(),
+            h('span', {},
+              'Este evento ainda não tem módulos cadastrados, então as barras acima são os ',
+              h('strong', {}, 'lotes crus'), ' que vieram da Hotmart. ',
+              'Sem módulo cadastrado não sai certificado.'))
+        : soltos.length
+          ? h('div', { class: 'mod-nota' },
+              icons.alert(),
+              h('span', {},
+                soltos.length === 1
+                  ? h('span', {}, 'O lote ', h('strong', {}, soltos[0].nome), ' não bate com nenhum módulo cadastrado.')
+                  : h('span', {}, soltos.length + ' lotes não batem com nenhum módulo cadastrado: ',
+                      h('strong', {}, soltos.map((g) => g.nome).join(', ')), '.'),
+                ' Sem módulo, esses inscritos ficam de fora do certificado.'))
+          : null,
+
+      vazios.length
+        ? h('div', { class: 'mod-nota muted' },
+            icons.info(),
+            h('span', {},
+              vazios.length === 1
+                ? h('span', {}, h('strong', {}, vazios[0].nome), ' está cadastrado e ainda não vendeu nada.')
+                : h('span', {}, h('strong', {}, vazios.map((g) => g.nome).join(', ')),
+                    ' estão cadastrados e ainda não venderam nada.')))
+        : null
+    );
+  }
+
+  function linhaModulo(g, teto, total, semRegistro) {
+    // 2 de 573 é 0,3% — arredondar para "0%" ao lado de um número maior que
+    // zero faz a linha parecer bug. "<1%" diz a verdade.
+    const bruto = total ? (g.total / total) * 100 : 0;
+    const share = g.total && bruto < 1 ? '<1%' : Math.round(bruto) + '%';
+    const larg = (n) => (teto ? (n / teto) * 100 : 0);
+    const detalhe = g.lotes.map((l) => `${l.lote}: ${l.n}`).join(' · ');
+    const titulo = g.total
+      ? `${g.nome} — ${g.total} inscrito${g.total !== 1 ? 's' : ''}` +
+        (g.presentes ? ` · ${g.presentes} com check-in` : '') +
+        (detalhe ? `\n${detalhe}` : '')
+      : `${g.nome} — nenhum inscrito ainda`;
+
+    return h('div', { class: 'mod-linha', role: 'row', title: titulo },
+      h('div', { class: 'mod-nome', role: 'cell' },
+        g.nome,
+        !g.cadastrado && g.total && !semRegistro
+          ? h('span', { class: 'mod-tag' }, 'sem módulo') : null),
+      // pré-venda primeiro porque veio antes; o lote atual — o que ainda se
+      // mexe — fica na ponta, que é onde o olho cai.
+      h('div', { class: 'mod-trilho', role: 'cell' },
+        g.preVenda
+          ? h('span', {
+              class: 'mod-seg pre' + (g.loteAtual ? '' : ' fim'),
+              style: { width: larg(g.preVenda) + '%' }
+            })
+          : null,
+        g.loteAtual
+          ? h('span', {
+              class: 'mod-seg atual fim',
+              style: { width: larg(g.loteAtual) + '%' }
+            })
+          : null),
+      h('div', { class: 'mod-valor mono', role: 'cell' },
+        g.total.toLocaleString('pt-BR'),
+        h('small', {}, g.total ? ` · ${share}` : ' · —')));
   }
 
   // Contadores de camiseta por tamanho (retirados/total) — só evento corrida.
