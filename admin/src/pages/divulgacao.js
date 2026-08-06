@@ -1,4 +1,5 @@
 import { h, setContent } from '../core/dom.js';
+import { parseCSV as leCSV, pareceCabecalho } from '../core/csv.js';
 import { icons } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
 import { listEvents } from '../data/events.js';
@@ -47,7 +48,12 @@ export async function pageDivulgacao(view) {
     templateId: '',
     contacts: [],     // [{ phone, name }] válidos e deduplicados
     invalid: 0,
+    vazios: 0,
+    motivo: '',
     dupes: 0,
+    // Antes isso vinha ligado do banco e não aparecia na tela: toda
+    // divulgação tirava, calada, quem já estava inscrito no evento.
+    skipParticipantes: false,
     campaign: null,   // campanha criada (com lotes)
     batches: []       // [{ n, contacts, status }]
   };
@@ -55,48 +61,81 @@ export async function pageDivulgacao(view) {
   function tplById(id) { return templates.find(t => t.id === id); }
   function evById(id) { return events.find(e => e.id === id); }
 
-  // ── Parsing de CSV (vanilla, sem libs) ──
+  // ── Leitura da lista ────────────────────────────────────────────────
+  // O export do RD Station vem em UTF-16 com TAB e DUAS colunas de telefone
+  // (Telefone e Celular), muitas vezes só uma preenchida. A versão antiga
+  // daqui só entendia vírgula e ponto-e-vírgula e olhava uma coluna só —
+  // por isso um arquivo perfeitamente bom voltava "nenhum telefone válido".
+
+  // Força UTF-8 num arquivo UTF-16 e o resultado é lixo com bytes nulos.
+  function decodeTexto(buf) {
+    const b = new Uint8Array(buf);
+    if (b[0] === 0xff && b[1] === 0xfe) return new TextDecoder('utf-16le').decode(b.subarray(2));
+    if (b[0] === 0xfe && b[1] === 0xff) return new TextDecoder('utf-16be').decode(b.subarray(2));
+    if (b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf) return new TextDecoder('utf-8').decode(b.subarray(3));
+    return new TextDecoder('utf-8').decode(b);
+  }
+
   function parseCSV(text) {
-    const lines = text.split(/\r?\n/).filter(l => l.trim());
-    if (!lines.length) return { contacts: [], invalid: 0, dupes: 0 };
+    const linhas = leCSV(text);
+    if (!linhas.length) return { contacts: [], invalid: 0, dupes: 0, vazios: 0, motivo: 'O arquivo está vazio.' };
 
-    // Detecta separador (vírgula ou ponto-e-vírgula)
-    const sep = (lines[0].match(/;/g) || []).length > (lines[0].match(/,/g) || []).length ? ';' : ',';
+    const temCab = pareceCabecalho(linhas[0]) ||
+      /tel|fone|whats|celular|nome|name|phone/i.test(linhas[0].join(' '));
+    const cab = temCab ? linhas[0] : [];
+    const dados = temCab ? linhas.slice(1) : linhas;
 
-    // Detecta se a 1ª linha é cabeçalho
-    const first = lines[0].toLowerCase();
-    const hasHeader = /tel|fone|whats|nome|name|phone/.test(first);
-    const dataLines = hasHeader ? lines.slice(1) : lines;
+    // TODAS as colunas que parecem telefone, na ordem em que aparecem.
+    let colsTel = [];
+    let colNome = -1;
+    if (temCab) {
+      cab.forEach((c, i) => {
+        if (/tel|fone|whats|celular|phone|mobile/i.test(c)) colsTel.push(i);
+        if (colNome < 0 && /nome|name/i.test(c) && !/arquivo|evento|empresa/i.test(c)) colNome = i;
+      });
+    }
+    // Sem cabeçalho: adivinha pelo formato do dado da primeira linha.
+    if (!colsTel.length) {
+      const amostra = dados[0] || [];
+      amostra.forEach((c, i) => { if (normalizePhone(c)) colsTel.push(i); });
+      if (colsTel.length && colNome < 0) {
+        colNome = amostra.findIndex((c, i) => !colsTel.includes(i) && /[a-zA-ZÀ-ÿ]{3}/.test(c));
+      }
+    }
 
-    // Descobre índice das colunas (se tiver header)
-    let phoneIdx = 0, nameIdx = -1;
-    if (hasHeader) {
-      const cols = lines[0].split(sep).map(c => c.trim().toLowerCase());
-      const pIdx = cols.findIndex(c => /tel|fone|whats|phone/.test(c));
-      const nIdx = cols.findIndex(c => /nome|name/.test(c));
-      if (pIdx !== -1) phoneIdx = pIdx;
-      if (nIdx !== -1) nameIdx = nIdx;
-    } else {
-      // Sem header: assume [nome, telefone] se 2 colunas, ou [telefone] se 1
-      const cols = lines[0].split(sep);
-      if (cols.length >= 2) { nameIdx = 0; phoneIdx = 1; }
+    if (!colsTel.length) {
+      return { contacts: [], invalid: 0, dupes: 0, vazios: 0,
+        motivo: `Li ${dados.length} linha(s), mas não achei coluna de telefone.` +
+                (cab.length ? ` Colunas do arquivo: ${cab.join(', ')}.` : '') };
     }
 
     const seen = new Set();
     const contacts = [];
-    let invalid = 0, dupes = 0;
+    let invalid = 0, dupes = 0, vazios = 0;
 
-    for (const line of dataLines) {
-      const cols = line.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
-      const rawPhone = cols[phoneIdx] || '';
-      const name = nameIdx >= 0 ? (cols[nameIdx] || '') : '';
-      const norm = normalizePhone(rawPhone);
-      if (!norm) { invalid++; continue; }
+    for (const cols of dados) {
+      let norm = null;
+      let bruto = '';
+      for (const i of colsTel) {          // tenta Telefone, depois Celular
+        const v = cols[i] || '';
+        if (!v.replace(/\D/g, '')) continue;
+        bruto = v;
+        norm = normalizePhone(v);
+        if (norm) break;
+      }
+      if (!norm) { if (bruto) invalid++; else vazios++; continue; }
       if (seen.has(norm)) { dupes++; continue; }
       seen.add(norm);
-      contacts.push({ phone: norm, name });
+      contacts.push({ phone: norm, name: colNome >= 0 ? (cols[colNome] || '') : '' });
     }
-    return { contacts, invalid, dupes };
+
+    let motivo = '';
+    if (!contacts.length) {
+      if (invalid && !vazios) motivo = `Achei ${invalid} telefone(s), mas nenhum com DDD. Falta o DDD nos números.`;
+      else if (vazios && !invalid) motivo = `Li ${dados.length} linha(s), todas com a coluna de telefone vazia.`;
+      else motivo = `Li ${dados.length} linha(s): ${vazios} sem telefone e ${invalid} com número incompleto.`;
+    }
+    return { contacts, invalid, dupes, vazios, motivo };
   }
 
   function normalizePhone(raw) {
@@ -152,7 +191,7 @@ export async function pageDivulgacao(view) {
           h('div', { class: 'upload-drop', id: 'drop' },
             icons.plus(),
             h('div', { class: 'upload-drop-title' }, 'Arraste um CSV ou clique para escolher'),
-            h('div', { class: 'upload-drop-sub' }, 'Colunas aceitas: nome e telefone (ou só telefone). Separador vírgula ou ponto-e-vírgula.'),
+            h('div', { class: 'upload-drop-sub' }, 'Aceita export do RD Station, Excel ou Google Sheets. Separador vírgula, ponto-e-vírgula ou TAB. Usa a coluna Telefone e, se estiver vazia, a Celular.'),
             h('input', { type: 'file', id: 'csv-input', accept: '.csv,text/csv', style: { display: 'none' } })
           ),
           h('div', { class: 'csv-help-row' },
@@ -168,7 +207,24 @@ export async function pageDivulgacao(view) {
           h('h3', {}, '2. Mensagem'),
           field('Evento', selectEl('d-event',
             events.map(e => ({ v: e.id, t: e.name || e.slug || e.id })), state.eventId,
-            (val) => { state.eventId = val; renderPreview(); })),
+            (val) => { state.eventId = val; renderPreview(); renderResumoEnvio(); })),
+          h('div', { class: 'row-sub', style: { marginTop: '-6px', marginBottom: '12px' } },
+            'Só para identificar a campanha. Não muda quem recebe.'),
+
+          // Antes isso era decidido sozinho, sem aparecer: toda divulgação
+          // tirava da lista quem já estava inscrito no evento escolhido.
+          // Numa oferta de parceiro esse é justamente o público certo.
+          h('label', { class: 'check-linha' },
+            h('input', {
+              type: 'checkbox', id: 'd-skip', checked: state.skipParticipantes || false,
+              onchange: (e) => { state.skipParticipantes = e.target.checked; renderResumoEnvio(); }
+            }),
+            h('span', {},
+              h('strong', {}, 'Não enviar para quem já está inscrito neste evento'),
+              h('span', { class: 'row-sub', style: { display: 'block' } },
+                'Marque em campanha que vende o evento. Deixe desmarcado em oferta de parceiro.'))),
+          h('div', { id: 'd-resumo-envio' }),
+
           field('Template aprovado', selectEl('d-template',
             [{ v: '', t: templates.length ? 'Selecione…' : 'Nenhum aprovado ainda' }]
               .concat(templates.map(t => ({ v: t.id, t: `${t.name} (${t.category})` }))),
@@ -225,9 +281,29 @@ export async function pageDivulgacao(view) {
     setContent(box, ...camps.map(histRow));
   }
 
+  // Motivos pelos quais um contato não recebe. Não são falhas — são
+  // decisões nossas, e some da tela vira medo antes de um disparo grande.
+  const MOTIVO_SUPRESSAO = {
+    inscrito: 'já inscritos',
+    optout: 'pediram descadastro',
+    bloqueio: 'bloqueados',
+    invalido: 'telefone inválido'
+  };
+  function contaSuprimidos(c) {
+    const s = c.suprimidos || {};
+    const n = Object.values(s).reduce((a, v) => a + (Number(v) || 0), 0);
+    if (!n) return null;
+    const partes = Object.entries(s)
+      .filter(([, v]) => Number(v) > 0)
+      .map(([k, v]) => `${v} ${MOTIVO_SUPRESSAO[k] || k}`);
+    return { n, texto: partes.join(', ') };
+  }
+
   function histRow(c) {
     const total = c.list_size || 0;
-    const done = (c.sent || 0) + (c.failed || 0);
+    const sup = contaSuprimidos(c);
+    // A barra só é honesta se contar todo mundo que já teve destino
+    const done = (c.sent || 0) + (c.failed || 0) + (sup ? sup.n : 0);
     const pct = total ? Math.round((done / total) * 100) : 0;
     const running = c.auto_status === 'running';
     const scheduled = c.auto_status === 'scheduled';
@@ -307,21 +383,29 @@ export async function pageDivulgacao(view) {
   function handleFile(file) {
     const reader = new FileReader();
     reader.onload = () => {
-      const { contacts, invalid, dupes } = parseCSV(reader.result);
-      state.contacts = contacts;
-      state.invalid = invalid;
-      state.dupes = dupes;
+      const r = parseCSV(decodeTexto(reader.result));
+      state.contacts = r.contacts;
+      state.invalid = r.invalid;
+      state.dupes = r.dupes;
+      state.vazios = r.vazios;
+      state.motivo = r.motivo;
       renderSummary();
       updateReady();
     };
-    reader.readAsText(file, 'UTF-8');
+    reader.onerror = () => {
+      state.contacts = []; state.motivo = 'Não consegui abrir o arquivo.';
+      renderSummary(); updateReady();
+    };
+    reader.readAsArrayBuffer(file);
   }
 
   function renderSummary() {
     const box = document.getElementById('list-summary');
     if (!box) return;
+    renderResumoEnvio();   // lista nova, prévia nova
     if (!state.contacts.length) {
-      setContent(box, h('div', { class: 'list-warn' }, 'Nenhum telefone válido encontrado no arquivo.'));
+      setContent(box, h('div', { class: 'list-warn' },
+        state.motivo || 'Nenhum telefone válido encontrado no arquivo.'));
       return;
     }
     const nBatches = Math.ceil(state.contacts.length / BATCH_SIZE);
@@ -331,9 +415,57 @@ export async function pageDivulgacao(view) {
         h('div', { class: 'list-stat-sub' },
           `${nBatches} lote(s) de até ${BATCH_SIZE}` +
           (state.dupes ? ` · ${state.dupes} duplicado(s) removido(s)` : '') +
-          (state.invalid ? ` · ${state.invalid} inválido(s) ignorado(s)` : ''))
+          (state.invalid ? ` · ${state.invalid} sem DDD` : '') +
+          (state.vazios ? ` · ${state.vazios} sem telefone` : ''))
       )
     );
+  }
+
+  // Quantos da lista NÃO vão receber, e por quê — antes de disparar, não
+  // depois. O medo de um lote grande vem de descobrir isso na barra de
+  // progresso, quando já não dá para desfazer.
+  let previaEmVoo = 0;
+  async function renderResumoEnvio() {
+    const box = document.getElementById('d-resumo-envio');
+    if (!box) return;
+    if (!state.contacts.length) { box.replaceChildren(); return; }
+
+    const meu = ++previaEmVoo;
+    box.replaceChildren(h('div', { class: 'row-sub' }, 'Conferindo a lista…'));
+    try {
+      const { supabase: sb } = await import('../data/supabase.js');
+      const { data, error } = await sb.rpc('wa_div_previa', {
+        p_event_id: state.eventId || null,
+        p_phones: state.contacts.map((c) => c.phone),
+        p_skip: !!state.skipParticipantes
+      });
+      if (meu !== previaEmVoo) return;          // chegou resposta velha
+      if (error || data?.erro) throw new Error(error?.message || data.erro);
+      // Resposta fora do formato esperado vira aviso honesto, nunca
+      // "undefined de undefined" numa tela que dispara mensagem real.
+      if (typeof data?.vao_receber !== 'number' || typeof data?.total !== 'number') {
+        throw new Error('resposta inesperada do servidor');
+      }
+
+      const fora = [];
+      const p = (n, um, muitos) => `${n} ${n > 1 ? muitos : um}`;
+      if (data.repetidos) fora.push(p(data.repetidos, 'repetido na lista', 'repetidos na lista'));
+      if (data.optout) fora.push(p(data.optout, 'pediu descadastro', 'pediram descadastro'));
+      if (data.inscritos) fora.push(p(data.inscritos, 'já inscrito no evento', 'já inscritos no evento'));
+
+      box.replaceChildren(
+        h('div', { class: fora.length ? 'previa-box alerta' : 'previa-box' },
+          h('div', { class: 'previa-num' },
+            h('strong', {}, String(data.vao_receber)),
+            h('span', {}, ` de ${data.total} vão receber`)),
+          fora.length
+            ? h('div', { class: 'row-sub' }, 'Fora: ' + fora.join(', ') + '.')
+            : h('div', { class: 'row-sub' }, 'Ninguém fica de fora.')));
+    } catch (e) {
+      if (meu !== previaEmVoo) return;
+      box.replaceChildren(h('div', { class: 'row-sub' },
+        'Não consegui conferir a lista antes do envio: ' + (e.message || e)));
+    }
   }
 
   function renderPreview() {
@@ -391,7 +523,7 @@ export async function pageDivulgacao(view) {
       : null;
     const confirmMsg = isScheduled
       ? `Agendar disparo para ${state.contacts.length} contatos em ${whenTxt}?\n\nNa hora marcada, o envio começa sozinho no servidor.`
-      : `Disparar para ${state.contacts.length} contatos?\n\nO envio roda automaticamente no servidor (~250/min). Você pode fechar esta aba — o progresso continua.`;
+      : `Disparar para ${state.contacts.length} contatos?\n\nO envio roda automaticamente no servidor (cerca de 40/min). Você pode fechar esta aba — o progresso continua.`;
     if (!confirm(confirmMsg)) return;
 
     const btn = document.getElementById(isScheduled ? 'd-schedule' : 'd-prepare');
@@ -407,6 +539,7 @@ export async function pageDivulgacao(view) {
         total_batches: Math.ceil(state.contacts.length / BATCH_SIZE),
         status: isScheduled ? 'scheduled' : 'sending',
         auto_status: isScheduled ? 'scheduled' : 'idle',
+        skip_participants: !!state.skipParticipantes,
         scheduled_for: scheduledFor
       }).select().single();
       if (error) throw error;
@@ -490,7 +623,7 @@ export async function pageDivulgacao(view) {
         ? h('div', { class: 'batch-note row-sub', style: { background: 'var(--green-soft)' } },
             '✓ Disparo concluído. A lista foi apagada do servidor.')
         : h('div', { class: 'batch-note row-sub' },
-            'Rodando no servidor (~250/min). Pode fechar a aba — o envio continua sozinho.'),
+            'Rodando no servidor (cerca de 40/min). Pode fechar a aba — o envio continua sozinho.'),
       h('button', { class: 'btn btn-ghost btn-sm', style: { marginTop: '12px' }, onclick: loadHistory },
         '← Ver todas as campanhas')
     );

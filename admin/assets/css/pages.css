@@ -2363,3 +2363,27 @@
 }
 .toast-acao:hover { opacity: 1; }
 .toast-msg { flex: 1; }
+
+/* ── Divulgação: prévia do envio e escolha de exclusão ───────────────
+   Antes o sistema decidia sozinho quem ficava de fora e não contava a
+   ninguém. Estes dois blocos existem para que a conta apareça ANTES do
+   disparo, não na barra de progresso quando já não dá para desfazer. */
+.check-linha {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin: 4px 0 14px; cursor: pointer;
+  font-size: 13.5px; color: var(--text-2);
+}
+.check-linha input { width: 17px; height: 17px; margin-top: 2px; flex: 0 0 auto; cursor: pointer; }
+.check-linha strong { color: var(--text-1); font-weight: 600; }
+.check-linha .row-sub { margin-top: 2px; }
+
+.previa-box {
+  border: 1px solid var(--linha);
+  border-left: 3px solid var(--ok, #1a7a52);
+  border-radius: 12px; padding: 12px 15px; margin: 0 0 16px;
+  background: var(--fundo-2, rgba(0,0,0,.02));
+}
+.previa-box.alerta { border-left-color: var(--alerta, #b8860b); }
+.previa-num { font-size: 15px; margin-bottom: 3px; }
+.previa-num strong { font-size: 21px; font-weight: 700; color: var(--text-1); }
+.previa-num span { color: var(--text-2); }
