@@ -183,6 +183,11 @@ function isEditable(event) {
 // A mesma trava tem duas causas opostas, e dizer a errada faz o atendente
 // achar que o evento acabou quando ele nem começou.
 function motivoBloqueio(event) {
+  // Evento sem data cai aqui também, e dizer "encerrado" para um evento que
+  // ninguém configurou manda o atendente procurar o problema no lugar errado.
+  if (inicioDoEvento(event) === null) {
+    return "Este evento ainda não tem data cadastrada — só visualização";
+  }
   const faltam = diasParaAbrir(event);
   if (faltam === null) return "Período de edição encerrado — apenas visualização";
   if (faltam === 1) return "O credenciamento abre amanhã — por enquanto, só visualização";

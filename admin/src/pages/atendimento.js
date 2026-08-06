@@ -120,10 +120,14 @@ export async function pageAtendimento(view) {
         h('div', { class: 'at-pergunta' }, c.ultima_pergunta || '(sem mensagem)'),
         c.nome ? h('div', { class: 'at-tel mono' }, telRot(c.phone)) : null),
       h('div', { class: 'at-item-acoes' },
-        h('a', {
-          class: 'btn btn-secondary', href: linkWa(c.phone), target: '_blank', rel: 'noopener',
-          onclick: (e) => e.stopPropagation()
-        }, 'Abrir WhatsApp'),
+        linkWa(c.phone)
+          ? h('a', {
+              class: 'btn btn-secondary', href: linkWa(c.phone), target: '_blank', rel: 'noopener',
+              onclick: (e) => e.stopPropagation()
+            }, 'Abrir WhatsApp')
+          : h('button', {
+              class: 'btn btn-secondary', disabled: true, title: 'Esta conversa não tem número'
+            }, 'Sem WhatsApp'),
         h('button', { class: 'btn btn-primary', onclick: () => marcaResolvida(c) }, 'Resolvida')));
   }
 
@@ -138,8 +142,10 @@ export async function pageAtendimento(view) {
         h('div', { class: 'at-modal-topo' },
           h('span', { class: 'at-motivo' }, motivoRot(c.escal_motivo)),
           h('span', { class: 'at-espera urgente' }, 'esperando ' + esperaRot(c.horas_esperando)),
-          h('a', { class: 'at-link', href: linkWa(c.phone), target: '_blank', rel: 'noopener' },
-            telRot(c.phone))),
+          linkWa(c.phone)
+            ? h('a', { class: 'at-link', href: linkWa(c.phone), target: '_blank', rel: 'noopener' },
+                telRot(c.phone))
+            : h('span', { class: 'at-link muted' }, 'sem número')),
         h('div', { class: 'at-conversa' }, ...msgs.map((m) =>
           h('div', { class: 'at-bolha ' + (m.role === 'user' ? 'deles' : 'nossa') },
             h('div', { class: 'at-bolha-txt' }, m.content),
@@ -149,10 +155,10 @@ export async function pageAtendimento(view) {
               })))))),
       actions: [
         { label: 'Fechar', kind: 'btn-ghost', onClick: (fechar) => fechar() },
-        {
+        ...(linkWa(c.phone) ? [{
           label: 'Abrir WhatsApp', kind: 'btn-secondary',
           onClick: () => window.open(linkWa(c.phone), '_blank', 'noopener')
-        },
+        }] : []),
         {
           label: 'Marcar resolvida', kind: 'btn-primary',
           onClick: (fechar) => { fechar(); marcaResolvida(c); }

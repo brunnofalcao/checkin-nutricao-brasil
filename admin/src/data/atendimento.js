@@ -86,6 +86,9 @@ export function telRot(phone) {
   return m ? `(${m[1]}) ${m[2]}-${m[3]}` : phone;
 }
 
+// null quando não há número: a página usa isso para desabilitar o botão em
+// vez de oferecer um "Abrir WhatsApp" que abre uma aba em branco.
 export function linkWa(phone) {
-  return 'https://wa.me/' + String(phone || '').replace(/\D/g, '');
+  const d = String(phone || '').replace(/\D/g, '');
+  return d.length >= 10 ? 'https://wa.me/' + d : null;
 }

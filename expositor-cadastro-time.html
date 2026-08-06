@@ -82,6 +82,28 @@ input.ruim{border-color:#f87171}
   padding:12px 22px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
 .linkbox{background:#0f0720;border:1px solid var(--line);border-radius:11px;padding:12px;
   font-size:12.5px;word-break:break-all;color:var(--t2);margin-top:12px;font-family:ui-monospace,Menlo,monospace}
+
+/* ── porta de entrada: reivindicar, pedir e confirmar código ────────── */
+.porta{max-width:480px;margin:0 auto;text-align:left}
+.porta .selo{display:block;text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--ciano);margin-bottom:10px}
+.porta h2{text-align:center}
+.porta .sub{text-align:center;color:var(--t2);margin:0 0 22px;font-size:14px}
+.porta .bloco{margin-top:0}
+.otp{display:block;width:100%;text-align:center;letter-spacing:14px;font-size:30px;font-weight:700;
+  font-family:ui-monospace,Menlo,monospace;padding:16px 12px 16px 26px;background:#0f0720;
+  border:1px solid var(--line);border-radius:13px;color:var(--t1);outline:none}
+.otp:focus{border-color:var(--roxo)}
+.otp.ruim{border-color:#f87171}
+.destino{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.24);border-radius:12px;
+  padding:13px 15px;margin:0 0 18px;font-size:13.5px;color:#bfeef7;text-align:center}
+.destino b{color:#fff;font-family:ui-monospace,Menlo,monospace;letter-spacing:.5px}
+.reenviar{background:none;border:0;color:var(--roxo);font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;padding:10px;display:block;margin:4px auto 0;text-decoration:underline}
+.reenviar:disabled{color:var(--t3);text-decoration:none;cursor:default}
+.trocar{display:block;text-align:center;margin-top:18px;color:var(--t3);font-size:12.5px}
+.trocar button{background:none;border:0;color:var(--t3);font-family:inherit;font-size:12.5px;
+  text-decoration:underline;cursor:pointer;padding:0}
 </style>
 </head>
 <body>
@@ -100,6 +122,67 @@ input.ruim{border-color:#f87171}
     <p class="erro-msg" id="codErro"></p>
     <p style="margin-top:26px;color:var(--t3);font-size:13px">
       Não tem o código? Fale com quem cuida do seu contrato na Science Play.</p>
+  </div>
+
+  <!-- PRIMEIRO ACESSO: ninguém reivindicou esta empresa ainda -->
+  <div id="reivindicar" class="hide">
+    <div class="porta">
+      <span class="selo">Primeiro acesso</span>
+      <h2 id="revEmpresa">Quem vai responder por esta empresa?</h2>
+      <p class="sub">Este link fica ligado ao WhatsApp que você cadastrar agora.
+         É para ele que vai o código toda vez que alguém abrir o cadastro.</p>
+      <form id="revForm" class="bloco" novalidate>
+        <div class="campo"><label>Seu nome completo *</label>
+          <input type="text" id="revNome" autocomplete="name"></div>
+        <div class="campo"><label>E-mail *</label>
+          <input type="email" id="revEmail" autocomplete="email"></div>
+        <div class="campo"><label>WhatsApp *</label>
+          <input type="tel" id="revWhats" placeholder="(61) 99999-0000" autocomplete="tel"></div>
+        <p class="aviso" style="margin-top:4px">
+          Confira o número com calma. Depois de confirmado, <b>só a Science Play</b>
+          consegue trocar o responsável deste cadastro.</p>
+        <p class="erro-msg" id="revErro"></p>
+        <button type="submit" class="btn pri" id="revBtn">Cadastrar e receber o código</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- VOLTANDO: já tem dono, precisa provar que é ele -->
+  <div id="pedir" class="hide">
+    <div class="porta">
+      <span class="selo">Acesso protegido</span>
+      <h2 id="pedirEmpresa">Cadastro da equipe</h2>
+      <p class="sub" id="pedirSub">Para abrir a lista, mandamos um código no WhatsApp do responsável.</p>
+      <div class="bloco">
+        <div class="destino" id="pedirDestino"></div>
+        <p class="erro-msg" id="pedirErro"></p>
+        <button type="button" class="btn pri" id="pedirBtn">Enviar código no WhatsApp</button>
+        <p class="trocar">Não é mais esse o responsável?
+          <button type="button" id="pedirAjuda">Como trocar</button></p>
+        <div class="aviso hide" id="pedirComoTrocar">
+          Por segurança, a troca de responsável é feita só pela Science Play.
+          Fale com quem cuida do seu contrato e informe o código
+          <b id="pedirCodigoEmpresa"></b> — é por ele que a gente acha sua empresa.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIGITAR O CÓDIGO -->
+  <div id="confirmar" class="hide">
+    <div class="porta">
+      <span class="selo">Código enviado</span>
+      <h2>Digite o código</h2>
+      <p class="sub">Seis dígitos, válidos por 10 minutos.</p>
+      <form id="confForm" class="bloco" novalidate>
+        <div class="destino" id="confDestino"></div>
+        <input class="otp" id="otp" inputmode="numeric" autocomplete="one-time-code"
+               maxlength="6" placeholder="······" spellcheck="false">
+        <p class="erro-msg" id="confErro"></p>
+        <button type="submit" class="btn pri" id="confBtn">Abrir cadastro</button>
+        <button type="button" class="reenviar" id="reenviar">Não chegou? Enviar de novo</button>
+      </form>
+    </div>
   </div>
 
   <div id="pronto" class="estado hide">
@@ -152,6 +235,9 @@ input.ruim{border-color:#f87171}
           <div class="campo"><label>WhatsApp *</label><input type="tel" id="respWhats"></div>
         </div>
       </div>
+      <p class="aviso hide" id="respTravado">
+        O WhatsApp do responsável é o que destrava este cadastro, então ele
+        <b>não pode ser trocado por aqui</b>. Precisa mudar? Fale com a Science Play.</p>
     </div>
 
     <div class="bloco">
@@ -195,7 +281,12 @@ input.ruim{border-color:#f87171}
 const URL_SB = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
 const $ = i => document.getElementById(i);
-const S = { dados:null, limite:5, chave:null };
+
+// `sessao` mora no sessionStorage, não no localStorage: fechou a aba,
+// pede o código de novo. Foi assim que ficou combinado — o link não vira
+// uma chave permanente esquecida no navegador de quem passou por ali.
+const S = { dados:null, limite:5, chave:null, sessao:null, empresa:'', rascunho:null };
+const CHAVE_SESSAO = 'nb-expo-sessao';
 
 async function rpc(fn, body){
   const r = await fetch(URL_SB + '/rest/v1/rpc/' + fn, {
@@ -206,6 +297,17 @@ async function rpc(fn, body){
   if (!r.ok) throw new Error('rede');
   return r.json();
 }
+// O envio do código passa pela edge function: ela roda com service_role,
+// lê o código e manda para o WhatsApp. A página nunca vê o número inteiro
+// nem o código — só o mascarado que volta na resposta.
+async function mandaCodigo(chave){
+  const r = await fetch(URL_SB + '/functions/v1/expo-codigo', {
+    method:'POST',
+    headers:{ apikey:ANON, Authorization:'Bearer ' + ANON, 'Content-Type':'application/json' },
+    body: JSON.stringify({ chave })
+  });
+  return r.json();
+}
 const fone = v => String(v||'').replace(/\D/g,'');
 function foneBonito(v){
   const d = fone(v);
@@ -213,6 +315,11 @@ function foneBonito(v){
   const n = d.length > 11 ? d.slice(-11) : d;
   return n.length === 11 ? `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`
                          : `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
+}
+function mostra(qual){
+  ['carregando','codigo','reivindicar','pedir','confirmar','form','pronto']
+    .forEach(id => $(id).classList.toggle('hide', id !== qual));
+  window.scrollTo({ top:0, behavior:'auto' });
 }
 
 /* ── equipe ────────────────────────────────────────────────────────── */
@@ -259,9 +366,10 @@ $('respEuMesmo').addEventListener('change', e => {
   $('respCampos').classList.toggle('hide', e.target.checked);
 });
 
-/* ── carregar ──────────────────────────────────────────────────────── */
+/* ── formulário ────────────────────────────────────────────────────── */
 function pintaForm(d){
-  S.dados = d; S.limite = d.limite || 5; S.chave = d.token;
+  S.dados = d; S.limite = d.limite || 5; S.chave = d.token || d.codigo || S.chave;
+  S.empresa = d.empresa || S.empresa;
   $('tagEmpresa').textContent = (d.empresa || 'Expositor') + (d.cota ? ' · cota ' + d.cota : '') +
     ' · até ' + S.limite + ' credenciais';
   $('empresa').value = d.empresa || '';
@@ -272,22 +380,84 @@ function pintaForm(d){
   $('respWhats').value = foneBonito(d.resp?.whatsapp);
   $('focoNome').value = d.foco?.nome || ''; $('focoEmail').value = d.foco?.email || '';
   $('focoWhats').value = foneBonito(d.foco?.whatsapp);
+
+  // Com a trava ligada, o WhatsApp do responsável É a chave de entrada.
+  // Deixar editável seria oferecer um jeito de o cadastro se auto-expulsar.
+  const travado = d.etapa === 'liberado';
+  $('respWhats').disabled = travado;
+  $('respTravado').classList.toggle('hide', !travado);
+  $('respEuMesmo').closest('.check').classList.toggle('hide', travado);
+
   const eq = (d.equipe && d.equipe.length) ? d.equipe : [{}];
   $('equipe').replaceChildren(...eq.map((p,i) => linhaPessoa(p,i)));
   renumera();
-  $('carregando').classList.add('hide'); $('codigo').classList.add('hide');
-  $('pronto').classList.add('hide'); $('form').classList.remove('hide');
+  if (S.rascunho) { aplicaRascunho(); S.rascunho = null; }
+  mostra('form');
 }
+
+// Se a sessão cair no meio do preenchimento, a pessoa refaz o código —
+// mas não redigita a equipe inteira. O que ela escreveu volta.
+function guardaRascunho(){
+  S.rascunho = {
+    empresa:$('empresa').value, cnpj:$('cnpj').value, estande:$('estande').value, obs:$('obs').value,
+    cad:['cadNome','cadEmail','cadWhats','cadCargo'].map(i => $(i).value),
+    foco:['focoNome','focoEmail','focoWhats'].map(i => $(i).value),
+    equipe: [...$('equipe').children].map(el => ({
+      nome: el.querySelector('.p-nome').value, cargo: el.querySelector('.p-cargo').value,
+      email: el.querySelector('.p-email').value, whatsapp: el.querySelector('.p-whats').value,
+      pode_retirar: el.querySelector('.p-ret').checked,
+      retirado: el.classList.contains('travada')
+    }))
+  };
+}
+function aplicaRascunho(){
+  const r = S.rascunho;
+  $('empresa').value = r.empresa; $('cnpj').value = r.cnpj;
+  $('estande').value = r.estande; $('obs').value = r.obs;
+  ['cadNome','cadEmail','cadWhats','cadCargo'].forEach((id,i) => $(id).value = r.cad[i]);
+  ['focoNome','focoEmail','focoWhats'].forEach((id,i) => $(id).value = r.foco[i]);
+  if (r.equipe.length) $('equipe').replaceChildren(...r.equipe.map((p,i) => linhaPessoa(p,i)));
+  renumera();
+}
+
+/* ── abrir: decide em que etapa a pessoa está ──────────────────────── */
 async function abrir(codigo, token){
-  try{
-    const d = await rpc('expo_abre', { p_codigo: codigo || null, p_token: token || null });
-    if (!d) return false;
-    if (d.bloqueado){ $('codErro').textContent = 'Este cadastro está bloqueado. Fale com a Science Play.'; return false; }
-    pintaForm(d);
-    if (token) history.replaceState(null, '', location.pathname + '?t=' + token);
-    return true;
+  let d;
+  try {
+    d = await rpc('expo_abre', {
+      p_codigo: codigo || null, p_token: token || null, p_sessao: S.sessao || null
+    });
   } catch(e){ return false; }
+  if (!d || d.erro === 'codigo') return false;
+  if (d.bloqueado){ $('codErro').textContent = 'Este cadastro está bloqueado. Fale com a Science Play.'; return false; }
+
+  S.chave = d.token || d.codigo || codigo || token;
+  S.codigoEmpresa = d.codigo || (codigo || '').toUpperCase() || S.codigoEmpresa;
+  S.empresa = d.empresa || '';
+  S.limite = d.limite || S.limite;
+  if (d.token) history.replaceState(null, '', location.pathname + '?t=' + d.token);
+  else if (d.codigo) history.replaceState(null, '', location.pathname + '?e=' + d.codigo);
+
+  // Sem `etapa` = trava desligada: comporta como sempre foi.
+  if (!d.etapa || d.etapa === 'liberado'){ pintaForm(d); return true; }
+
+  if (d.etapa === 'reivindicar'){
+    $('revEmpresa').textContent = 'Quem responde pela ' + (d.empresa || 'empresa') + '?';
+    mostra('reivindicar'); $('revNome').focus();
+    return true;
+  }
+
+  // etapa 'codigo': tem dono e ainda não provou que é ele
+  $('pedirEmpresa').textContent = d.empresa || 'Cadastro da equipe';
+  $('pedirSub').textContent = d.resp_nome
+    ? 'Mandamos um código no WhatsApp de ' + d.resp_nome + ', responsável por este cadastro.'
+    : 'Para abrir a lista, mandamos um código no WhatsApp do responsável.';
+  $('pedirDestino').innerHTML = 'O código vai para <b>' + esc(d.mascarado || '') + '</b>' +
+    (d.equipe_total ? '<br>' + d.equipe_total + (d.equipe_total > 1 ? ' pessoas já cadastradas' : ' pessoa já cadastrada') : '');
+  mostra('pedir');
+  return true;
 }
+
 $('irCod').addEventListener('click', async () => {
   const v = $('cod').value.trim().toUpperCase();
   $('codErro').textContent = '';
@@ -295,6 +465,157 @@ $('irCod').addEventListener('click', async () => {
   if (!await abrir(v, null)) $('codErro').textContent = 'Código não encontrado. Confira com a Science Play.';
 });
 $('cod').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('irCod').click(); } });
+
+/* ── primeiro acesso: reivindicar ──────────────────────────────────── */
+$('revForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  $('revErro').textContent = '';
+  document.querySelectorAll('#reivindicar .ruim').forEach(el => el.classList.remove('ruim'));
+
+  const nome = $('revNome').value.trim();
+  const email = $('revEmail').value.trim();
+  const whats = fone($('revWhats').value);
+  const falta = [];
+  if (nome.length < 3) falta.push($('revNome'));
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) falta.push($('revEmail'));
+  if (whats.length < 10) falta.push($('revWhats'));
+  if (falta.length){
+    falta.forEach(el => el.classList.add('ruim'));
+    falta[0].focus();
+    $('revErro').textContent = 'Confira os campos marcados. O WhatsApp precisa ter DDD.';
+    return;
+  }
+
+  const b = $('revBtn'); b.disabled = true; b.textContent = 'Cadastrando…';
+  try {
+    const r = await rpc('expo_reivindica', {
+      p_chave: S.chave, p_dados: { nome, email, whatsapp: whats }
+    });
+    if (!r || r.erro){
+      $('revErro').textContent = ({
+        codigo: 'Cadastro não encontrado. Recarregue a página.',
+        bloqueado: 'Este cadastro está bloqueado. Fale com a Science Play.',
+        ja_reivindicado: 'Alguém já registrou o responsável desta empresa' +
+          (r.mascarado ? ' (' + r.mascarado + ')' : '') + '. Recarregue a página para receber o código.',
+        nome: 'Digite o nome completo.',
+        email: 'Confira o e-mail.',
+        whatsapp: 'Confira o WhatsApp — precisa ter DDD.'
+      })[r?.erro] || 'Não consegui cadastrar. Tente de novo.';
+      b.disabled = false; b.textContent = 'Cadastrar e receber o código';
+      return;
+    }
+    await enviaEabreConfirmacao(r.mascarado, b, 'Cadastrar e receber o código');
+  } catch(e){
+    $('revErro').textContent = 'Sem conexão. Tente de novo.';
+    b.disabled = false; b.textContent = 'Cadastrar e receber o código';
+  }
+});
+$('revWhats').addEventListener('blur', e => { e.target.value = foneBonito(e.target.value); });
+
+/* ── pedir o código ────────────────────────────────────────────────── */
+$('pedirBtn').addEventListener('click', async () => {
+  const b = $('pedirBtn'); $('pedirErro').textContent = '';
+  b.disabled = true; b.textContent = 'Enviando…';
+  await enviaEabreConfirmacao(null, b, 'Enviar código no WhatsApp', 'pedirErro');
+});
+// Sem número de suporte cadastrado no sistema, mandar para um WhatsApp
+// chutado seria pior que não mandar. O que resolve de verdade é a pessoa
+// ter o código em mãos quando falar com o comercial dela.
+$('pedirAjuda').addEventListener('click', () => {
+  $('pedirCodigoEmpresa').textContent = S.codigoEmpresa || S.chave || '';
+  $('pedirComoTrocar').classList.remove('hide');
+});
+
+async function enviaEabreConfirmacao(mascarado, botao, rotulo, campoErro){
+  const alvo = campoErro || 'revErro';
+  try {
+    const env = await mandaCodigo(S.chave);
+    if (env?.livre){ await abrir(null, S.chave); return; }   // trava desligada no meio do caminho
+    if (!env?.ok){
+      $(alvo).textContent = env?.recado || 'Não consegui enviar o código agora.';
+      botao.disabled = false; botao.textContent = rotulo;
+      return;
+    }
+    $('confDestino').innerHTML = 'Código enviado para <b>' + esc(env.mascarado || mascarado || '') + '</b>';
+    mostra('confirmar');
+    $('otp').value = ''; $('confErro').textContent = ''; $('otp').focus();
+    contaReenvio();
+  } catch(e){
+    $(alvo).textContent = 'Sem conexão. Tente de novo.';
+  }
+  botao.disabled = false; botao.textContent = rotulo;
+}
+
+/* ── confirmar o código ────────────────────────────────────────────── */
+$('otp').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+  e.target.classList.remove('ruim');
+  if (e.target.value.length === 6) $('confForm').requestSubmit();
+});
+$('confForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const v = $('otp').value.replace(/\D/g, '');
+  $('confErro').textContent = '';
+  if (v.length !== 6){ $('otp').classList.add('ruim'); $('confErro').textContent = 'O código tem 6 dígitos.'; return; }
+
+  const b = $('confBtn'); b.disabled = true; b.textContent = 'Conferindo…';
+  try {
+    const r = await rpc('expo_confirma_codigo', { p_chave: S.chave, p_codigo: v });
+    if (!r?.ok){
+      $('otp').classList.add('ruim'); $('otp').value = '';
+      $('confErro').textContent = ({
+        codigo: 'Cadastro não encontrado. Recarregue a página.',
+        formato: 'O código tem 6 dígitos.',
+        expirado: 'Esse código expirou. Peça um novo.',
+        tentativas: 'Muitas tentativas erradas. Peça um código novo.',
+        invalido: 'Código errado.' + (r?.restam != null ? ' Restam ' + r.restam + ' tentativas.' : '')
+      })[r?.erro] || 'Não consegui conferir o código.';
+      b.disabled = false; b.textContent = 'Abrir cadastro';
+      $('otp').focus();
+      return;
+    }
+    S.sessao = r.sessao;
+    try { sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify({ chave:S.chave, sessao:r.sessao })); } catch(e){}
+    b.textContent = 'Abrindo…';
+    if (!await abrir(null, S.chave)){
+      $('confErro').textContent = 'Código aceito, mas não consegui abrir o cadastro. Recarregue a página.';
+      b.disabled = false; b.textContent = 'Abrir cadastro';
+    }
+  } catch(e){
+    $('confErro').textContent = 'Sem conexão. Tente de novo.';
+    b.disabled = false; b.textContent = 'Abrir cadastro';
+  }
+});
+
+// Reenviar tem espera: sem isso, um dedo nervoso queima o limite de
+// pedidos do banco e a pessoa fica 15 minutos sem conseguir entrar.
+let tReenvio;
+function contaReenvio(seg = 45){
+  const b = $('reenviar');
+  clearInterval(tReenvio);
+  b.disabled = true;
+  const tick = () => {
+    b.textContent = seg > 0 ? `Não chegou? Reenviar em ${seg}s` : 'Não chegou? Enviar de novo';
+    if (seg <= 0){ b.disabled = false; clearInterval(tReenvio); }
+    seg--;
+  };
+  tick(); tReenvio = setInterval(tick, 1000);
+}
+$('reenviar').addEventListener('click', async () => {
+  const b = $('reenviar'); b.disabled = true; b.textContent = 'Enviando…';
+  $('confErro').textContent = '';
+  try {
+    const env = await mandaCodigo(S.chave);
+    if (env?.ok){
+      $('confDestino').innerHTML = 'Código enviado para <b>' + esc(env.mascarado || '') + '</b>';
+      $('otp').value = ''; $('otp').focus();
+      contaReenvio();
+    } else {
+      $('confErro').textContent = env?.recado || 'Não consegui reenviar agora.';
+      contaReenvio(20);
+    }
+  } catch(e){ $('confErro').textContent = 'Sem conexão.'; contaReenvio(20); }
+});
 
 /* ── salvar ────────────────────────────────────────────────────────── */
 $('form').addEventListener('submit', async ev => {
@@ -310,12 +631,13 @@ $('form').addEventListener('submit', async ev => {
     pode_retirar: el.querySelector('.p-ret').checked
   })).filter(p => p.nome);
 
+  const euMesmo = $('respEuMesmo').checked;
+  const respBloqueado = $('respWhats').disabled;
   const falta = [];
   if (!$('empresa').value.trim()) falta.push($('empresa'));
   if (!$('cadNome').value.trim()) falta.push($('cadNome'));
   if (fone($('cadWhats').value).length < 10) falta.push($('cadWhats'));
-  const euMesmo = $('respEuMesmo').checked;
-  if (!euMesmo){
+  if (!euMesmo && !respBloqueado){
     if (!$('respNome').value.trim()) falta.push($('respNome'));
     if (fone($('respWhats').value).length < 10) falta.push($('respWhats'));
   }
@@ -349,18 +671,38 @@ $('form').addEventListener('submit', async ev => {
       observacoes: $('obs').value.trim(),
       cad: { nome:$('cadNome').value.trim(), email:$('cadEmail').value.trim(),
              whatsapp:fone($('cadWhats').value), cargo:$('cadCargo').value.trim() },
-      resp: euMesmo
-        ? { nome:$('cadNome').value.trim(), email:$('cadEmail').value.trim(), whatsapp:fone($('cadWhats').value) }
-        : { nome:$('respNome').value.trim(), email:$('respEmail').value.trim(), whatsapp:fone($('respWhats').value) },
       foco: { nome:$('focoNome').value.trim(), email:$('focoEmail').value.trim(), whatsapp:fone($('focoWhats').value) },
       equipe
     };
-    const r = await rpc('expo_salva', { p_chave: S.chave || S.dados.codigo, p_dados: dados });
+    // Responsável travado: não manda o bloco, para o banco preservar o que
+    // já está lá em vez de receber campo vazio.
+    if (!respBloqueado){
+      dados.resp = euMesmo
+        ? { nome:$('cadNome').value.trim(), email:$('cadEmail').value.trim(), whatsapp:fone($('cadWhats').value) }
+        : { nome:$('respNome').value.trim(), email:$('respEmail').value.trim(), whatsapp:fone($('respWhats').value) };
+    }
+
+    const r = await rpc('expo_salva', {
+      p_chave: S.chave || S.dados?.codigo, p_dados: dados, p_sessao: S.sessao || null
+    });
+
+    // Sessão caiu no meio do preenchimento: guarda o que foi digitado e
+    // manda refazer o código, em vez de perder o trabalho da pessoa.
+    if (r?.erro === 'sessao' || r?.erro === 'sem_sessao' || r?.erro === 'travado'){
+      guardaRascunho();
+      S.sessao = null;
+      try { sessionStorage.removeItem(CHAVE_SESSAO); } catch(e){}
+      b.disabled = false; b.textContent = 'Salvar cadastro';
+      await abrir(null, S.chave);
+      $('pedirErro').textContent = 'Sua sessão expirou. Peça um novo código — o que você preencheu está guardado.';
+      return;
+    }
     if (!r || r.erro){
       $('erro').textContent = ({
         limite: 'Sua cota permite até ' + (r?.limite || S.limite) + ' credenciais.',
         empresa: 'O nome da empresa é obrigatório.',
         bloqueado: 'Este cadastro está bloqueado. Fale com a Science Play.',
+        reivindicar: 'Este cadastro ainda não tem responsável. Recarregue a página.',
         codigo: 'Código inválido. Recarregue a página.'
       })[r?.erro] || 'Não consegui salvar. Tente de novo.';
       b.disabled = false; b.textContent = 'Salvar cadastro'; return;
@@ -370,28 +712,43 @@ $('form').addEventListener('submit', async ev => {
       (equipe.length > 1 ? ' pessoas cadastradas.' : ' pessoa cadastrada.') +
       ' Os crachás serão impressos com estes nomes.';
     $('linkEdit').textContent = url;
-    $('form').classList.add('hide'); $('pronto').classList.remove('hide');
-    window.scrollTo({ top:0, behavior:'smooth' });
+    mostra('pronto');
   } catch(e){
     $('erro').textContent = 'Não consegui salvar. Confira sua conexão e tente de novo.';
     b.disabled = false; b.textContent = 'Salvar cadastro';
   }
 });
 $('voltarEditar').addEventListener('click', () => {
-  $('pronto').classList.add('hide'); $('form').classList.remove('hide');
   $('salvar').disabled = false; $('salvar').textContent = 'Salvar cadastro';
-  window.scrollTo({ top:0, behavior:'smooth' });
+  mostra('form');
 });
 
 /* ── boot ──────────────────────────────────────────────────────────── */
 (async function(){
   const q = new URLSearchParams(location.search);
   const t = q.get('t'), c = q.get('e') || q.get('c');
-  if (t && await abrir(null, t)) return;
-  if (c && await abrir(c.toUpperCase(), null)) return;
-  $('carregando').classList.add('hide');
-  $('codigo').classList.remove('hide');
-  if (c) $('cod').value = c.toUpperCase();
+
+  // Sessão da aba: só vale para a MESMA empresa. Chave diferente = sessão
+  // de outro cadastro, e reaproveitar seria abrir a porta errada.
+  try {
+    const guardada = JSON.parse(sessionStorage.getItem(CHAVE_SESSAO) || 'null');
+    if (guardada && (guardada.chave === t || guardada.chave === (c || '').toUpperCase())) {
+      S.sessao = guardada.sessao;
+    } else if (guardada) {
+      sessionStorage.removeItem(CHAVE_SESSAO);
+    }
+  } catch(e){}
+
+  if (t){ S.chave = t; if (await abrir(null, t)) return; }
+  if (c){ S.chave = c.toUpperCase(); if (await abrir(c.toUpperCase(), null)) return; }
+  mostra('codigo');
+  // Chegou por um link que não abriu: dizer isso é melhor do que mostrar
+  // um campo em branco e deixar a pessoa achar que ela é que errou.
+  if (t || c){
+    $('cod').value = (c || '').toUpperCase();
+    $('codErro').textContent = 'Esse link não abriu nenhum cadastro. ' +
+      'Confira o código com a Science Play.';
+  }
   $('cod').focus();
 })();
 </script>
