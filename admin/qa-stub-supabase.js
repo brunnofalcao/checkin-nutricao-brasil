@@ -103,10 +103,33 @@ const RACE_PROFILES = [
 const EXHIBITOR_MEMBERS = [
   { participant_id: 'p7', exhibitors: { empresa: 'Nestlé Nutrition & Health', estande: '12' } }
 ];
+// Um membro do jeito que o PostgREST devolve: o participante embutido pela
+// FK do dono do crachá, e quem retirou como texto solto.
+const mem = (id, nome, cargo, extra = {}) => ({
+  id, cargo, pode_retirar: false, retirado_em: null, retirado_por_nome: null,
+  participants: { id: 'pm-' + id, name: nome, phone: '5561988' + id.slice(-6), email: id + '@exemplo.com' },
+  ...extra
+});
+
 let EXHIBITORS = [
-  { id: 'x1', event_id: 'ev-expo', codigo: 'NBAAA11', token: 't1', empresa: 'Nestlé Nutrition & Health', estande: '12', cota: 'Diamante', limite_credenciais: 8, status: 'preenchido', resp_nome: 'Brunno', resp_whatsapp: '5561999990000', cad_nome: 'Yasmin', preenchido_em: '2026-07-10T10:00:00Z', exhibitor_members: [] },
+  // Preenchida, com equipe e um crachá já retirado por outra pessoa —
+  // é o caso que o CAEX precisa mostrar direito.
+  { id: 'x1', event_id: 'ev-expo', codigo: 'NBAAA11', token: 't1', empresa: 'Nestlé Nutrition & Health', estande: '12', cota: 'Diamante', limite_credenciais: 8, status: 'preenchido', resp_nome: 'Brunno', resp_whatsapp: '5561999990000', cad_nome: 'Yasmin', preenchido_em: '2026-07-10T10:00:00Z',
+    exhibitor_members: [
+      mem('m100001', 'Yasmin Moura', 'Gerente de Marketing', { pode_retirar: true }),
+      mem('m100002', 'Caio Bertolini', 'Nutricionista', { retirado_em: '2026-08-27T09:12:00Z', retirado_por_nome: 'Yasmin Moura' }),
+      mem('m100003', 'Renata Prado', 'Promotora')
+    ] },
   { id: 'x2', event_id: 'ev-expo', codigo: 'NBBBB22', token: 't2', empresa: 'Rousselot', estande: '07', cota: 'Ouro', limite_credenciais: 5, status: 'convidado', resp_nome: null, resp_whatsapp: null, cad_nome: null, preenchido_em: null, exhibitor_members: [] },
-  { id: 'x3', event_id: 'ev-expo', codigo: 'NBCCC33', token: 't3', empresa: 'Prana Bebidas Leves', estande: '22', cota: 'Prata', limite_credenciais: 3, status: 'convidado', resp_nome: null, resp_whatsapp: null, cad_nome: null, preenchido_em: null, exhibitor_members: [] }
+  // Acima do limite: 4 pessoas para 3 credenciais. Existe para a tela ter
+  // que mostrar o estouro em vez de esconder.
+  { id: 'x3', event_id: 'ev-expo', codigo: 'NBCCC33', token: 't3', empresa: 'Prana Bebidas Leves', estande: '22', cota: 'Prata', limite_credenciais: 3, status: 'preenchido', resp_nome: 'Marina', resp_whatsapp: '5561988887777', cad_nome: 'Marina', preenchido_em: '2026-07-22T14:00:00Z',
+    exhibitor_members: [
+      mem('m300001', 'Marina Lopes', 'Fundadora', { pode_retirar: true }),
+      mem('m300002', 'Pedro Sales', 'Comercial'),
+      mem('m300003', 'Bia Tavares', 'Atendimento'),
+      mem('m300004', 'Léo Andrade', 'Apoio')
+    ] }
 ];
 let PERFIS = [
   { id: 'u1', email: 'jaqueline@scienceplay.com', display_name: null, role: 'admin', created_at: '2026-05-15T15:46:55Z' },

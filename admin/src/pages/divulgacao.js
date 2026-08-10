@@ -1,4 +1,5 @@
 import { h, setContent } from '../core/dom.js';
+import { leArquivo, paraTexto } from '../core/planilha.js';
 import { parseCSV as leCSV, pareceCabecalho } from '../core/csv.js';
 import { icons } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
@@ -190,9 +191,9 @@ export async function pageDivulgacao(view) {
           h('h3', {}, '1. Lista de contatos'),
           h('div', { class: 'upload-drop', id: 'drop' },
             icons.plus(),
-            h('div', { class: 'upload-drop-title' }, 'Arraste um CSV ou clique para escolher'),
-            h('div', { class: 'upload-drop-sub' }, 'Aceita export do RD Station, Excel ou Google Sheets. Separador vírgula, ponto-e-vírgula ou TAB. Usa a coluna Telefone e, se estiver vazia, a Celular.'),
-            h('input', { type: 'file', id: 'csv-input', accept: '.csv,text/csv', style: { display: 'none' } })
+            h('div', { class: 'upload-drop-title' }, 'Arraste a planilha ou clique para escolher'),
+            h('div', { class: 'upload-drop-sub' }, 'Excel (.xlsx) ou CSV — export do RD Station, Excel ou Google Sheets. Separador vírgula, ponto-e-vírgula ou TAB. Usa a coluna Telefone e, se estiver vazia, a Celular.'),
+            h('input', { type: 'file', id: 'csv-input', accept: '.xlsx,.csv,.tsv,.txt,text/csv', style: { display: 'none' } })
           ),
           h('div', { class: 'csv-help-row' },
             h('a', {
@@ -380,23 +381,35 @@ export async function pageDivulgacao(view) {
     input.onchange = () => { if (input.files[0]) handleFile(input.files[0]); };
   }
 
-  function handleFile(file) {
+  async function handleFile(file) {
+    // .xlsx é zip: passar por decodeTexto devolveria bytes comprimidos com
+    // cara de texto, e a lista sairia vazia sem ninguém entender por quê.
+    if (/\.xlsx$/i.test(file.name)) {
+      try {
+        aplicaLista(parseCSV(paraTexto(await leArquivo(file))));
+      } catch (e) {
+        state.contacts = []; state.motivo = e.message || 'Não consegui abrir a planilha.';
+        renderSummary(); updateReady();
+      }
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = () => {
-      const r = parseCSV(decodeTexto(reader.result));
-      state.contacts = r.contacts;
-      state.invalid = r.invalid;
-      state.dupes = r.dupes;
-      state.vazios = r.vazios;
-      state.motivo = r.motivo;
-      renderSummary();
-      updateReady();
-    };
+    reader.onload = () => aplicaLista(parseCSV(decodeTexto(reader.result)));
     reader.onerror = () => {
       state.contacts = []; state.motivo = 'Não consegui abrir o arquivo.';
       renderSummary(); updateReady();
     };
     reader.readAsArrayBuffer(file);
+  }
+
+  function aplicaLista(r) {
+    state.contacts = r.contacts;
+    state.invalid = r.invalid;
+    state.dupes = r.dupes;
+    state.vazios = r.vazios;
+    state.motivo = r.motivo;
+    renderSummary();
+    updateReady();
   }
 
   function renderSummary() {

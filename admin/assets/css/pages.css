@@ -1961,28 +1961,35 @@
 .lote-previa {
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
-  overflow: hidden;
   margin-top: 10px;
   max-height: 320px;
-  overflow-y: auto;
+  overflow: auto;
 }
+.lote-table th:last-child, .lote-table td:last-child { padding-right: 14px; }
 .lote-vazio {
   padding: 22px;
   text-align: center;
   font-size: 13px;
   color: var(--ink-mute);
 }
-.lote-table th, .lote-table td { font-size: 12.5px; padding: 8px 12px; }
+/* fixed: sem isso o navegador estica a tabela para caber o texto do aviso
+   e a coluna de Situação — a razão de a prévia existir — sai da tela. */
+.lote-table { table-layout: fixed; width: 100%; }
+.lote-table th, .lote-table td {
+  font-size: 12.5px;
+  padding: 8px 10px;
+  word-break: break-word;
+}
 .lote-table tbody tr.lote-ruim { opacity: 0.5; }
-.lote-aviso { font-size: 11.5px; color: var(--amber); font-weight: 600; }
+.lote-aviso { font-size: 11.5px; color: var(--amber); font-weight: 600; line-height: 1.35; }
 .lote-rodape {
-  margin-top: 10px;
+  margin: 14px 0 8px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--ink);
 }
 
-.lote-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.lote-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
 .lote-card {
   border: 1px solid var(--line);
   border-left: 3px solid var(--violet);
@@ -2371,19 +2378,300 @@
 .check-linha {
   display: flex; gap: 10px; align-items: flex-start;
   margin: 4px 0 14px; cursor: pointer;
-  font-size: 13.5px; color: var(--text-2);
+  font-size: 13.5px; color: var(--ink-soft);
 }
 .check-linha input { width: 17px; height: 17px; margin-top: 2px; flex: 0 0 auto; cursor: pointer; }
-.check-linha strong { color: var(--text-1); font-weight: 600; }
+.check-linha strong { color: var(--ink-strong); font-weight: 600; }
 .check-linha .row-sub { margin-top: 2px; }
 
 .previa-box {
-  border: 1px solid var(--linha);
-  border-left: 3px solid var(--ok, #1a7a52);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--green);
   border-radius: 12px; padding: 12px 15px; margin: 0 0 16px;
-  background: var(--fundo-2, rgba(0,0,0,.02));
+  background: var(--bg-2);
 }
-.previa-box.alerta { border-left-color: var(--alerta, #b8860b); }
+.previa-box.alerta { border-left-color: var(--amber); }
 .previa-num { font-size: 15px; margin-bottom: 3px; }
-.previa-num strong { font-size: 21px; font-weight: 700; color: var(--text-1); }
-.previa-num span { color: var(--text-2); }
+.previa-num strong { font-size: 21px; font-weight: 700; color: var(--ink-strong); }
+.previa-num span { color: var(--ink-soft); }
+
+/* ════════════════════════════════════════════════════════════
+   EXPOSITORES · faixa de números, filtros e tabela densa
+
+   A página antiga tinha quatro cartões grandes no topo, a equipe de
+   cada empresa aberta dentro do cartão e o QR de visitante no meio
+   do caminho. Com trinta expositores isso vira rolagem. Aqui a regra
+   é: o número que decide o dia (quem ainda não preencheu) aparece
+   primeiro, tudo o mais é uma linha por empresa.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── faixa de números ── */
+.exp-faixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  margin-bottom: var(--s-4);
+  overflow: hidden;
+}
+.exp-faixa-item {
+  flex: 1 1 130px;
+  min-width: 118px;
+  padding: 12px 18px;
+  border-right: 1px solid var(--line);
+}
+.exp-faixa-item:last-child { border-right: 0; }
+.exp-faixa-rot {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+.exp-faixa-num {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink-strong);
+  margin-top: 2px;
+}
+/* Tom só onde muda a decisão. Colorir tudo é o mesmo que não colorir nada. */
+.exp-faixa-item.ok .exp-faixa-num { color: var(--green); }
+.exp-faixa-item.alerta .exp-faixa-num { color: var(--amber); }
+.exp-faixa-item.ruim .exp-faixa-num { color: var(--red); }
+.exp-faixa-item.alerta { background: var(--amber-soft); }
+.exp-faixa-item.ruim { background: var(--red-soft); }
+
+/* ── barra de trabalho: filtros + busca ── */
+.exp-barra {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--s-3);
+  flex-wrap: wrap;
+}
+.exp-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.exp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+.exp-chip:hover { border-color: var(--line-strong); color: var(--ink); }
+.exp-chip.on {
+  background: var(--violet-soft);
+  border-color: var(--violet-border);
+  color: var(--violet);
+}
+.exp-chip-n {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--bg-2);
+  color: var(--ink-mute);
+}
+.exp-chip.on .exp-chip-n { background: var(--violet); color: var(--on-fill); }
+.exp-busca { flex: 1 1 240px; min-width: 200px; max-width: 380px; margin-left: auto; }
+
+/* ── tabela ── */
+.exp-tabela .table td { vertical-align: middle; }
+.exp-codigo {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--r-sm);
+  background: var(--violet-soft);
+  color: var(--violet);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+.exp-cred { display: flex; flex-direction: column; gap: 5px; }
+.exp-cred .mono { font-size: 13px; font-weight: 600; }
+.exp-cred .ruim { color: var(--red); }
+.exp-barra-mini {
+  width: 100%;
+  max-width: 120px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.exp-barra-fill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--violet);
+  transition: width var(--dur-2) var(--ease);
+}
+.exp-barra-fill.estourou { background: var(--red); }
+.exp-acoes { display: flex; gap: 4px; align-items: center; justify-content: flex-end; white-space: nowrap; }
+/* Afirma que a linha abre alguma coisa. Sem isso, o cursor de mão é a
+   única pista de que dá para clicar — e ninguém repara nele. */
+.exp-seta {
+  font-size: 19px;
+  line-height: 1;
+  color: var(--ink-dim);
+  padding-left: 4px;
+  transition: color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.exp-linha:hover .exp-seta { color: var(--violet); transform: translateX(2px); }
+.ruim { color: var(--red); }
+
+/* ── painel da equipe ── */
+.exp-modal-topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.exp-modal-topo .row-sub { margin-top: 0; }
+.exp-link-box {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  font-size: 12px;
+  color: var(--ink-soft);
+  word-break: break-all;
+  user-select: all;
+}
+
+/* ── rodapé: entrada de visitante ── */
+.exp-visitante {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: var(--s-5);
+  padding: 14px 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  background: var(--bg-2);
+}
+.exp-visitante-t { font-weight: 600; color: var(--ink-strong); margin-bottom: 2px; }
+.exp-visitante .row-sub { max-width: 560px; }
+.exp-visitante-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+@media (max-width: 860px) {
+  .exp-faixa-item { flex: 1 1 50%; border-bottom: 1px solid var(--line); }
+  .exp-faixa-item:nth-child(2n) { border-right: 0; }
+  .exp-busca { margin-left: 0; max-width: none; }
+  /* Sem cabeçalho de tabela no mobile, o valor solto não diz o que é. */
+  .exp-tabela .table tbody td[data-rot]::before {
+    content: attr(data-rot);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-mute);
+  }
+  .exp-tabela .table tbody td:first-child[data-rot]::before { content: none; }
+  .exp-acoes { justify-content: stretch; padding: 10px 14px; }
+  .exp-acoes .btn { flex: 1; justify-content: center; }
+  .exp-seta { display: none; }
+  .exp-visitante { flex-direction: column; align-items: stretch; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   NOVA EMPRESA + IMPORTAÇÃO DE PLANILHA
+   ════════════════════════════════════════════════════════════ */
+
+.campo { margin-bottom: var(--s-4); }
+.campo-rot {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.campo-dica { font-size: 12px; color: var(--ink-mute); margin-top: 5px; line-height: 1.45; }
+.campo-aviso {
+  font-size: 12.5px;
+  color: var(--amber);
+  font-weight: 600;
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+.nv-linha { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.nv-codigo-box {
+  border: 1px solid var(--violet-border);
+  border-left: 3px solid var(--violet);
+  border-radius: var(--r-sm);
+  background: var(--violet-soft);
+  padding: 14px 16px;
+  margin-bottom: var(--s-4);
+}
+.nv-codigo {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--violet);
+  line-height: 1.2;
+  user-select: all;
+}
+.nv-previa {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* Área de subir arquivo */
+.lote-drop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  background: var(--bg-2);
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+.lote-drop.sobre { border-color: var(--violet); background: var(--violet-soft); }
+.lote-drop-txt strong { display: block; color: var(--ink-strong); font-size: 14px; }
+.lote-drop-txt .muted { font-size: 12.5px; margin-top: 2px; }
+.lote-drop-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.lote-arquivo-nome { font-size: 12.5px; margin-top: 8px; min-height: 18px; }
+.lote-arquivo-ok { color: var(--green); font-weight: 600; }
+.lote-ou {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-mute);
+  margin: 16px 0 7px;
+}
+
+@media (max-width: 560px) {
+  .nv-linha { grid-template-columns: 1fr; }
+  .lote-drop { flex-direction: column; align-items: stretch; }
+  .lote-drop-acoes .btn { flex: 1; justify-content: center; }
+}

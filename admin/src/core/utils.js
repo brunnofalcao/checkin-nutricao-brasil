@@ -74,3 +74,14 @@ export function firstName(s) {
   if (!s) return '';
   return s.trim().split(/\s+/)[0];
 }
+
+// Deixa o telefone legível sem mexer no dado guardado. Vive aqui porque o
+// mesmo número aparece na lista de pessoas, no painel do expositor e no
+// atendimento — três cópias da mesma regra é uma a mais para divergir.
+export function telefoneBonito(raw) {
+  const d = String(raw ?? '').replace(/\D+/g, '');
+  const s = d.startsWith('55') && d.length >= 12 ? d.slice(2) : d;
+  if (s.length === 11) return `(${s.slice(0, 2)}) ${s.slice(2, 7)}-${s.slice(7)}`;
+  if (s.length === 10) return `(${s.slice(0, 2)}) ${s.slice(2, 6)}-${s.slice(6)}`;
+  return raw;
+}

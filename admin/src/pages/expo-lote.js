@@ -2,14 +2,18 @@
 // CONVITES DE EXPOSITOR EM LOTE
 //
 // A lista de expositores vive numa planilha do comercial. Gerar convite a
-// convite, no prompt(), com 20 empresas, é uma tarde perdida. Aqui você cola
-// a planilha inteira, confere o que vai ser criado e gera tudo de uma vez —
-// já saindo com a mensagem pronta para o comercial disparar.
+// convite, no prompt(), com 20 empresas, é uma tarde perdida. Aqui você sobe
+// a planilha inteira (ou cola), confere o que vai ser criado e gera tudo de
+// uma vez — já saindo com a mensagem pronta para o comercial disparar.
+//
+// Sobe .xlsx direto: exigir "salve como CSV" antes é onde a maioria das
+// importações morre.
 // =====================================================================
 import { h, setContent } from '../core/dom.js';
 import { openModal } from '../ui/modal.js';
 import { toast } from '../ui/toast.js';
 import { supabase } from '../data/supabase.js';
+import { leArquivo, paraTexto } from '../core/planilha.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
 
@@ -21,13 +25,28 @@ function separa(linha) {
   return [linha];
 }
 
+// Planilha quase sempre vem com cabeçalho. Sem isso, "Empresa" viraria um
+// convite para uma empresa chamada Empresa — e o comercial só descobre
+// depois de mandar o link.
+const ROTULO_EMPRESA = /^(empresa|nome|nome da empresa|razão social|razao social|expositor|marca|cliente)$/i;
+const ROTULO_OUTROS = /^(estande|stand|cota|patrocínio|patrocinio|credenciais|credencial|crachás|crachas|qtd\.?|quantidade|vagas|pessoas)$/i;
+
+export function ehCabecalho(linha) {
+  const cs = separa(String(linha || '')).map((c) => c.trim());
+  if (!ROTULO_EMPRESA.test(cs[0] || '')) return false;
+  const resto = cs.slice(1).filter(Boolean);
+  return resto.length === 0 || resto.some((c) => ROTULO_OUTROS.test(c));
+}
+
 export function parseLista(texto, jaExistentes = []) {
   const nomes = new Set(jaExistentes.map((x) => (x.empresa || '').trim().toLowerCase()));
   const vistos = new Set();
-  return String(texto || '')
+  const cruas = String(texto || '')
     .split(/\r?\n/)
     .map((l) => l.trim())
-    .filter(Boolean)
+    .filter(Boolean);
+  if (cruas.length && ehCabecalho(cruas[0])) cruas.shift();
+  return cruas
     .map((l, i) => {
       const [empresa = '', estande = '', cota = '', cred = ''] = separa(l).map((c) => c.trim());
       const limite = parseInt(String(cred).replace(/\D/g, ''), 10);
@@ -90,6 +109,23 @@ function copia(txt, msg) {
     .catch(() => toast.danger('Não consegui copiar.'));
 }
 
+function baixa(nome, conteudo, tipo) {
+  // ﻿: sem o BOM, o Excel do Windows abre o CSV com acento quebrado.
+  const url = URL.createObjectURL(new Blob(['﻿' + conteudo], { type: tipo }));
+  const a = h('a', { href: url, download: nome });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+const MODELO_CSV = [
+  'empresa;estande;cota;credenciais',
+  'Nestlé Nutrition & Health;12;Diamante;8',
+  'Rousselot;07;Ouro;5',
+  'Prana Bebidas Leves;22;Prata;3'
+].join('\n');
+
 // abreLote({ eventId, evento, jaExistentes, prazoPadrao, aoTerminar })
 export function abreLote({ eventId, evento, jaExistentes = [], prazoPadrao = '', aoTerminar } = {}) {
   let texto = '';
@@ -134,11 +170,12 @@ export function abreLote({ eventId, evento, jaExistentes = [], prazoPadrao = '',
               'tr',
               {},
               h('th', { style: { width: '34px' } }, ''),
-              h('th', { style: { width: '38%' } }, 'Empresa'),
-              h('th', {}, 'Estande'),
-              h('th', {}, 'Cota'),
-              h('th', {}, 'Credenciais'),
-              h('th', {}, '')
+              // Quatro colunas, não seis: o modal tem ~490px. Estande e cota
+              // viram subtítulo da empresa — continuam visíveis, param de
+              // espremer a coluna de aviso, que é a razão de a prévia existir.
+              h('th', {}, 'Empresa'),
+              h('th', { style: { width: '78px' } }, 'Cred.'),
+              h('th', { style: { width: '150px' } }, 'Situação')
             )
           ),
           h(
@@ -165,10 +202,18 @@ export function abreLote({ eventId, evento, jaExistentes = [], prazoPadrao = '',
                         }
                       })
                 ),
-                h('td', {}, l.empresa || h('span', { class: 'muted' }, '(linha sem nome)')),
-                h('td', { class: 'muted' }, l.estande || '—'),
-                h('td', { class: 'muted' }, l.cota || '—'),
-                h('td', {}, String(l.limite)),
+                h(
+                  'td',
+                  {},
+                  h('div', { class: 'row-name' },
+                    l.empresa || h('span', { class: 'muted' }, '(linha sem nome)')),
+                  l.estande || l.cota
+                    ? h('div', { class: 'row-sub' },
+                        [l.estande ? 'estande ' + l.estande : null, l.cota]
+                          .filter(Boolean).join(' · '))
+                    : null
+                ),
+                h('td', { class: 'mono' }, String(l.limite)),
                 h(
                   'td',
                   {},
@@ -206,8 +251,87 @@ export function abreLote({ eventId, evento, jaExistentes = [], prazoPadrao = '',
       const wrap = h('div', { class: 'expo-lote' });
       previa = h('div', { class: 'lote-previa' });
       rodape = h('div', { class: 'lote-rodape' });
+      let entrada, area, aviso;
 
-      const area = h('textarea', {
+      // Arquivo e colagem escrevem na mesma caixa de texto. Isso é de
+      // propósito: depois de subir a planilha, o conteúdo continua visível
+      // e editável — dá para corrigir um nome sem voltar ao Excel.
+      async function recebe(file) {
+        if (!file) return;
+        // Sem checar a extensão, arrastar o arquivo errado da pasta de
+        // downloads gera uma lista de lixo com cara de lista boa — e o
+        // erro só aparece depois que os convites foram criados.
+        if (!/\.(xlsx|csv|tsv|txt)$/i.test(file.name)) {
+          const m = `"${file.name}" não é planilha. Suba .xlsx ou .csv.`;
+          setContent(aviso, h('span', { class: 'lote-aviso' }, m));
+          toast.danger(m);
+          return;
+        }
+        setContent(aviso, h('span', { class: 'muted' }, 'Lendo ' + file.name + '…'));
+        try {
+          const linhas = await leArquivo(file);
+          if (!linhas.length) throw new Error('A planilha está vazia.');
+          // Cabeçalho sai aqui, não só na prévia: deixar "Empresa / Estande"
+          // na caixa de texto faz parecer que vai virar convite.
+          if (ehCabecalho(paraTexto([linhas[0]]))) linhas.shift();
+          if (!linhas.length) throw new Error('A planilha só tem o cabeçalho.');
+          texto = paraTexto(linhas);
+          area.value = texto;
+          desenhaPrevia();
+          setContent(
+            aviso,
+            h('span', { class: 'lote-arquivo-ok' }, '✓ ' + file.name),
+            h('span', { class: 'muted' }, ` · ${linhas.length} empresa(s) lida(s)`)
+          );
+        } catch (e) {
+          setContent(aviso, h('span', { class: 'lote-aviso' }, e.message || String(e)));
+          toast.danger(e.message || 'Não consegui ler esse arquivo.');
+        }
+      }
+
+      const seletor = h('input', {
+        type: 'file',
+        accept: '.xlsx,.csv,.tsv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        class: 'sr-only',
+        ref: (el) => (entrada = el),
+        onChange: (e) => recebe(e.target.files?.[0])
+      });
+
+      const zona = h(
+        'div',
+        {
+          class: 'lote-drop',
+          onDragOver: (e) => { e.preventDefault(); zona.classList.add('sobre'); },
+          onDragLeave: () => zona.classList.remove('sobre'),
+          onDrop: (e) => {
+            e.preventDefault();
+            zona.classList.remove('sobre');
+            recebe(e.dataTransfer?.files?.[0]);
+          }
+        },
+        h(
+          'div',
+          { class: 'lote-drop-txt' },
+          h('strong', {}, 'Suba a planilha do comercial'),
+          h('div', { class: 'muted' }, 'Excel (.xlsx) ou CSV — ou arraste o arquivo aqui')
+        ),
+        h(
+          'div',
+          { class: 'lote-drop-acoes' },
+          h('button', { class: 'btn btn-secondary btn-sm', onclick: () => entrada.click() },
+            'Escolher arquivo'),
+          h('button', {
+            class: 'btn btn-ghost btn-sm',
+            onclick: () => baixa('modelo-expositores.csv', MODELO_CSV, 'text/csv;charset=utf-8'),
+            title: 'Baixa um CSV já com as colunas certas'
+          }, 'Baixar modelo')
+        ),
+        seletor
+      );
+
+      aviso = h('div', { class: 'lote-arquivo-nome' });
+
+      area = h('textarea', {
         class: 'input lote-area',
         rows: '7',
         spellcheck: 'false',
@@ -225,11 +349,14 @@ export function abreLote({ eventId, evento, jaExistentes = [], prazoPadrao = '',
         h(
           'div',
           { class: 'lote-ajuda' },
-          h('strong', {}, 'Uma empresa por linha: '),
+          h('strong', {}, 'Quatro colunas, nessa ordem: '),
           'empresa, estande, cota, nº de credenciais. ',
-          'Pode colar direto da planilha (separado por TAB) ou digitar com ponto-e-vírgula. ',
-          'Só o nome é obrigatório — sem número de credenciais, entra com 5.'
+          'Só o nome é obrigatório — sem número de credenciais, entra com 5. ',
+          'Se a planilha tiver linha de cabeçalho, ela é ignorada sozinha.'
         ),
+        zona,
+        aviso,
+        h('div', { class: 'lote-ou' }, 'ou cole aqui, uma empresa por linha'),
         area,
         h(
           'div',
@@ -244,11 +371,12 @@ export function abreLote({ eventId, evento, jaExistentes = [], prazoPadrao = '',
             oninput: (e) => (prazo = e.target.value.trim())
           })
         ),
-        previa,
-        rodape
+        // O total vem ANTES da tabela: com 30 linhas, a prévia rola e o
+        // número que decide o clique ficaria abaixo da dobra do modal.
+        rodape,
+        previa
       );
       desenhaPrevia();
-      requestAnimationFrame(() => area.focus());
       return wrap;
     },
     actions: [
@@ -332,8 +460,16 @@ function abreResultado(feitos, falhas, ctx) {
               { class: 'lote-acoes' },
               h(
                 'button',
-                { class: 'btn btn-primary', onclick: () => copia(csv, 'Planilha copiada.') },
-                'Copiar planilha (CSV)'
+                {
+                  class: 'btn btn-primary',
+                  onclick: () => baixa('convites-expositores.csv', csv, 'text/csv;charset=utf-8')
+                },
+                'Baixar CSV'
+              ),
+              h(
+                'button',
+                { class: 'btn btn-secondary', onclick: () => copia(csv, 'Planilha copiada.') },
+                'Copiar planilha'
               ),
               h(
                 'button',

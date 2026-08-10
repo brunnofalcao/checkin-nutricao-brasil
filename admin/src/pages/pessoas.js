@@ -13,7 +13,7 @@ import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { openModal } from '../ui/modal.js';
 import { toast } from '../ui/toast.js';
-import { fmtRelative, fmtDateTime, debounce, normalizePhone } from '../core/utils.js';
+import { fmtRelative, fmtDateTime, debounce, normalizePhone, telefoneBonito } from '../core/utils.js';
 import { listEvents } from '../data/events.js';
 import { checkinParticipant, uncheckinParticipant } from '../data/participants.js';
 import {
@@ -707,13 +707,4 @@ export async function pagePessoas(view) {
   }
 
   render();
-}
-
-// Deixa o telefone legível sem mexer no dado guardado.
-function telefoneBonito(raw) {
-  const d = soDigitos(raw);
-  const s = d.startsWith('55') && d.length >= 12 ? d.slice(2) : d;
-  if (s.length === 11) return `(${s.slice(0, 2)}) ${s.slice(2, 7)}-${s.slice(7)}`;
-  if (s.length === 10) return `(${s.slice(0, 2)}) ${s.slice(2, 6)}-${s.slice(6)}`;
-  return raw;
 }

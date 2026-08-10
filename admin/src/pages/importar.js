@@ -15,6 +15,7 @@ import { toast } from '../ui/toast.js';
 import { supabase } from '../data/supabase.js';
 import { normalizePhone } from '../core/utils.js';
 import { parseCSV, detectaSeparador, adivinhaColuna, pareceCabecalho } from '../core/csv.js';
+import { leArquivo, paraTexto } from '../core/planilha.js';
 import { soDigitos, dobra } from '../data/pessoas.js';
 
 const CAMPOS = [
@@ -251,17 +252,27 @@ export function abreImportar({ evento, participantes = [], aoImportar } = {}) {
     const zona = h('div', { class: 'upload-drop imp-drop', tabindex: '0', role: 'button' },
       h('div', { class: 'upload-drop-title' }, 'Arraste o CSV aqui ou clique para escolher'),
       h('div', { class: 'upload-drop-sub' },
-        'Vale o que sai do RD Station, do Excel, do Google Sheets. ' +
+        'Vale o que sai do RD Station, do Excel (.xlsx) ou do Google Sheets. ' +
         'Vírgula, ponto-e-vírgula ou TAB — a tela descobre sozinha.'));
 
     const arquivo = h('input', {
-      type: 'file', accept: '.csv,.tsv,.txt,text/csv,text/plain',
+      type: 'file', accept: '.xlsx,.csv,.tsv,.txt,text/csv,text/plain',
       style: { display: 'none' },
       onchange: (e) => { const f = e.target.files?.[0]; if (f) le(f); }
     });
 
-    const le = (f) => {
+    const le = async (f) => {
       if (f.size > 8 * 1024 * 1024) return toast.danger('Arquivo muito grande (máx 8 MB).');
+      // A tela sempre disse "vale o que sai do Excel". Até aqui só valia se
+      // a pessoa lembrasse de salvar como CSV — .xlsx virava lixo binário.
+      if (/\.xlsx$/i.test(f.name)) {
+        try {
+          processa(paraTexto(await leArquivo(f)));
+        } catch (e) {
+          toast.danger(e.message || 'Não consegui ler essa planilha.');
+        }
+        return;
+      }
       const r = new FileReader();
       r.onload = () => processa(String(r.result || ''));
       r.onerror = () => toast.danger('Não consegui ler o arquivo.');
