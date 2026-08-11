@@ -8,6 +8,14 @@ const EVENTOS = [
   { id: 'ev-vis', name: 'Visitantes – Brasília', city: 'Brasília', event_type: 'visitor', status: 'embreve', date_start: null, event_date: '2026-08-27', venue: 'Ulysses', parent_event_id: 'ev-bsb', total_inscritos: 0, total_checkins: 0 }
 ];
 
+// Quem está "logado" na QA. Sem parâmetro, é o admin de sempre.
+function quemSou() {
+  const papel = new URLSearchParams(location.search).get('papel');
+  if (papel === 'expositores') return { id: 'u4', email: 'yasmin@scienceplay.com' };
+  if (papel === 'operadora') return { id: 'u2', email: 'contato@scienceplay.com' };
+  return { id: 'u1', email: 'jaqueline@scienceplay.com' };
+}
+
 function p(id, event_id, name, email, phone, extra = {}) {
   return {
     id, event_id, name, email, phone,
@@ -107,7 +115,11 @@ const EXHIBITOR_MEMBERS = [
 // FK do dono do crachá, e quem retirou como texto solto.
 const mem = (id, nome, cargo, extra = {}) => ({
   id, cargo, pode_retirar: false, retirado_em: null, retirado_por_nome: null,
-  participants: { id: 'pm-' + id, name: nome, phone: '5561988' + id.slice(-6), email: id + '@exemplo.com' },
+  participants: {
+    id: 'pm-' + id, name: nome, phone: '5561988' + id.slice(-6),
+    email: id + '@exemplo.com', code: id.slice(-4).toUpperCase(),
+    checked: !!extra.retirado_em
+  },
   ...extra
 });
 
@@ -134,7 +146,8 @@ let EXHIBITORS = [
 let PERFIS = [
   { id: 'u1', email: 'jaqueline@scienceplay.com', display_name: null, role: 'admin', created_at: '2026-05-15T15:46:55Z' },
   { id: 'u2', email: 'contato@scienceplay.com', display_name: null, role: 'operadora', created_at: '2026-05-15T15:47:34Z' },
-  { id: 'u3', email: 'atendimento@scienceplay.com', display_name: 'Atendimento 1', role: 'operadora', created_at: '2026-07-01T10:00:00Z' }
+  { id: 'u3', email: 'atendimento@scienceplay.com', display_name: 'Atendimento 1', role: 'operadora', created_at: '2026-07-01T10:00:00Z' },
+  { id: 'u4', email: 'yasmin@scienceplay.com', display_name: 'Yasmin', role: 'expositores', created_at: '2026-08-10T10:00:00Z' }
 ];
 const WA_TEMPLATES = [{ id: 't1', status: 'PENDING' }, { id: 't2', status: 'APPROVED' }];
 const NB_PUBLICO = [
@@ -348,8 +361,10 @@ export function createClient() {
       return { data: true, error: null };
     },
     auth: {
-      getSession: async () => ({ data: { session: { user: { id: 'u1', email: 'jaqueline@scienceplay.com' } } } }),
-      getUser: async () => ({ data: { user: { id: 'u1', email: 'jaqueline@scienceplay.com' } } }),
+      // ?papel=expositores no endereço da QA entra como outra pessoa. Serve
+      // para testar o painel restrito sem precisar de conta de verdade.
+      getSession: async () => ({ data: { session: { user: quemSou() } } }),
+      getUser: async () => ({ data: { user: quemSou() } }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
       signOut: async () => ({ error: null })
     }

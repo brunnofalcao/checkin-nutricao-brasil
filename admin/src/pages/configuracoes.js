@@ -17,10 +17,18 @@ import { getProfile } from '../data/auth.js';
 import { listEvents } from '../data/events.js';
 import { fmtRelative } from '../core/utils.js';
 
+// A ordem aqui é a ordem do seletor: do acesso maior para o menor, para
+// quem promove alguém ver primeiro o que está entregando.
 const PAPEIS = {
   admin: {
     rot: 'Administrador',
-    pode: 'Abre o painel inteiro: eventos, pessoas, exposição, certificados, crachás.'
+    pode: 'Abre o painel inteiro: eventos, pessoas, disparos, certificados, configurações.'
+  },
+  expositores: {
+    rot: 'Exposição',
+    pode: 'Só a área de Exposição: cria empresas, gera links, administra credenciais, ' +
+          'imprime crachás e dá baixa na retirada. Não alcança disparo de mensagem, ' +
+          'pessoas nem configurações.'
   },
   operadora: {
     rot: 'Operação',
@@ -97,7 +105,9 @@ export async function pageConfiguracoes(view) {
           souEu ? h('span', { class: 'cfg-voce' }, 'você') : null),
         h('div', { class: 'row-sub' }, p.email || '—')),
       h('td', {},
-        h('div', {}, h('span', { class: 'status ' + (p.role === 'admin' ? 'soon' : 'done') }, cfg.rot)),
+        h('div', {}, h('span', {
+          class: 'status ' + (p.role === 'admin' ? 'soon' : p.role === 'expositores' ? 'live' : 'done')
+        }, cfg.rot)),
         h('div', { class: 'cfg-pode' }, cfg.pode)),
       h('td', { class: 'muted' }, fmtRelative(p.created_at)),
       h('td', {},
@@ -130,7 +140,9 @@ export async function pageConfiguracoes(view) {
       return;
     }
     p.role = papel;
-    toast.success(`${p.email?.split('@')[0]} agora é ${PAPEIS[papel].rot.toLowerCase()}.`);
+    toast.success(
+      `${p.email?.split('@')[0]} agora é ${(PAPEIS[papel]?.rot || papel).toLowerCase()}.`
+    );
     render();
   }
 

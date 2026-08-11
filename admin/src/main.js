@@ -2,6 +2,7 @@ import { getSession, getProfile, onAuthChange } from './data/auth.js';
 import { renderLogin } from './pages/login.js';
 import { renderShell } from './ui/chrome.js';
 import { route, start } from './core/router.js';
+import { podeVer, temPainel, rotaInicial, ROTULO_PAPEL } from './core/permissoes.js';
 import { pageHome } from './pages/home.js';
 import { pageEvents } from './pages/events.js';
 import { pageEventDetail } from './pages/event-detail.js';
@@ -25,27 +26,36 @@ async function bootstrap() {
     return;
   }
   const profile = await getProfile();
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || !temPainel(profile)) {
     renderAccessDenied(profile);
     return;
   }
-  // Tem sessão e é admin → renderiza shell + roteamento.
-  const view = await renderShell(root);
-  // Registra rotas.
-  route('/', pageHome);
-  route('/eventos', pageEvents);
-  route('/eventos/:id', pageEventDetail);
-  route('/certificados', pageCertificates);
-  route('/certificados/entrega', pageCertEntrega);
-  route('/certificados/:id', pageCertificates);
-  route('/expositores', pageExpositores);
-  route('/pessoas', pagePessoas);
-  route('/configuracoes', pageConfiguracoes);
-  route('/disparos', pageDisparos);
-  route('/templates', pageTemplates);
-  route('/divulgacao', pageDivulgacao);
-  route('/base-conhecimento', pageKb);
-  route('/atendimento', pageAtendimento);
+
+  const view = await renderShell(root, profile);
+
+  // Só registra o que o papel alcança. Esconder o menu e deixar a rota
+  // registrada não é permissão — bastaria digitar o endereço.
+  const registra = (path, render) => { if (podeVer(profile, path)) route(path, render); };
+  registra('/', pageHome);
+  registra('/eventos', pageEvents);
+  registra('/eventos/:id', pageEventDetail);
+  registra('/certificados', pageCertificates);
+  registra('/certificados/entrega', pageCertEntrega);
+  registra('/certificados/:id', pageCertificates);
+  registra('/expositores', pageExpositores);
+  registra('/pessoas', pagePessoas);
+  registra('/configuracoes', pageConfiguracoes);
+  registra('/disparos', pageDisparos);
+  registra('/templates', pageTemplates);
+  registra('/divulgacao', pageDivulgacao);
+  registra('/base-conhecimento', pageKb);
+  registra('/atendimento', pageAtendimento);
+
+  // Quem não tem a home cairia num 404 ao abrir o painel.
+  const inicio = rotaInicial(profile);
+  if (inicio !== '/' && (!location.hash || location.hash === '#/' || location.hash === '#')) {
+    location.hash = inicio;
+  }
   start(view);
 }
 function renderAccessDenied(profile) {
@@ -62,7 +72,9 @@ function renderAccessDenied(profile) {
           'div',
           { class: 'login-sub' },
           profile
-            ? `Sua conta (${profile.email}) está no painel como "${profile.role || 'sem role'}". O painel administrativo é restrito a contas admin.`
+            ? `Sua conta (${profile.email}) está no painel como ` +
+              `"${ROTULO_PAPEL[profile.role] || profile.role || 'sem papel'}", que não abre o painel. ` +
+              'Peça a um administrador para liberar o acesso em Configurações.'
             : 'Sessão inválida.'
         ),
         h(

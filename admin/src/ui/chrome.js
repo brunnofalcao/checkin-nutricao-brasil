@@ -3,6 +3,7 @@ import { icons } from './icons.js';
 import { signOut, getProfile } from '../data/auth.js';
 import { navigate } from '../core/router.js';
 import { controleTema, ouveSistema } from './tema.js';
+import { podeVer, ROTULO_PAPEL } from '../core/permissoes.js';
 const NAV = [
   {
     label: 'Operação',
@@ -53,6 +54,10 @@ const SUBNAV = {
   }
 };
 
+// Guardado no módulo porque atualizaSubnav é chamado pelo roteador, que
+// não carrega o perfil junto.
+let perfilAtual = null;
+
 // Chamado a cada troca de rota. Desenha as abas do workspace atual, ou nada.
 export function atualizaSubnav(path) {
   const alvo = document.getElementById('subnav');
@@ -60,10 +65,14 @@ export function atualizaSubnav(path) {
   const ws = Object.values(SUBNAV).find((w) =>
     w.raiz.some((r) => path === r || path.startsWith(r + '/')));
   alvo.replaceChildren();
-  if (!ws || ws.abas.length < 2) { alvo.classList.add('vazio'); return; }
+  // A aba também obedece à permissão: workspace com uma aba proibida no
+  // meio entregaria um clique que só leva a 404.
+  const perfil = perfilAtual;
+  const abas = (ws?.abas || []).filter((a) => a.external || podeVer(perfil, a.path));
+  if (!ws || abas.length < 2) { alvo.classList.add('vazio'); return; }
   alvo.classList.remove('vazio');
   const lista = h('div', { class: 'subnav-lista', role: 'tablist' });
-  ws.abas.forEach((a) => {
+  abas.forEach((a) => {
     const ativo = a.path && (a.exato ? path === a.path : path.startsWith(a.path));
     lista.appendChild(a.external
       ? h('a', { class: 'subnav-aba', href: a.href, target: '_blank', rel: 'noopener' },
@@ -79,8 +88,9 @@ export function atualizaSubnav(path) {
 
 // Em construção (telas que ainda não foram implementadas).
 const STUB_PATHS = [];
-export async function renderShell(rootEl) {
-  const profile = await getProfile();
+export async function renderShell(rootEl, perfilJaCarregado) {
+  const profile = perfilJaCarregado || (await getProfile());
+  perfilAtual = profile;
   const app = h(
     'div',
     { class: 'app' },
@@ -115,7 +125,12 @@ function renderSidebar(profile) {
       'nutrição',
       h('span', {}, 'brasil')
     ),
-    ...NAV.map(renderNavGroup),
+    // Grupo sem nenhum item permitido some inteiro — cabeçalho de seção
+    // vazio ("COMUNICAÇÃO" sem nada embaixo) parece bug, não permissão.
+    ...NAV.map((g) => {
+      const itens = g.items.filter((i) => podeVer(profile, i.path));
+      return itens.length ? renderNavGroup({ ...g, items: itens }) : null;
+    }),
     h(
       'div',
       { class: 'sidebar-foot' },
@@ -128,7 +143,7 @@ function renderSidebar(profile) {
           'div',
           { style: { flex: '1', minWidth: '0' } },
           h('div', { class: 'user-name' }, profile?.email?.split('@')[0] || 'Usuário'),
-          h('div', { class: 'user-role' }, profile?.role || '—')
+          h('div', { class: 'user-role' }, ROTULO_PAPEL[profile?.role] || profile?.role || '—')
         ),
         h(
           'button',

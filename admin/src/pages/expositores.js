@@ -18,6 +18,7 @@ import { openModal } from '../ui/modal.js';
 import { abreLote } from './expo-lote.js';
 import { abreNovaEmpresa } from './expo-nova.js';
 import { telefoneBonito } from '../core/utils.js';
+import { abreCrachas } from './crachas.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
 
@@ -34,7 +35,7 @@ async function carrega(eventId) {
     .select('id, codigo, token, empresa, cnpj, estande, cota, limite_credenciais, status, ' +
             'resp_nome, resp_whatsapp, cad_nome, preenchido_em, ' +
             'exhibitor_members(id, cargo, pode_retirar, retirado_em, retirado_por_nome, ' +
-            'participants!exhibitor_members_participant_id_fkey(id, name, phone, email))')
+            'participants!exhibitor_members_participant_id_fkey(id, name, phone, email, code, checked))')
     .eq('event_id', eventId)
     .order('empresa');
   if (emp.error) throw emp.error;
@@ -49,7 +50,8 @@ async function carrega(eventId) {
     const time = (x.exhibitor_members ?? []).map((m) => ({
       id: m.id, cargo: m.cargo, pode_retirar: m.pode_retirar,
       retirado_em: m.retirado_em, retirado_por: m.retirado_por_nome,
-      nome: m.participants?.name, phone: m.participants?.phone, email: m.participants?.email
+      nome: m.participants?.name, phone: m.participants?.phone, email: m.participants?.email,
+      participant_id: m.participants?.id, code: m.participants?.code
     })).sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
     return { ...x, time, retirados: time.filter((p) => p.retirado_em).length };
   });
@@ -108,6 +110,9 @@ function pinta(view) {
               onChange: async (e) => { E.eventId = e.target.value; await recarrega(view); } },
               ...E.eventos.map((e) => h('option', { value: e.id, selected: e.id === E.eventId }, e.name)))
           : null,
+        h('button', { class: 'btn btn-ghost', onClick: () => imprimeCrachas(), disabled: !c.pessoas || null,
+          title: c.pessoas ? 'Gerar a folha A4 dos crachás das equipes'
+                           : 'Nenhuma equipe cadastrada ainda' }, 'Crachás'),
         h('button', { class: 'btn btn-secondary', onClick: () => loteDeConvites(view) }, 'Importar planilha'),
         h('button', { class: 'btn btn-primary', onClick: () => novaEmpresa(view) }, '+ Nova empresa')
       )
@@ -348,6 +353,27 @@ function novaEmpresa(view) {
     prazoPadrao: prazoSugerido(ev),
     aoTerminar: () => recarrega(view)
   });
+}
+
+// Imprimir crachá de expositor morava só no detalhe do evento — para chegar
+// lá era preciso passar por uma tela com "importar lista" e "disparar
+// mensagem". Aqui é onde a pessoa já está quando pensa em crachá de equipe,
+// e mantém o acesso de Exposição restrito ao que é de Exposição.
+function imprimeCrachas() {
+  const ev = E.eventos.find((e) => e.id === E.eventId);
+  const pessoas = E.empresas.flatMap((x) =>
+    x.time
+      .filter((p) => p.participant_id)
+      // `checked` é o que o modal usa para separar "já retirou" de "no
+      // balcão". Em expositor, isso é a retirada do crachá.
+      .map((p) => ({ id: p.participant_id, name: p.nome, code: p.code,
+                     checked: !!p.retirado_em, __empresa: x.empresa, __estande: x.estande }))
+  );
+  if (!pessoas.length) {
+    toast.danger('Nenhuma equipe cadastrada ainda — não há crachá para imprimir.');
+    return;
+  }
+  abreCrachas({ evento: ev, participantes: pessoas });
 }
 
 function loteDeConvites(view) {
