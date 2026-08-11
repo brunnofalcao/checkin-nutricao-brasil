@@ -140,8 +140,12 @@ export async function pageConfiguracoes(view) {
       return;
     }
     p.role = papel;
+    // Quem já está com o painel aberto continua vendo o acesso antigo até
+    // recarregar. Dizer isso aqui evita a mensagem "não funcionou".
     toast.success(
-      `${p.email?.split('@')[0]} agora é ${(PAPEIS[papel]?.rot || papel).toLowerCase()}.`
+      `${p.email?.split('@')[0]} agora é ${(PAPEIS[papel]?.rot || papel).toLowerCase()}. ` +
+        'Se ela estiver com o painel aberto, peça para recarregar a página.',
+      { ms: 7000 }
     );
     render();
   }

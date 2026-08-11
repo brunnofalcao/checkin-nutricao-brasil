@@ -77,11 +77,23 @@ function renderAccessDenied(profile) {
               'Peça a um administrador para liberar o acesso em Configurações.'
             : 'Sessão inválida.'
         ),
+        // O perfil fica em cache na memória da página. Quem acabou de ser
+        // liberado veria a mesma tela até apertar F5 — e ia pedir socorro
+        // antes disso. Este botão é o F5 com nome.
+        h(
+          'button',
+          {
+            class: 'btn btn-primary btn-block',
+            style: { marginTop: '16px' },
+            onclick: () => location.reload()
+          },
+          'Já liberaram meu acesso — tentar de novo'
+        ),
         h(
           'button',
           {
             class: 'btn btn-secondary btn-block',
-            style: { marginTop: '16px' },
+            style: { marginTop: '8px' },
             onclick: async () => {
               const { signOut } = await import('./data/auth.js');
               await signOut();
