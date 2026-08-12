@@ -2554,6 +2554,60 @@
   user-select: all;
 }
 
+/* ── ficha da empresa: leitura e edição no mesmo lugar ──
+   Os mesmos campos, na mesma grade, trocando só de forma quando o cadeado
+   abre. Se a grade mudasse junto, cada edição pareceria outra tela. */
+.exp-ficha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px 18px;
+  margin-top: 18px;
+}
+.exp-dado { min-width: 0; }
+.exp-dado-rot {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+.exp-dado-val { font-size: 14.5px; color: var(--ink); word-break: break-word; }
+.exp-dado-val.ruim { color: var(--red); font-weight: 600; }
+.exp-dado .input { width: 100%; }
+
+/* ── os três endereços, dentro da empresa ──
+   Saíram da linha da lista porque lá obrigavam a escolher antes de
+   entender. Aqui cada um vem com o nome do que abre. */
+.exp-links { margin-top: 22px; }
+.exp-link-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.exp-link-item:last-child { padding-bottom: 0; }
+.exp-link-item > div:first-child { min-width: 0; flex: 1; }
+.exp-link-item .exp-link-box { margin-top: 8px; }
+.exp-link-item .btn { flex: none; }
+
+.exp-modal-acoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 560px) {
+  .exp-link-item { flex-direction: column; align-items: stretch; }
+  .exp-link-item .btn { width: 100%; justify-content: center; }
+}
+
 /* ── rodapé: entrada de visitante ── */
 .exp-visitante {
   display: flex;
