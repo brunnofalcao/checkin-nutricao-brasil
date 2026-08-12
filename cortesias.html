@@ -96,6 +96,47 @@ input::placeholder{color:#5d4f77}
 .lista-mod li::before{content:'✓ ';color:var(--ok)}
 .rodape{text-align:center;color:var(--t3);font-size:12.5px;margin-top:24px;line-height:1.6}
 .carregando{text-align:center;padding:30px;color:var(--t3);font-size:14px}
+
+/* onboarding: as duas portas */
+.portas{display:flex;flex-direction:column;gap:11px;margin:20px 0 4px}
+.porta{display:flex;align-items:flex-start;gap:14px;width:100%;text-align:left;
+  border:1px solid var(--linha2);border-radius:var(--r-sm);padding:16px;background:var(--bg);
+  cursor:pointer;font-family:inherit;color:var(--t1);transition:border-color .12s,background .12s}
+.porta:hover{border-color:var(--roxo);background:var(--roxo-soft)}
+.porta-ico{width:38px;height:38px;border-radius:10px;background:var(--roxo-soft);
+  border:1px solid var(--linha2);display:grid;place-items:center;font-size:19px;flex:0 0 auto}
+.porta-t{display:block;font-weight:700;font-size:15.5px;margin-bottom:3px}
+.porta-d{display:block;font-size:13px;color:var(--t3);line-height:1.45}
+.passos{list-style:none;margin:6px 0 18px;padding:0}
+.passos li{display:flex;gap:11px;align-items:flex-start;font-size:14px;color:var(--t2);
+  margin-bottom:9px;line-height:1.45}
+.passos b{color:var(--t1);font-weight:600}
+.passo-n{width:21px;height:21px;border-radius:50%;background:var(--roxo-fill);color:#fff;
+  font-size:11.5px;font-weight:700;display:grid;place-items:center;flex:0 0 auto;margin-top:1px}
+
+/* lista */
+.baixar{display:flex;gap:9px;flex-wrap:wrap;margin:4px 0 18px}
+.baixar a{flex:1;min-width:150px;text-align:center;border:1px solid var(--linha2);
+  border-radius:var(--r-sm);padding:12px;font-size:14px;font-weight:600;color:var(--t2);
+  background:var(--bg);transition:border-color .12s,color .12s}
+.baixar a:hover{border-color:var(--roxo);color:var(--t1)}
+.solta{border:1px dashed var(--linha2);border-radius:var(--r-sm);padding:22px 16px;text-align:center;
+  background:var(--bg);transition:border-color .12s,background .12s;cursor:pointer}
+.solta:hover,.solta.sobre{border-color:var(--roxo);background:var(--roxo-soft)}
+.solta b{display:block;font-size:15px;margin-bottom:3px}
+.solta span{font-size:12.5px;color:var(--t3)}
+.previa{border:1px solid var(--linha2);border-radius:var(--r-sm);max-height:280px;overflow:auto;margin:12px 0}
+.previa table{width:100%;border-collapse:collapse;font-size:13px}
+.previa th{position:sticky;top:0;background:var(--card2);text-align:left;font-size:11px;
+  text-transform:uppercase;letter-spacing:.05em;color:var(--t3);padding:9px 11px;font-weight:700}
+.previa td{padding:9px 11px;border-top:1px solid var(--linha);color:var(--t2);vertical-align:top}
+.previa tr.ruim td{opacity:.55}
+.previa .pnome{color:var(--t1);font-weight:600}
+.previa .pdet{font-size:11.5px;color:var(--t3)}
+.previa .pprob{color:var(--al);font-size:11.5px;font-weight:600}
+.previa .pok{color:var(--ok);font-size:11.5px;font-weight:700}
+.resumo{font-size:14px;font-weight:600;margin:12px 0 2px}
+.resumo span{color:var(--t3);font-weight:400}
 .esconde{display:none}
 </style>
 </head>
@@ -111,6 +152,10 @@ input::placeholder{color:#5d4f77}
 
 <script type="module">
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+// Mesmo leitor que o painel usa. Importar de lá evita duas cópias da
+// mesma regra vivendo em lugares diferentes e divergindo com o tempo.
+import { leArquivo } from './admin/src/core/planilha.js';
+import { leLista } from './admin/src/core/cortesias-lista.js';
 
 const FN = SUPABASE_URL + '/functions/v1/cortesia-inscreve';
 const app = document.getElementById('app');
@@ -185,15 +230,18 @@ function telaCodigo(erro) {
       return;
     }
     E.codigo = cod; E.dados = r; E.marcados = new Set();
-    telaFormulario();
+    telaEscolha();
   };
 }
 
-// ── 2. ficha + módulos ───────────────────────────────────────────────
-function telaFormulario(erro) {
-  const d = E.dados;
+// ── 2. onboarding: explica e abre as duas portas ─────────────────────
+// A mesma tela atende duas pessoas muito diferentes: o convidado, que quer
+// a própria vaga, e quem cuida do estande, que tem uma lista inteira. Sem
+// esta bifurcação, o segundo cadastraria um por um sem saber que podia
+// subir a planilha.
+function faixa(d) {
   const pouco = d.restantes <= 3;
-  app.innerHTML = `
+  return `
     <div class="faixa-empresa">
       <div>
         <div class="de">Cortesia oferecida por</div>
@@ -202,8 +250,54 @@ function telaFormulario(erro) {
       <div class="restam ${pouco ? 'pouco' : ''}">
         <b>${d.restantes}</b><span>de ${d.total} restantes</span>
       </div>
+    </div>`;
+}
+
+function telaEscolha() {
+  const d = E.dados;
+  app.innerHTML = `
+    ${faixa(d)}
+    <h1>Cortesia no Nutrição Brasil</h1>
+    <p class="lead">Inscrição sem custo no maior evento de nutrição do país,
+    em Brasília, de 27 a 29 de agosto.</p>
+
+    <ul class="passos">
+      <li><span class="passo-n">1</span><div>Escolha <b>quais módulos</b> vai assistir.
+        Cada módulo usa uma cortesia da ${esc(d.empresa)}.</div></li>
+      <li><span class="passo-n">2</span><div>Preencha os dados — leva um minuto.</div></li>
+      <li><span class="passo-n">3</span><div>A confirmação chega no <b>seu WhatsApp</b>,
+        com data, local e as instruções do credenciamento.</div></li>
+    </ul>
+
+    <div class="portas">
+      <button class="porta" id="p-eu">
+        <span class="porta-ico">👤</span>
+        <span>
+          <span class="porta-t">Quero minha cortesia</span>
+          <span class="porta-d">Você recebeu o código e vai se inscrever.</span>
+        </span>
+      </button>
+      <button class="porta" id="p-lista">
+        <span class="porta-ico">📋</span>
+        <span>
+          <span class="porta-t">Vou cadastrar uma lista</span>
+          <span class="porta-d">É da ${esc(d.empresa)} e tem vários convidados para inscrever de uma vez.</span>
+        </span>
+      </button>
     </div>
 
+    <button class="btn btn-fantasma" id="voltar">Usar outro código</button>`;
+
+  document.getElementById('p-eu').onclick = () => telaFormulario();
+  document.getElementById('p-lista').onclick = () => telaLista();
+  document.getElementById('voltar').onclick = () => { E.dados = null; telaCodigo(); };
+}
+
+// ── 2. ficha + módulos ───────────────────────────────────────────────
+function telaFormulario(erro) {
+  const d = E.dados;
+  app.innerHTML = `
+    ${faixa(d)}
     <h1>Complete sua inscrição</h1>
     <p class="lead">Leva um minuto. No fim você recebe a confirmação no WhatsApp.</p>
     ${erro ? `<div class="aviso erro">${esc(erro)}</div>` : ''}
@@ -218,7 +312,8 @@ function telaFormulario(erro) {
       <input id="em" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com"></div>
     <div class="campo"><label for="ce">Celular com DDD</label>
       <input id="ce" type="tel" inputmode="tel" autocomplete="tel" placeholder="(61) 98138-2900">
-      <div class="dica">É por aqui que enviamos a confirmação e as instruções do credenciamento.</div></div>
+      <div class="dica">DDD + número, sem o 55. É por aqui que enviamos a confirmação
+      e as instruções do credenciamento.</div></div>
     <div class="campo"><label for="es">Estado</label>
       <select id="es"><option value="">Selecione</option>
         ${ESTADOS.map((e) => `<option>${esc(e)}</option>`).join('')}</select></div>
@@ -240,7 +335,7 @@ function telaFormulario(erro) {
     </div>
 
     <button class="btn" id="enviar" disabled>Confirmar inscrição</button>
-    <button class="btn btn-fantasma" id="voltar">Usar outro código</button>`;
+    <button class="btn btn-fantasma" id="voltar">Voltar</button>`;
 
   const conta = document.getElementById('conta');
   const enviar = document.getElementById('enviar');
@@ -270,15 +365,21 @@ function telaFormulario(erro) {
   atualiza();
 
   // Máscara leve: só formata, nunca impede de digitar.
+  //
+  // Muita gente digita o número já com o 55 do país. Cortar em 11 dígitos
+  // sem olhar isso transformava 55 61 98138-2900 em "(55) 61981-3829" —
+  // um número que não existe, e a confirmação ia para o vazio.
   const cel = document.getElementById('ce');
   cel.addEventListener('input', () => {
-    const d2 = cel.value.replace(/\D/g, '').slice(0, 11);
+    let d2 = cel.value.replace(/\D/g, '');
+    if (d2.length > 11 && d2.startsWith('55')) d2 = d2.slice(2);
+    d2 = d2.slice(0, 11);
     cel.value = d2.length > 6
       ? `(${d2.slice(0,2)}) ${d2.slice(2, d2.length > 10 ? 7 : 6)}-${d2.slice(d2.length > 10 ? 7 : 6)}`
       : d2.length > 2 ? `(${d2.slice(0,2)}) ${d2.slice(2)}` : d2;
   });
 
-  document.getElementById('voltar').onclick = () => { E.dados = null; telaCodigo(); };
+  document.getElementById('voltar').onclick = () => telaEscolha();
 
   enviar.onclick = async () => {
     const v = (id) => document.getElementById(id).value.trim();
@@ -331,7 +432,172 @@ function telaFormulario(erro) {
   }
 }
 
-// ── 3. pronto ────────────────────────────────────────────────────────
+// ── 3. lista: baixar modelo, subir, conferir, confirmar ──────────────
+let LISTA = null;
+
+function telaLista(erro) {
+  const d = E.dados;
+  app.innerHTML = `
+    ${faixa(d)}
+    <h1>Cadastrar a lista</h1>
+    <p class="lead">Baixe o modelo, preencha com seus convidados e suba aqui.
+    Você confere tudo antes de qualquer coisa ser gravada.</p>
+    ${erro ? `<div class="aviso erro">${esc(erro)}</div>` : ''}
+
+    <label>1. Baixe o modelo</label>
+    <div class="baixar">
+      <a href="/modelo-cortesias.xlsx" download>Modelo em Excel</a>
+      <a href="#" id="mod-csv">Modelo em CSV</a>
+    </div>
+    <div class="dica" style="margin:-12px 0 18px">
+      No Excel, Estado e Profissão são listas — clique na célula e escolha.
+      Marque <b>X</b> em cada módulo que a pessoa vai assistir: cada X usa uma cortesia.
+    </div>
+
+    <label>2. Suba a lista preenchida</label>
+    <div class="solta" id="solta">
+      <b>Escolher arquivo</b>
+      <span>ou arraste aqui · Excel (.xlsx) ou CSV</span>
+      <input type="file" id="arq" accept=".xlsx,.csv,.tsv,.txt" style="display:none">
+    </div>
+    <div id="saida"></div>
+
+    <button class="btn btn-fantasma" id="voltar">Voltar</button>`;
+
+  const solta = document.getElementById('solta');
+  const arq = document.getElementById('arq');
+  solta.onclick = () => arq.click();
+  arq.onchange = () => recebe(arq.files?.[0]);
+  solta.addEventListener('dragover', (e) => { e.preventDefault(); solta.classList.add('sobre'); });
+  solta.addEventListener('dragleave', () => solta.classList.remove('sobre'));
+  solta.addEventListener('drop', (e) => {
+    e.preventDefault(); solta.classList.remove('sobre');
+    recebe(e.dataTransfer?.files?.[0]);
+  });
+  document.getElementById('voltar').onclick = () => telaEscolha();
+
+  document.getElementById('mod-csv').onclick = (e) => {
+    e.preventDefault();
+    const csv = [
+      'primeiro nome;ultimo nome;e-mail;celular;estado;profissao;' + (d.modulos || []).join(';'),
+      'Marina;Lopes;marina@empresa.com;(61) 98138-2900;Distrito Federal (DF);Nutrição;X;X;'
+    ].join('\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = 'modelo-cortesias.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+}
+
+async function recebe(f) {
+  const saida = document.getElementById('saida');
+  if (!f) return;
+  if (!/\.(xlsx|csv|tsv|txt)$/i.test(f.name)) {
+    saida.innerHTML = `<div class="aviso erro">"${esc(f.name)}" não é planilha.
+      Baixe o modelo acima, preencha e suba .xlsx ou .csv.</div>`;
+    return;
+  }
+  saida.innerHTML = '<div class="carregando">Lendo a planilha…</div>';
+  try {
+    const r = leLista(await leArquivo(f));
+    if (r.erro) throw new Error(r.erro);
+    if (!r.total) throw new Error('A planilha está sem nenhuma pessoa preenchida.');
+    LISTA = r;
+    desenhaPrevia(f.name);
+  } catch (e) {
+    LISTA = null;
+    saida.innerHTML = `<div class="aviso erro">${esc(e.message || String(e))}</div>`;
+  }
+}
+
+function desenhaPrevia(nomeArquivo) {
+  const r = LISTA, d = E.dados;
+  const cabe = r.custoTotal <= d.restantes;
+  document.getElementById('saida').innerHTML = `
+    <div class="resumo">${r.validas} pessoa(s) entram · usam ${r.custoTotal} cortesia(s)
+      <span>· restam ${d.restantes}${r.comProblema ? ` · ${r.comProblema} com problema` : ''}</span></div>
+    ${!cabe ? `<div class="aviso erro">A lista usa ${r.custoTotal} cortesias e restam ${d.restantes}.
+      Tire pessoas da planilha ou desmarque módulos e suba de novo.</div>` : ''}
+    <div class="previa">
+      <table>
+        <thead><tr><th>Pessoa</th><th style="width:58px">Usa</th><th style="width:38%">Situação</th></tr></thead>
+        <tbody>${r.pessoas.map((p) => `
+          <tr class="${p.ok ? '' : 'ruim'}">
+            <td><div class="pnome">${esc(p.nome || '(linha ' + p.linha + ')')}</div>
+                <div class="pdet">${esc([p.email, p.modulos.join(' + ')].filter(Boolean).join(' · '))}</div></td>
+            <td>${p.custo}</td>
+            <td>${p.problemas.length
+                  ? `<span class="pprob">${esc(p.problemas.join(' · '))}</span>`
+                  : p.avisos.length
+                    ? `<span class="pprob">${esc(p.avisos.join(' · '))}</span>`
+                    : '<span class="pok">ok</span>'}</td>
+          </tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${r.comProblema ? `<div class="aviso alerta">As linhas marcadas ficam de fora e
+      <b>não gastam cortesia</b>. Corrija na planilha e suba de novo, ou siga só com as válidas.</div>` : ''}
+    ${cabe && r.validas
+      ? `<button class="btn" id="grava">Cadastrar ${r.validas} pessoa(s) · ${r.custoTotal} cortesia(s)</button>`
+      : ''}
+    <div class="dica" style="text-align:center;margin-top:8px">${esc(nomeArquivo)}</div>`;
+
+  const b = document.getElementById('grava');
+  if (b) b.onclick = () => gravaLista(b);
+}
+
+async function gravaLista(botao) {
+  const r = LISTA;
+  botao.disabled = true; botao.textContent = 'Cadastrando…';
+  const pessoas = r.pessoas.filter((p) => p.ok).map((p) => ({
+    primeiro_nome: p.primeiro_nome, ultimo_nome: p.ultimo_nome,
+    email: p.email, celular: p.celular, estado: p.estado,
+    formacao: p.formacao, modulos: p.modulos
+  }));
+  const res = await chama({ acao: 'registra', codigo: E.codigo, pessoas, origem: 'patrocinador' });
+
+  if (res?.erro) {
+    botao.disabled = false;
+    botao.textContent = `Cadastrar ${r.validas} pessoa(s) · ${r.custoTotal} cortesia(s)`;
+    const atual = await chama({ acao: 'abre', codigo: E.codigo });
+    if (atual?.ok) E.dados = atual;
+    telaLista(res.erro === 'cota'
+      ? `Restam ${res.restantes} cortesia(s) e a lista pede ${res.pedido}. A cota mudou enquanto você preenchia.`
+      : (MOTIVO[res.erro] || 'Não consegui cadastrar agora. Tente de novo.'));
+    return;
+  }
+  telaListaPronta(res);
+}
+
+function telaListaPronta(res) {
+  const criados = res.criados || [];
+  const jaTinham = (res.recusados || []).filter((x) => x.motivo === 'ja_inscrito');
+  const pessoas = [...new Set(criados.map((c) => c.email))];
+  app.innerHTML = `
+    <div class="centro">
+      <div class="selo">✓</div>
+      <h1>${pessoas.length} inscrição(ões) confirmada(s)</h1>
+      <p class="lead">Cada pessoa recebe a confirmação no WhatsApp que você informou.</p>
+    </div>
+    <div class="resumo">${criados.length} cortesia(s) usadas
+      <span>· restam ${res.restantes} de ${res.total}</span></div>
+    <div class="previa" style="margin-top:10px">
+      <table><tbody>${criados.map((c) => `
+        <tr><td><div class="pnome">${esc(c.nome)}</div>
+            <div class="pdet">${esc(c.email)}</div></td>
+            <td style="text-align:right">${esc(c.modulo)}</td></tr>`).join('')}</tbody></table>
+    </div>
+    ${jaTinham.length ? `<div class="aviso alerta">${jaTinham.length} já estavam inscritos
+      no módulo pedido — nenhuma cortesia foi usada por isso.</div>` : ''}
+    <button class="btn btn-fantasma" id="mais">Cadastrar outra lista</button>`;
+  document.getElementById('mais').onclick = async () => {
+    const atual = await chama({ acao: 'abre', codigo: E.codigo });
+    if (atual?.ok) { E.dados = atual; LISTA = null; telaLista(); }
+    else telaCodigo(MOTIVO[atual?.erro] || 'As cortesias acabaram.');
+  };
+}
+
+// ── 4. pronto (uma pessoa) ───────────────────────────────────────────
 function telaPronto(r, pessoa) {
   const mods = (r.criados || []).map((c) => c.modulo);
   const recusados = (r.recusados || []).filter((x) => x.motivo === 'ja_inscrito');
@@ -363,7 +629,7 @@ function telaPronto(r, pessoa) {
   if (!pre) { telaCodigo(); return; }
   E.codigo = pre;
   const r = await chama({ acao: 'abre', codigo: pre });
-  if (r?.ok) { E.dados = r; telaFormulario(); }
+  if (r?.ok) { E.dados = r; telaEscolha(); }
   else {
     let msg = MOTIVO[r?.erro] || 'Não consegui abrir esse código.';
     if (r?.erro === 'prazo' && r.prazo) msg = `O prazo dessa cortesia terminou em ${esc(r.prazo)}.`;

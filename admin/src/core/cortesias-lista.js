@@ -72,13 +72,36 @@ export function normalizaFormacao(bruto) {
   return FORMACAO_MAP.get(k) || null;
 }
 
-// Mesma regra do webhook da Hotmart: tudo vira 55DDDNÚMERO.
+// Tudo vira 55DDDNÚMERO, e o que não virar é recusado aqui — não no dia
+// do credenciamento.
+//
+// Contar dígito não basta. "55619813829" tem 11 e passaria por número
+// nacional sem o país; completar com outro 55 daria "5555619813829", que
+// também não existe, agora com cara de certo. Então a conferência olha o
+// miolo: celular tem 9 dígitos e começa com 9, fixo tem 8 e começa de 2 a
+// 5. É o que distingue DDD 55 de verdade (Santa Maria) de país cortado.
+//
+// A mesma regra existe na edge function cortesia-inscreve. São dois
+// runtimes que não compartilham módulo — a duplicação é proposital, e as
+// duas precisam mudar juntas.
 export function normalizaFone(bruto) {
-  const d = String(bruto ?? '').replace(/\D+/g, '');
+  let d = String(bruto ?? '').replace(/\D+/g, '');
   if (!d) return '';
-  if (d.startsWith('55') && d.length >= 12) return d;
-  if (d.length === 10 || d.length === 11) return '55' + d;
-  return d;
+  while (d.length > 13 && d.startsWith('5555')) d = d.slice(2);
+
+  let nac;
+  if ((d.length === 13 || d.length === 12) && d.startsWith('55')) nac = d.slice(2);
+  else if (d.length === 11 || d.length === 10) nac = d;
+  else return '';
+
+  const ddd = Number(nac.slice(0, 2));
+  if (ddd < 11 || ddd > 99) return '';
+
+  const assinante = nac.slice(2);
+  if (assinante.length === 9 && assinante[0] !== '9') return '';
+  if (assinante.length === 8 && !/[2-5]/.test(assinante[0])) return '';
+
+  return '55' + nac;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
@@ -169,8 +192,11 @@ export function leLista(linhas) {
     if (!primeiro && !ultimo) problemas.push('sem nome');
     if (!email) problemas.push('sem e-mail');
     else if (!EMAIL_RE.test(email)) problemas.push('e-mail inválido');
-    if (!fone) problemas.push('sem celular');
-    else if (fone.length < 12) problemas.push('celular incompleto');
+    // Coluna em branco e número errado são erros diferentes para quem vai
+    // corrigir a planilha. "sem celular" manda procurar o número;
+    // "celular inválido" manda conferir o que já está lá.
+    if (!foneBruto) problemas.push('sem celular');
+    else if (!fone) problemas.push(`celular "${foneBruto}" não é um número válido`);
     if (!modulos.length) problemas.push('nenhum módulo marcado');
 
     // Estado e profissão não impedem a inscrição — impedem a ficha
