@@ -1,290 +1,419 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-tema="escuro">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0d0618">
 <title>Manual do Expositor · Nutrição Brasil 2026 · Brasília</title>
-<meta name="description" content="Manual do Expositor do Nutrição Brasil 2026, Brasília. Acesso pelo código da empresa.">
 <link rel="icon" href="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583223/nb_Logotipo_05_c3tejv.png">
 <style>
-/* ==========================================================
-   Nutrição Brasil · Brandbook v1.0
-   Núcleo fixo + acentos da edição Brasília (nude, azul, verde)
-   ========================================================== */
+/* ============================================================
+   Nutrição Brasil · Manual do Expositor
+   Tokens do Brandbook v1.0 · edição Brasília
+   ============================================================ */
 :root{
-  --nb-bg:#0d0618; --nb-bg-2:#1a0f2e; --nb-bg-3:#241540;
-  --nb-border:#3a2a52;
-  --nb-text-1:#ffffff; --nb-text-2:#c9bcde; --nb-text-3:#8a7aa5;
-  --nb-brand:#6f4d89; --nb-brand-cta:#8b5fbf;
-  --nb-gold:#ffc800; --nb-convert:#5ab78e; --nb-urgent:#ff6b6b;
-  --nb-info:#80c0ff; --nb-warm:#e0b3a1;
-  --nb-edition:#e0b3a1;
+  --bg:#0d0618; --sup:#1a0f2e; --sup2:#241540; --linha:#3a2a52;
+  --t1:#ffffff; --t2:#c9bcde; --t3:#8a7aa5;
+  --marca:#6f4d89; --cta:#8b5fbf;
+  --gold:#ffc800; --verde:#5ab78e; --alerta:#ff6b6b; --info:#80c0ff; --nude:#e0b3a1;
+  --gold-txt:#ffc800; --verde-txt:#5ab78e; --alerta-txt:#ff6b6b; --info-txt:#80c0ff;
+  --trilho:rgba(255,255,255,.09);
+  --sombra:0 18px 40px rgba(0,0,0,.45);
+  --marca-txt:#c89eff;
   --font:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
   --mono:Menlo,Monaco,'SF Mono',monospace;
+  --lat:296px;
+}
+html[data-tema="claro"]{
+  --bg:#f4f0fa; --sup:#ffffff; --sup2:#ece5f7; --linha:#ddd2ee;
+  --t1:#150b26; --t2:#4b3a68; --t3:#7b6c95;
+  --marca:#6f4d89; --cta:#6f4d89;
+  --gold-txt:#8a6a00; --verde-txt:#1f7a55; --alerta-txt:#b93030; --info-txt:#245fa6;
+  --marca-txt:#6f4d89;
+  --trilho:rgba(21,11,38,.09);
+  --sombra:0 14px 34px rgba(60,40,90,.14);
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%}
 body{
-  margin:0;background:var(--nb-bg);color:var(--nb-text-1);
-  font-family:var(--font);font-size:16px;line-height:1.6;
+  margin:0;background:var(--bg);color:var(--t1);
+  font-family:var(--font);font-size:16px;line-height:1.62;
   -webkit-font-smoothing:antialiased;
 }
-a{color:var(--nb-info);text-decoration:none}
+a{color:var(--info-txt);text-decoration:none}
 a:hover{text-decoration:underline}
-:focus-visible{outline:2px solid var(--nb-info);outline-offset:3px;border-radius:4px}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+:focus-visible{outline:2px solid var(--info);outline-offset:3px;border-radius:5px}
+button{font-family:var(--font)}
+mark[data-busca]{background:var(--gold);color:#1a1200;border-radius:3px;padding:0 2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* ---------- PORTARIA ---------- */
+/* ================= PORTARIA ================= */
 #portaria{
-  min-height:100dvh;display:flex;align-items:center;justify-content:center;
-  padding:32px 20px;
-  background:radial-gradient(1100px 640px at 78% -16%, #2a1247, var(--nb-bg) 62%);
+  min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:32px 20px;
+  background:radial-gradient(1100px 640px at 78% -16%, #2a1247, var(--bg) 62%);
 }
+html[data-tema="claro"] #portaria{background:radial-gradient(1100px 640px at 78% -16%, #e6dcf5, var(--bg) 62%)}
 .portao{width:100%;max-width:440px;text-align:center}
-.portao img.logo{width:190px;max-width:62%;height:auto;margin:0 auto 32px;display:block}
-.portao .kicker{color:var(--nb-info)}
+.portao .logo{width:190px;max-width:62%;height:auto;margin:0 auto 32px;display:block}
 .portao h1{font-size:clamp(27px,7vw,34px);margin:10px 0 12px}
-.portao p.lead{color:var(--nb-text-2);font-size:15px;margin:0 0 28px}
+.portao .lead{color:var(--t2);font-size:15px;margin:0 0 28px}
 .campo{
-  width:100%;background:var(--nb-bg-2);border:1px solid var(--nb-border);border-radius:10px;
-  color:var(--nb-text-1);font-family:var(--mono);font-size:24px;font-weight:700;
-  letter-spacing:5px;text-align:center;text-transform:uppercase;
-  padding:18px 14px;margin-bottom:14px;
+  width:100%;background:var(--sup);border:1px solid var(--linha);border-radius:10px;color:var(--t1);
+  font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:5px;text-align:center;
+  text-transform:uppercase;padding:18px 14px;margin-bottom:14px;
 }
-.campo::placeholder{color:var(--nb-text-3);letter-spacing:5px;font-weight:400}
-.campo:focus{border-color:var(--nb-info);outline:none;box-shadow:0 0 0 3px rgba(128,192,255,.16)}
-.campo.erro{border-color:var(--nb-urgent);box-shadow:0 0 0 3px rgba(255,107,107,.16)}
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  border:0;border-radius:12px;cursor:pointer;font-family:var(--font);
-  font-size:15px;font-weight:700;padding:16px 26px;width:100%;
-  transition:filter .16s ease;
-}
-.btn:hover{filter:brightness(1.08)}
-.btn:active{filter:brightness(.92)}
-.btn[disabled]{opacity:.4;cursor:default;filter:none}
-.btn-conversao{background:var(--nb-convert);color:#07130d}
-.btn-marca{background:var(--nb-brand-cta);color:#fff}
-.btn-ghost{background:transparent;border:1px solid var(--nb-border);color:var(--nb-text-2)}
-.aviso{
-  display:none;text-align:left;gap:10px;margin:16px 0 0;padding:13px 16px;
-  border-radius:10px;font-size:13.5px;line-height:1.5;
-  background:rgba(255,107,107,.08);border-left:3px solid var(--nb-urgent);color:#ffd9d9;
-}
+.campo::placeholder{color:var(--t3);font-weight:400}
+.campo:focus{border-color:var(--info);outline:none;box-shadow:0 0 0 3px rgba(128,192,255,.18)}
+.campo.erro{border-color:var(--alerta);box-shadow:0 0 0 3px rgba(255,107,107,.18)}
+.aviso{display:none;text-align:left;margin:16px 0 0;padding:13px 16px;border-radius:10px;
+  font-size:13.5px;line-height:1.5;background:rgba(255,107,107,.09);
+  border-left:3px solid var(--alerta);color:var(--alerta-txt)}
 .aviso.on{display:block}
-.aviso b{color:#fff}
-.portao .ajuda{margin-top:26px;font-size:13px;color:var(--nb-text-3);line-height:1.7}
-.portao .ajuda a{color:var(--nb-text-2)}
+.aviso b{color:var(--t1)}
+.portao .ajuda{margin-top:26px;font-size:13px;color:var(--t3);line-height:1.7}
+.portao .ajuda a{color:var(--t2)}
 
-/* ---------- ESTRUTURA DO MANUAL ---------- */
-#manual{display:none}
-#manual.on{display:block}
+/* ================= BOTÕES ================= */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:12px;
+  cursor:pointer;font-size:15px;font-weight:700;padding:15px 24px;line-height:1.2;
+  transition:filter .16s ease;text-decoration:none;
+}
+.btn:hover{filter:brightness(1.08);text-decoration:none}
+.btn:active{filter:brightness(.92)}
+.btn[disabled]{opacity:.42;cursor:default;filter:none}
+.btn-conversao{background:var(--verde);color:#07130d}
+.btn-marca{background:var(--cta);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--linha);color:var(--t2)}
+.btn-ghost:hover{border-color:var(--info);color:var(--t1)}
+.btn-bloco{width:100%}
+.btn-sm{font-size:13px;padding:11px 17px;border-radius:10px}
 
-.barra{
-  position:sticky;top:0;z-index:40;background:rgba(13,6,24,.92);
-  backdrop-filter:saturate(160%) blur(12px);
-  border-bottom:1px solid var(--nb-border);
-}
-.barra-in{
-  max-width:1000px;margin:0 auto;padding:12px 20px;
-  display:flex;align-items:center;gap:14px;
-}
-.barra img{height:26px;width:auto;flex:0 0 auto}
-.barra .emp{
-  font-size:12px;font-weight:700;color:var(--nb-text-2);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto;
-}
-.barra .emp span{color:var(--nb-text-3);font-weight:400}
-.btn-sum{
-  flex:0 0 auto;background:transparent;border:1px solid var(--nb-border);color:var(--nb-text-2);
-  border-radius:999px;padding:7px 15px;font-size:11px;font-weight:700;letter-spacing:1.4px;
-  text-transform:uppercase;cursor:pointer;font-family:var(--font);
-}
-.btn-sum:hover{border-color:var(--nb-info);color:var(--nb-text-1)}
+/* ================= LAYOUT ================= */
+#app{display:none}
+#app.on{display:block}
 
-.wrap{max-width:1000px;margin:0 auto;padding:0 20px 96px}
-@media(max-width:640px){.wrap{padding:0 15px 72px}}
+.topo{
+  position:sticky;top:0;z-index:60;background:var(--bg);
+  border-bottom:1px solid var(--linha);
+}
+.topo-in{display:flex;align-items:center;gap:12px;padding:10px 20px;max-width:1560px;margin:0 auto}
+.topo img{height:25px;width:auto;flex:0 0 auto}
+.icone{
+  flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:transparent;
+  border:1px solid var(--linha);color:var(--t2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.icone:hover{border-color:var(--info);color:var(--t1)}
+.icone svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.topo .emp{
+  flex:1 1 auto;min-width:0;font-size:12.5px;color:var(--t3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.topo .emp b{color:var(--t2);font-weight:700}
+@media(max-width:900px){.topo .emp{display:none}}
 
-/* ---------- HERO ---------- */
-.hero{padding:52px 0 40px;border-bottom:1px solid var(--nb-border)}
-.kicker{
-  font-size:11px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
-  color:var(--nb-info);margin:0 0 12px;
-}
-h1{
-  font-size:clamp(30px,6.2vw,50px);font-weight:800;letter-spacing:-1.4px;
-  line-height:1.06;margin:0 0 16px;
-}
-.hero .sub{color:var(--nb-text-2);font-size:17px;max-width:640px;margin:0}
-.hero .sub b{color:var(--nb-text-1);font-weight:700}
+.corpo{display:flex;max-width:1560px;margin:0 auto;align-items:flex-start}
 
-/* Painel da empresa: elemento assinatura */
-.painel{
-  margin:32px 0 0;border:1px solid var(--nb-border);border-radius:16px;
-  background:linear-gradient(180deg,var(--nb-bg-2),#140b23);overflow:hidden;
+/* ---- lateral ---- */
+.lateral{
+  flex:0 0 var(--lat);width:var(--lat);position:sticky;top:59px;
+  height:calc(100dvh - 59px);overflow-y:auto;overscroll-behavior:contain;
+  border-right:1px solid var(--linha);padding:20px 16px 60px;
 }
-.painel-top{
-  padding:20px 24px;border-bottom:1px solid var(--nb-border);
-  display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;
+html.recolhido .lateral{display:none}
+.busca{position:relative;margin-bottom:14px}
+.busca input{
+  width:100%;background:var(--sup);border:1px solid var(--linha);border-radius:10px;
+  color:var(--t1);font-size:14px;padding:11px 34px 11px 36px;font-family:var(--font);
 }
-.painel-top .rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--nb-text-3);width:100%}
-.painel-top .nome{font-size:clamp(20px,4.4vw,27px);font-weight:800;letter-spacing:-.6px;line-height:1.2}
+.busca input::placeholder{color:var(--t3)}
+.busca input:focus{border-color:var(--info);outline:none}
+.busca .lupa{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+  stroke:var(--t3);fill:none;stroke-width:2;pointer-events:none}
+.busca .limpar{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;
+  width:22px;height:22px;border-radius:50%;border:0;background:var(--sup2);color:var(--t2);
+  cursor:pointer;font-size:13px;line-height:1;align-items:center;justify-content:center;
+}
+.busca .limpar.on{display:flex}
+.resultado{font-size:12px;color:var(--t3);margin:0 0 12px;padding:0 3px;display:none}
+.resultado.on{display:block}
+.resultado b{color:var(--gold-txt)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.chip{
+  border:1px solid var(--linha);background:transparent;color:var(--t3);
+  border-radius:999px;padding:5px 11px;font-size:11.5px;font-weight:600;cursor:pointer;
+}
+.chip:hover{color:var(--t1);border-color:var(--t3)}
+.chip[aria-pressed="true"]{background:var(--cta);border-color:var(--cta);color:#fff}
+
+#nav ul{list-style:none;margin:0;padding:0}
+#nav > ul > li{margin-bottom:1px}
+#nav .item{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:transparent;border:0;cursor:pointer;color:var(--t2);
+  font-size:13.5px;line-height:1.35;padding:9px 10px;border-radius:9px;
+}
+#nav .item:hover{background:var(--sup);color:var(--t1)}
+#nav .item.ativo{background:var(--sup2);color:var(--t1);font-weight:700}
+#nav .item .n{font-family:var(--mono);font-size:10.5px;color:var(--t3);flex:0 0 20px}
+#nav .item.ativo .n{color:var(--nude)}
+#nav .item .tx{flex:1 1 auto;min-width:0}
+#nav .seta{flex:0 0 auto;width:13px;height:13px;stroke:var(--t3);fill:none;stroke-width:2.2;
+  transition:transform .18s ease}
+#nav li.aberto > .item .seta{transform:rotate(90deg)}
+#nav .subs{display:none;margin:2px 0 6px;padding-left:30px;border-left:1px solid var(--linha);margin-left:15px}
+#nav li.aberto > .subs{display:block}
+#nav .sub{
+  display:block;width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
+  color:var(--t3);font-size:12.5px;line-height:1.4;padding:6px 9px;border-radius:7px;
+}
+#nav .sub:hover{background:var(--sup);color:var(--t2)}
+#nav .sub.ativo{color:var(--nude);font-weight:600}
+#nav li.oculto{display:none}
+.vazio-nav{display:none;font-size:13px;color:var(--t3);padding:16px 10px;line-height:1.55}
+.vazio-nav.on{display:block}
+
+@media(max-width:1100px){
+  .lateral{
+    position:fixed;top:0;left:0;height:100dvh;z-index:90;background:var(--bg);
+    transform:translateX(-100%);visibility:hidden;
+    transition:transform .22s ease,visibility .22s ease;box-shadow:var(--sombra);
+    padding-top:18px;
+  }
+  html.gaveta .lateral{transform:none;visibility:visible;display:block}
+  html.recolhido .lateral{display:block}
+  .veu{position:fixed;inset:0;background:rgba(4,1,10,.62);z-index:85;opacity:0;pointer-events:none;
+    transition:opacity .22s ease}
+  html.gaveta .veu{opacity:1;pointer-events:auto}
+}
+.veu{display:none}
+@media(max-width:1100px){.veu{display:block}}
+
+/* ---- conteúdo ---- */
+.conteudo{flex:1 1 auto;min-width:0;padding:34px 40px 110px;max-width:1000px}
+@media(max-width:1100px){.conteudo{padding:26px 22px 90px}}
+@media(max-width:600px){.conteudo{padding:22px 15px 76px}}
+
+/* ================= TIPOGRAFIA ================= */
+.kicker{font-size:11px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+  color:var(--info-txt);margin:0 0 12px}
+h1{font-size:clamp(29px,5.4vw,46px);font-weight:800;letter-spacing:-1.3px;line-height:1.07;margin:0 0 14px}
+h2{font-size:clamp(21px,3.6vw,29px);font-weight:800;letter-spacing:-.65px;line-height:1.17;margin:0 0 8px}
+h2 .num{display:block;font-family:var(--mono);font-size:12.5px;font-weight:400;color:var(--t3);
+  letter-spacing:0;margin-bottom:9px}
+h3{font-size:17px;font-weight:700;letter-spacing:-.2px;margin:32px 0 10px;color:var(--t1);scroll-margin-top:80px}
+h4{font-size:14px;font-weight:700;margin:22px 0 8px;color:var(--nude)}
+html[data-tema="claro"] h4{color:#8a5a45}
+p{margin:0 0 14px;color:var(--t2)}
+strong{color:var(--t1);font-weight:700}
+.secsub{color:var(--t3);font-size:14.5px;margin:0 0 24px;max-width:660px}
+ul,ol{margin:0 0 16px;padding-left:20px;color:var(--t2)}
+li{margin-bottom:9px}
+li::marker{color:var(--t3)}
+.mono{font-family:var(--mono);font-size:13px;color:var(--nude);word-break:break-all;overflow-wrap:anywhere}
+html[data-tema="claro"] .mono{color:#8a5a45}
+
+section{padding-top:24px;margin-top:52px;border-top:1px solid var(--linha);scroll-margin-top:76px}
+
+/* ================= DASHBOARD ================= */
+.hero{padding-bottom:8px}
+.hero .sub{color:var(--t2);font-size:16.5px;max-width:650px;margin:0}
+.hero .sub b{color:var(--t1)}
+
+.painel{margin:30px 0 0;border:1px solid var(--linha);border-radius:16px;background:var(--sup);overflow:hidden}
+.painel-top{padding:18px 22px;border-bottom:1px solid var(--linha)}
+.painel-top .rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--t3)}
+.painel-top .nome{font-size:clamp(19px,4vw,26px);font-weight:800;letter-spacing:-.6px;line-height:1.2;margin-top:4px}
 .painel-grid{display:grid;grid-template-columns:repeat(4,1fr)}
-.painel-grid div{padding:18px 24px;border-right:1px solid var(--nb-border)}
-.painel-grid div:last-child{border-right:0}
-.painel-grid .r{display:block;font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--nb-text-3);margin-bottom:5px}
-.painel-grid .v{font-size:19px;font-weight:800;letter-spacing:-.3px;color:var(--nb-text-1)}
-.painel-grid .v.cod{font-family:var(--mono);letter-spacing:1px;font-size:17px;color:var(--nb-warm)}
-@media(max-width:760px){
+.painel-grid > div{padding:16px 22px;border-right:1px solid var(--linha)}
+.painel-grid > div:last-child{border-right:0}
+.painel-grid .r{display:block;font-size:10.5px;font-weight:700;letter-spacing:1.4px;
+  text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.painel-grid .v{font-size:18px;font-weight:800;letter-spacing:-.3px;color:var(--t1)}
+.painel-grid .v.cod{font-family:var(--mono);letter-spacing:1px;font-size:16px;color:var(--nude)}
+html[data-tema="claro"] .painel-grid .v.cod{color:#8a5a45}
+@media(max-width:820px){
   .painel-grid{grid-template-columns:1fr 1fr}
-  .painel-grid div{border-bottom:1px solid var(--nb-border)}
-  .painel-grid div:nth-child(2n){border-right:0}
-  .painel-grid div:nth-last-child(-n+2){border-bottom:0}
+  .painel-grid > div{border-bottom:1px solid var(--linha)}
+  .painel-grid > div:nth-child(2n){border-right:0}
+  .painel-grid > div:nth-last-child(-n+2){border-bottom:0}
 }
 
-/* Chamada de prazo */
+.medidores{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0 0}
+@media(max-width:820px){.medidores{grid-template-columns:1fr}}
+.medidor{border:1px solid var(--linha);border-radius:16px;background:var(--sup);padding:22px;
+  display:flex;flex-direction:column}
+.medidor .cab{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:16px}
+.medidor .rot{font-size:10.5px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;color:var(--t3)}
+.medidor .selo{font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  border-radius:999px;padding:4px 10px}
+.selo.ok{background:rgba(90,183,142,.16);color:var(--verde-txt)}
+.selo.at{background:rgba(255,200,0,.16);color:var(--gold-txt)}
+.selo.ur{background:rgba(255,107,107,.14);color:var(--alerta-txt)}
+.selo.nu{background:var(--sup2);color:var(--t3)}
+.medidor .linha{display:flex;align-items:center;gap:20px}
+.rosca{flex:0 0 auto;position:relative;width:112px;height:112px}
+.rosca svg{transform:rotate(-90deg);width:112px;height:112px}
+.rosca circle{fill:none;stroke-width:11;stroke-linecap:round}
+.rosca .trilho{stroke:var(--trilho)}
+.rosca .barra{transition:stroke-dashoffset .9s cubic-bezier(.22,.9,.3,1)}
+.rosca .meio{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rosca .pc{font-size:23px;font-weight:800;letter-spacing:-1px;line-height:1}
+.rosca .pl{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--t3);margin-top:3px}
+.numeros{flex:1 1 auto;min-width:0}
+.numeros .big{font-size:29px;font-weight:800;letter-spacing:-1.2px;line-height:1.05}
+.numeros .big span{color:var(--t3);font-size:18px;font-weight:700;letter-spacing:-.4px}
+.numeros .leg{font-size:13px;color:var(--t3);margin-top:5px}
+.quebra{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.tag{font-size:11.5px;font-weight:600;border-radius:999px;padding:4px 10px;
+  background:var(--sup2);color:var(--t2)}
+.tag b{color:var(--t1)}
+.medidor .rodape{margin-top:16px;padding-top:15px;border-top:1px solid var(--linha)}
+.medidor .rodape p{font-size:13px;margin:0 0 12px;color:var(--t3)}
+.estado{
+  border-radius:12px;padding:16px 18px;background:var(--sup2);
+  border:1px dashed var(--linha);color:var(--t3);font-size:13.5px;line-height:1.55;
+}
+.estado b{display:block;color:var(--t2);font-size:14px;margin-bottom:5px}
+
+/* faixa de cortesias */
+.faixa-cortesia{
+  margin:16px 0 0;border-radius:16px;padding:22px 24px;
+  background:linear-gradient(120deg, rgba(139,95,191,.16), rgba(90,183,142,.11));
+  border:1px solid var(--linha);
+  display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;
+}
+.faixa-cortesia .txt{flex:1 1 330px;min-width:0}
+.faixa-cortesia .rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--marca-txt);margin-bottom:6px}
+.faixa-cortesia h3{margin:0 0 6px;font-size:19px}
+.faixa-cortesia p{margin:0;font-size:14px;color:var(--t2)}
+.faixa-cortesia .acoes{display:flex;gap:9px;flex-wrap:wrap;flex:1 1 auto;min-width:0}
+.faixa-cortesia .acoes .btn{flex:1 1 auto}
+
 .prazo{
-  margin:22px 0 0;border-radius:14px;padding:20px 24px;
-  background:rgba(255,200,0,.07);border:1px solid rgba(255,200,0,.26);
+  margin:16px 0 0;border-radius:14px;padding:20px 24px;
+  background:rgba(255,200,0,.07);border:1px solid rgba(255,200,0,.28);
   display:flex;flex-wrap:wrap;align-items:center;gap:18px;justify-content:space-between;
 }
-.prazo .txt{flex:1 1 340px;min-width:0}
-.prazo .rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--nb-gold);margin-bottom:6px}
-.prazo p{margin:0;color:var(--nb-text-2);font-size:14.5px}
-.prazo p b{color:var(--nb-text-1)}
-.prazo .btn{width:auto;flex:0 0 auto;padding:15px 24px}
+.prazo .txt{flex:1 1 330px;min-width:0}
+.prazo .rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--gold-txt);margin-bottom:6px}
+.prazo p{margin:0;color:var(--t2);font-size:14.5px}
+.prazo p b{color:var(--t1)}
+.prazo .acoes{display:flex;gap:9px;flex-wrap:wrap;flex:1 1 auto;min-width:0}
+.prazo .acoes .btn{flex:1 1 auto}
 
-/* ---------- SUMÁRIO ---------- */
-#sumario{
-  display:none;margin:34px 0 0;border:1px solid var(--nb-border);border-radius:14px;
-  background:var(--nb-bg-2);padding:22px 24px;
-}
-#sumario.on{display:block}
-#sumario .rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--nb-text-3);margin-bottom:14px}
-#sumario ol{margin:0;padding:0;list-style:none;columns:2;column-gap:34px}
-@media(max-width:640px){#sumario ol{columns:1}}
-#sumario li{break-inside:avoid;margin-bottom:9px;font-size:14px}
-#sumario a{color:var(--nb-text-2);display:flex;gap:11px}
-#sumario a:hover{color:var(--nb-text-1);text-decoration:none}
-#sumario .n{font-family:var(--mono);font-size:12px;color:var(--nb-text-3);flex:0 0 24px}
-
-/* ---------- SEÇÕES ---------- */
-section{padding-top:22px;margin-top:56px;border-top:1px solid var(--nb-border);scroll-margin-top:70px}
-section:first-of-type{border-top:0;margin-top:44px;padding-top:0}
-h2{
-  font-size:clamp(22px,4.3vw,31px);font-weight:800;letter-spacing:-.7px;
-  line-height:1.16;margin:0 0 8px;
-}
-h2 .num{font-family:var(--mono);font-size:13px;font-weight:400;color:var(--nb-text-3);letter-spacing:0;display:block;margin-bottom:9px}
-h3{font-size:17px;font-weight:700;letter-spacing:-.2px;margin:34px 0 10px;color:var(--nb-text-1)}
-h4{font-size:14px;font-weight:700;margin:22px 0 8px;color:var(--nb-warm)}
-p{margin:0 0 14px;color:var(--nb-text-2)}
-strong{color:var(--nb-text-1);font-weight:700}
-.secsub{color:var(--nb-text-3);font-size:14.5px;margin:0 0 26px;max-width:660px}
-ul,ol.lista{margin:0 0 16px;padding-left:20px;color:var(--nb-text-2)}
-li{margin-bottom:9px}
-li::marker{color:var(--nb-text-3)}
-
-/* ---------- TABELAS ---------- */
+/* ================= TABELAS ================= */
 .tabwrap{overflow-x:auto;margin:18px 0 22px;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:440px}
-th{
-  text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
-  color:var(--nb-text-3);padding:11px 14px;background:var(--nb-bg-3);
-  border-bottom:1px solid var(--nb-border);white-space:nowrap;
-}
-th:first-child{border-top-left-radius:10px}
-th:last-child{border-top-right-radius:10px}
-td{padding:13px 14px;border-bottom:1px solid rgba(58,42,82,.6);color:var(--nb-text-2);vertical-align:top}
+th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--t3);padding:11px 14px;background:var(--sup2);border-bottom:1px solid var(--linha);white-space:nowrap}
+th:first-child{border-top-left-radius:10px} th:last-child{border-top-right-radius:10px}
+td{padding:13px 14px;border-bottom:1px solid var(--linha);color:var(--t2);vertical-align:top}
 tr:last-child td{border-bottom:0}
-td b,td strong{color:var(--nb-text-1)}
+td b,td strong{color:var(--t1)}
 td.num,th.num{text-align:center;white-space:nowrap}
-.multa{color:var(--nb-urgent);font-weight:700;white-space:nowrap}
-tr.destaque td{background:rgba(224,179,161,.07)}
+.multa{color:var(--alerta-txt);font-weight:700;white-space:nowrap}
+tr.destaque td{background:var(--sup)}
 
-/* ---------- BLOCOS ---------- */
-.box{
-  border:1px solid var(--nb-border);border-left:3px solid var(--nb-brand-cta);
-  border-radius:12px;padding:18px 22px;margin:22px 0;
-  background:linear-gradient(180deg,var(--nb-bg-2),#140b23);
-}
+/* ================= BLOCOS ================= */
+.box{border:1px solid var(--linha);border-left:3px solid var(--cta);border-radius:12px;
+  padding:18px 22px;margin:22px 0;background:var(--sup)}
 .box p:last-child{margin-bottom:0}
-.box .rot{font-size:10.5px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;color:var(--nb-text-3);margin-bottom:9px}
-.box.atencao{border-left-color:var(--nb-urgent);background:rgba(255,107,107,.06);border-color:rgba(255,107,107,.24)}
-.box.atencao .rot{color:var(--nb-urgent)}
-.box.nota{border-left-color:var(--nb-info);background:rgba(128,192,255,.05);border-color:rgba(128,192,255,.2)}
-.box.nota .rot{color:var(--nb-info)}
-.box.ok{border-left-color:var(--nb-convert);background:rgba(90,183,142,.06);border-color:rgba(90,183,142,.22)}
-.box.ok .rot{color:var(--nb-convert)}
+.box .acoes{display:flex;gap:9px;flex-wrap:wrap}
+.box .acoes .btn{flex:1 1 auto}
+.medidor .rodape .btn{width:100%}
+.box .rot{font-size:10.5px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;
+  color:var(--t3);margin-bottom:9px}
+.box.atencao{border-left-color:var(--alerta);background:rgba(255,107,107,.06);border-color:rgba(255,107,107,.26)}
+.box.atencao .rot{color:var(--alerta-txt)}
+.box.nota{border-left-color:var(--info);background:rgba(128,192,255,.06);border-color:rgba(128,192,255,.22)}
+.box.nota .rot{color:var(--info-txt)}
+.box.ok{border-left-color:var(--verde);background:rgba(90,183,142,.07);border-color:rgba(90,183,142,.24)}
+.box.ok .rot{color:var(--verde-txt)}
 
-/* Listas proibido / permitido */
 .regras{list-style:none;padding:0;margin:16px 0 22px}
-.regras li{
-  position:relative;padding:11px 0 11px 34px;margin:0;
-  border-bottom:1px solid rgba(58,42,82,.55);color:var(--nb-text-2);font-size:14.5px;
-}
+.regras li{position:relative;padding:11px 0 11px 34px;margin:0;border-bottom:1px solid var(--linha);
+  color:var(--t2);font-size:14.5px}
 .regras li:last-child{border-bottom:0}
-.regras li::before{
-  position:absolute;left:0;top:11px;width:20px;height:20px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
-}
-.regras.nao li::before{content:'\00d7';background:rgba(255,107,107,.15);color:var(--nb-urgent)}
-.regras.sim li::before{content:'\2713';background:rgba(90,183,142,.15);color:var(--nb-convert)}
+.regras li::before{position:absolute;left:0;top:11px;width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.regras.nao li::before{content:'\00d7';background:rgba(255,107,107,.16);color:var(--alerta-txt)}
+.regras.sim li::before{content:'\2713';background:rgba(90,183,142,.16);color:var(--verde-txt)}
 
-/* Cartões de contato */
-.contatos{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:14px;margin:22px 0}
-.card{
-  border:1px solid var(--nb-border);border-radius:12px;padding:20px 22px;
-  background:var(--nb-bg-2);
-}
-.cardrot{font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--nb-text-3);margin-bottom:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:14px;margin:22px 0}
+.card{border:1px solid var(--linha);border-radius:12px;padding:20px 22px;background:var(--sup)}
+.cardrot{font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
 .cardnome{font-size:17px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px}
-.cardfn{font-size:13px;color:var(--nb-text-3);margin-bottom:12px}
-.cardlinha{font-size:14px;color:var(--nb-text-2);margin-bottom:5px;word-break:break-word}
-.cardlinha a{color:var(--nb-info)}
+.cardfn{font-size:13px;color:var(--t3);margin-bottom:12px}
+.cardlinha{font-size:14px;color:var(--t2);margin-bottom:5px;word-break:break-word}
 
-/* Checklist */
 .check{list-style:none;padding:0;margin:18px 0 22px}
-.check li{
-  display:flex;gap:13px;align-items:flex-start;padding:13px 0;
-  border-bottom:1px solid rgba(58,42,82,.55);font-size:14.5px;color:var(--nb-text-2);margin:0;
-}
+.check li{display:flex;gap:13px;align-items:flex-start;padding:13px 0;
+  border-bottom:1px solid var(--linha);font-size:14.5px;color:var(--t2);margin:0}
 .check li:last-child{border-bottom:0}
-.check .caixa{
-  flex:0 0 auto;width:19px;height:19px;border:1.5px solid var(--nb-border);
-  border-radius:5px;margin-top:2px;
+.check .caixa{flex:0 0 auto;width:19px;height:19px;border:1.5px solid var(--linha);border-radius:5px;margin-top:2px}
+.check b{display:block;color:var(--t1);margin-bottom:2px}
+.check .q{font-size:13px;color:var(--t3)}
+
+/* ================= FAQ ================= */
+.faq{margin:22px 0}
+.faq details{border:1px solid var(--linha);border-radius:12px;background:var(--sup);margin-bottom:9px;overflow:hidden}
+.faq summary{
+  cursor:pointer;list-style:none;padding:16px 46px 16px 20px;position:relative;
+  font-size:15px;font-weight:700;color:var(--t1);line-height:1.4;
 }
-.check b{display:block;color:var(--nb-text-1);margin-bottom:2px}
-.check span.q{font-size:13px;color:var(--nb-text-3)}
-
-.mono{font-family:var(--mono);font-size:13.5px;color:var(--nb-warm);
-  word-break:break-all;overflow-wrap:anywhere}
-
-/* ---------- RODAPÉ ---------- */
-footer{
-  margin-top:70px;padding:34px 0 0;border-top:1px solid var(--nb-border);
-  color:var(--nb-text-3);font-size:13px;
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{
+  content:'';position:absolute;right:20px;top:22px;width:9px;height:9px;
+  border-right:2px solid var(--t3);border-bottom:2px solid var(--t3);
+  transform:rotate(45deg);transition:transform .18s ease;
 }
-footer img{height:26px;width:auto;margin-bottom:16px;opacity:.85}
-footer p{color:var(--nb-text-3);font-size:13px;margin:0 0 7px}
-footer a{color:var(--nb-text-2)}
+.faq details[open] summary::after{transform:rotate(-135deg);top:25px}
+.faq summary:hover{background:var(--sup2)}
+.faq .resp{padding:0 20px 18px;color:var(--t2);font-size:14.5px}
+.faq .resp p:last-child{margin-bottom:0}
+.faq .resp a{font-weight:600}
 
-/* ---------- IMPRESSÃO ---------- */
+/* ================= RODAPÉ ================= */
+footer{margin-top:64px;padding:32px 0 0;border-top:1px solid var(--linha);color:var(--t3);font-size:13px}
+footer img{height:25px;width:auto;margin-bottom:15px;opacity:.9}
+footer p{color:var(--t3);font-size:13px;margin:0 0 7px}
+footer a{color:var(--t2)}
+
+/* ================= TOAST ================= */
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,18px);z-index:120;
+  background:var(--verde);color:#07130d;font-size:14px;font-weight:700;
+  padding:13px 22px;border-radius:999px;box-shadow:var(--sombra);
+  opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ================= IMPRESSÃO ================= */
 @media print{
+  html{--bg:#fff}
   body{background:#fff;color:#111;font-size:11pt}
-  .barra,.prazo .btn,#sumario,.btn{display:none!important}
-  #manual{display:block!important}
+  .topo,.lateral,.veu,#toast,.btn,.faixa-cortesia .acoes,.prazo .acoes{display:none!important}
+  #app{display:block!important}
+  .corpo{display:block}
+  .conteudo{max-width:none;padding:0}
   a{color:#111;text-decoration:none}
-  section{border-top:1px solid #ccc;page-break-inside:auto;margin-top:26px}
+  section{border-top:1px solid #ccc;margin-top:24px}
   h1,h2,h3{color:#111;page-break-after:avoid}
   p,li,td{color:#333}
-  .painel,.box,.card,.prazo{border:1px solid #ccc;background:#fafafa;color:#111;page-break-inside:avoid}
-  .painel-grid .v,.painel-top .nome,td b,strong{color:#111}
+  .box,.card,.painel,.medidor,.prazo,.faixa-cortesia,.faq details{
+    border:1px solid #ccc;background:#fafafa;color:#111;page-break-inside:avoid}
   th{background:#eee;color:#333}
   table{min-width:0}
   .multa{color:#111}
+  .faq .resp{display:block!important}
+  .faq details{page-break-inside:avoid}
 }
 </style>
 </head>
@@ -293,19 +422,16 @@ footer a{color:var(--nb-text-2)}
 <!-- ==================== PORTARIA ==================== -->
 <div id="portaria">
   <div class="portao">
-    <img class="logo" src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png" alt="Nutrição Brasil">
+    <img class="logo" data-logo src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png" alt="Nutrição Brasil">
     <p class="kicker">Manual do Expositor · Brasília 2026</p>
     <h1>Digite o código da sua empresa</h1>
     <p class="lead">O código tem 7 caracteres e começa com NB. Ele foi enviado junto com o link de cadastro da sua equipe.</p>
-
     <form id="form" autocomplete="off" novalidate>
       <input id="codigo" class="campo" type="text" inputmode="text" autocapitalize="characters"
              spellcheck="false" placeholder="NB00000" aria-label="Código da empresa">
-      <button id="entrar" class="btn btn-conversao" type="submit">Abrir o manual</button>
+      <button id="entrar" class="btn btn-conversao btn-bloco" type="submit">Abrir o manual</button>
     </form>
-
     <div id="aviso" class="aviso" role="alert"></div>
-
     <p class="ajuda">
       Não tem o código?<br>
       Fale com a Yasmin Aguiar no WhatsApp <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a>
@@ -314,840 +440,1196 @@ footer a{color:var(--nb-text-2)}
   </div>
 </div>
 
-<!-- ==================== MANUAL ==================== -->
-<div id="manual">
+<!-- ==================== APP ==================== -->
+<div id="app">
 
-  <div class="barra">
-    <div class="barra-in">
-      <img src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png" alt="Nutrição Brasil">
-      <div class="emp"><span>Manual do Expositor ·</span> <b id="barraEmpresa"></b></div>
-      <button class="btn-sum" id="btnSumario" type="button" aria-expanded="false" aria-controls="sumario">Sumário</button>
+  <div class="topo">
+    <div class="topo-in">
+      <button class="icone" id="btnLateral" type="button" aria-label="Abrir o menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <img data-logo src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png" alt="Nutrição Brasil">
+      <div class="emp">Manual do Expositor · <b id="topoEmpresa"></b></div>
+      <button class="icone" id="btnTema" type="button" aria-label="Alternar tema claro e escuro">
+        <svg viewBox="0 0 24 24" id="iconeTema"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+      </button>
+      <button class="icone" id="btnImprimir" type="button" aria-label="Imprimir o manual">
+        <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg>
+      </button>
     </div>
   </div>
 
-  <div class="wrap">
+  <div class="veu" id="veu"></div>
 
-    <header class="hero">
-      <p class="kicker">Nutrição Brasil 2026 · Brasília · Distrito Federal</p>
-      <h1>Manual do<br>Expositor</h1>
-      <p class="sub">Tudo que a sua equipe precisa saber para montar, operar e desmontar o estande no <b>Centro de Convenções Ulysses Guimarães</b>, de <b>27 a 29 de agosto de 2026</b>. Este documento é parte integrante do Contrato de Participação.</p>
+  <div class="corpo">
 
-      <div class="painel">
-        <div class="painel-top">
-          <span class="rot">Empresa expositora</span>
-          <span class="nome" id="painelEmpresa"></span>
+    <!-- ---------- LATERAL ---------- -->
+    <aside class="lateral" id="lateral" aria-label="Navegação do manual">
+      <div class="busca">
+        <svg class="lupa" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="busca" type="search" placeholder="Buscar no manual" aria-label="Buscar no manual" autocomplete="off">
+        <button class="limpar" id="limparBusca" type="button" aria-label="Limpar a busca">&times;</button>
+      </div>
+      <p class="resultado" id="resultado"></p>
+
+      <div class="chips" id="chips" role="group" aria-label="Filtrar por assunto">
+        <button class="chip" data-cat="todos" aria-pressed="true" type="button">Tudo</button>
+        <button class="chip" data-cat="prazos" aria-pressed="false" type="button">Prazos</button>
+        <button class="chip" data-cat="credenciamento" aria-pressed="false" type="button">Credenciamento</button>
+        <button class="chip" data-cat="montagem" aria-pressed="false" type="button">Montagem</button>
+        <button class="chip" data-cat="operacao" aria-pressed="false" type="button">Operação</button>
+        <button class="chip" data-cat="seguranca" aria-pressed="false" type="button">Segurança</button>
+        <button class="chip" data-cat="regras" aria-pressed="false" type="button">Regras e multas</button>
+      </div>
+
+      <nav id="nav"></nav>
+      <p class="vazio-nav" id="vazioNav">Nenhum trecho do manual bate com esta busca. Tente outra palavra, ou limpe o filtro de assunto.</p>
+    </aside>
+
+    <!-- ---------- CONTEÚDO ---------- -->
+    <main class="conteudo">
+
+      <header class="hero" id="topo-doc">
+        <p class="kicker">Nutrição Brasil 2026 · Brasília · Distrito Federal</p>
+        <h1>Manual do Expositor</h1>
+        <p class="sub">Tudo que a sua equipe precisa para montar, operar e desmontar o estande no <b>Centro de Convenções Ulysses Guimarães</b>, de <b>27 a 29 de agosto de 2026</b>. Este documento é parte integrante do Contrato de Participação.</p>
+
+        <div class="painel">
+          <div class="painel-top">
+            <span class="rot">Empresa expositora</span>
+            <div class="nome" id="painelEmpresa"></div>
+          </div>
+          <div class="painel-grid">
+            <div><span class="r">Código</span><span class="v cod" id="painelCodigo"></span></div>
+            <div><span class="r">Estande</span><span class="v" id="painelEstande"></span></div>
+            <div><span class="r">Cota</span><span class="v" id="painelCota"></span></div>
+            <div><span class="r">Situação</span><span class="v" id="painelStatus"></span></div>
+          </div>
         </div>
-        <div class="painel-grid">
-          <div><span class="r">Código</span><span class="v cod" id="painelCodigo"></span></div>
-          <div><span class="r">Estande</span><span class="v" id="painelEstande"></span></div>
-          <div><span class="r">Cota</span><span class="v" id="painelCota"></span></div>
-          <div><span class="r">Credenciais</span><span class="v" id="painelLimite"></span></div>
+
+        <div class="medidores">
+          <div class="medidor" id="medCred"></div>
+          <div class="medidor" id="medCort"></div>
         </div>
-      </div>
 
-      <div class="prazo">
-        <div class="txt">
-          <div class="rot">Prazo: 22 de agosto de 2026</div>
-          <p>Cadastre a equipe do estande antes desta data. Depois do prazo, a lista trava e as inclusões passam a depender de aprovação, com fila no balcão no dia do evento.</p>
+        <div id="faixaCortesia"></div>
+
+        <div class="prazo">
+          <div class="txt">
+            <div class="rot">Prazo: 22 de agosto de 2026</div>
+            <p>Cadastre a equipe do estande antes desta data. Depois do prazo, a lista trava e as inclusões passam a depender de aprovação, com fila no balcão no dia do evento.</p>
+          </div>
+          <div class="acoes">
+            <a class="btn btn-conversao" id="ctaCadastro" href="#" target="_blank" rel="noopener">Cadastrar minha equipe</a>
+            <button class="btn btn-ghost btn-sm" data-copiar="cadastro" type="button">Copiar link</button>
+          </div>
         </div>
-        <a class="btn btn-conversao" id="linkCadastro" href="#" target="_blank" rel="noopener">Cadastrar minha equipe</a>
+      </header>
+
+      <div id="texto">
+
+        <!-- 01 -->
+        <section id="s1" data-cat="prazos">
+          <h2><span class="num">01</span>Datas e horários</h2>
+          <p class="secsub">O estande precisa estar operando em todo o horário de visitação, da abertura ao encerramento.</p>
+
+          <h3>Visitação da feira</h3>
+          <div class="tabwrap">
+            <table>
+              <thead><tr><th>Data</th><th>Dia da semana</th><th>Horário</th></tr></thead>
+              <tbody>
+                <tr><td><b>27/08/2026</b></td><td>Quinta-feira</td><td><b>17h00 às 21h30</b></td></tr>
+                <tr><td><b>28/08/2026</b></td><td>Sexta-feira</td><td><b>08h00 às 19h00</b></td></tr>
+                <tr><td><b>29/08/2026</b></td><td>Sábado</td><td><b>08h30 às 19h00</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Calendário completo de operação</h3>
+          <div class="tabwrap">
+            <table>
+              <thead><tr><th>Data</th><th>Dia</th><th>O que acontece</th></tr></thead>
+              <tbody>
+                <tr><td><b>25/08</b></td><td>Terça-feira</td><td>Montagem dos estandes, 09h às 17h</td></tr>
+                <tr class="destaque"><td><b>27/08</b></td><td>Quinta-feira</td>
+                  <td>Entrega dos estandes e credenciamento do expositor a partir das 09h<br>Decoração das 09h às 15h<br>Manutenção das 15h às 15h50<br><b>Visitação das 17h00 às 21h30</b></td></tr>
+                <tr><td><b>28/08</b></td><td>Sexta-feira</td><td>Manutenção das 07h às 07h50<br><b>Visitação das 08h00 às 19h00</b></td></tr>
+                <tr><td><b>29/08</b></td><td>Sábado</td><td>Manutenção das 07h às 07h50<br><b>Visitação das 08h30 às 19h00</b><br>Retirada de material das 19h às 22h</td></tr>
+                <tr><td><b>30/08</b></td><td>Domingo</td><td>NB Run, largada às 07h, Praça do Buriti</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="box atencao">
+            <div class="rot">Importante</div>
+            <p>O expositor se compromete a manter o estande em pleno funcionamento durante <strong>todo o período de visitação</strong>, da abertura ao encerramento, que pode se estender além do horário estimado. Atraso na abertura ou fechamento antecipado do estande acarreta <strong>multa e demais penalidades contratuais</strong>.</p>
+          </div>
+        </section>
+
+        <!-- 02 -->
+        <section id="s2" data-cat="regras">
+          <h2><span class="num">02</span>Apresentação</h2>
+          <p>Este Manual reúne as informações necessárias para o bom funcionamento do <strong>Nutrição Brasil 2026</strong>, realizado de 27 a 29 de agosto de 2026 no Centro de Convenções Ulysses Guimarães, em Brasília, Distrito Federal.</p>
+          <p>O documento é <strong>parte integrante do Contrato de Participação</strong>, conforme a cláusula 5, item 4b: "Observar e se manter adstrito ao que dispõe o Manual do Expositor", estabelecida entre a Science Play e as empresas expositoras.</p>
+          <p>O desconhecimento das normas e regulamentos aqui estabelecidos não isenta o expositor nem seus contratados, entre eles montadora e demais prestadores de serviço, das penalidades, multas, sanções e responsabilidades previstas neste Manual. Em caso de descumprimento, as multas são cobradas conforme a norma descumprida, por nota de débito emitida pela organização.</p>
+          <h3>CAEX, Centro de Atendimento ao Expositor</h3>
+          <div class="box nota">
+            <div class="rot">Onde resolver qualquer dúvida</div>
+            <p>Qualquer dúvida surgida em qualquer período do evento, seja na montagem, na realização ou na desmontagem, é resolvida exclusivamente pela Science Play. O expositor e seus prestadores de serviço devem procurar o <strong>CAEX</strong>, destinado à mediação, condução e resolução das questões.</p>
+          </div>
+          <p>A promotora não se responsabiliza por problemas decorrentes do não cumprimento das exigências feitas neste Manual.</p>
+        </section>
+
+        <!-- 03 -->
+        <section id="s3" data-cat="regras">
+          <h2><span class="num">03</span>Informações gerais</h2>
+          <div class="tabwrap">
+            <table>
+              <tbody>
+                <tr><td style="width:210px"><b>Local do evento</b></td><td>Centro de Convenções Ulysses Guimarães (CCUG)<br>SDC, Ulysses Guimarães, Brasília, Distrito Federal, CEP 70655-775</td></tr>
+                <tr><td><b>Organização e promoção</b></td><td>Science Play</td></tr>
+                <tr><td><b>Período do evento</b></td><td>27 a 29 de agosto de 2026</td></tr>
+                <tr><td><b>NB Run</b></td><td>30 de agosto de 2026, Praça do Buriti, largada às 07h</td></tr>
+                <tr><td><b>Corrente elétrica</b></td><td>220V</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 04 -->
+        <section id="s4" data-cat="regras">
+          <h2><span class="num">04</span>Normas gerais</h2>
+          <h3>Transferência de responsabilidade</h3>
+          <p>O expositor não pode transferir, total ou parcialmente, quaisquer responsabilidades ou direitos assumidos com a promotora, nem sublocar ou ceder parcela ou totalidade da área alugada.</p>
+          <h3>Promoção de terceiros</h3>
+          <p>É vetada a exposição, a distribuição de brindes e a publicidade direta ou indireta de produtos de empresas não participantes dentro do estande.</p>
+          <p>O expositor pode solicitar por escrito à promotora, que autoriza ou não a seu critério, a apresentação de produtos que não fabrica nem representa com exclusividade, desde que necessários à complementação da sua linha. <strong>Autorização verbal não vale.</strong> Esses produtos precisam ser de fabricação de outras empresas participantes do evento, e no estande não pode constar nenhuma menção promocional ou de agradecimento.</p>
+          <h3>Isenção de responsabilidade da promotora</h3>
+          <p>A promotora não se responsabiliza por danos ou prejuízos causados a pessoas ou produtos expostos antes, durante ou após a realização do evento, incluindo roubo, furto, sabotagem, convulsão civil, deficiências ou interrupções no fornecimento de energia elétrica e água, ou sinistros de qualquer espécie.</p>
+          <p>A promotora e seus prepostos também não respondem, nem subsidiariamente, por qualquer vínculo empregatício ou encargo social decorrente dos serviços executados na área do Centro de Convenções.</p>
+        </section>
+
+        <!-- 05 -->
+        <section id="s5" data-cat="prazos">
+          <h2><span class="num">05</span>Prazos dos formulários</h2>
+          <p class="secsub">O preenchimento é online, pelo link personalizado da sua empresa. Solicitações fora do prazo ficam sujeitas a confirmação.</p>
+          <div class="tabwrap">
+            <table>
+              <thead><tr><th>Formulário</th><th>Situação</th><th class="num">Prazo</th></tr></thead>
+              <tbody>
+                <tr><td><b>Credenciamento de Expositor</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
+                <tr><td><b>Credenciamento de Serviço ao Expositor</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
+                <tr><td><b>Credenciais adicionais</b> (R$ 50,00 cada)</td><td>Opcional</td><td class="num"><b>22/08/2026</b></td></tr>
+                <tr><td><b>Extintor de incêndio</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="box ok">
+            <div class="rot">Link do seu cadastro</div>
+            <p>O formulário da sua empresa já está aberto. É por ele que a equipe é cadastrada e editada até o prazo.</p>
+            <div class="acoes" style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
+              <a class="btn btn-conversao" data-cta-cadastro href="#" target="_blank" rel="noopener">Cadastrar minha equipe</a>
+              <button class="btn btn-ghost btn-sm" data-copiar="cadastro" type="button">Copiar link</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 06 -->
+        <section id="s6" data-cat="credenciamento">
+          <h2><span class="num">06</span>Credenciamento</h2>
+          <p>Nenhum profissional entra no evento sem estar devidamente credenciado e portando credencial. Todas as credenciais são <strong>pessoais e intransferíveis</strong>, sem direito a acompanhantes. O uso indevido implica apreensão, multa e cancelamento.</p>
+          <p>A credencial deve ser usada na altura do peito pelo titular enquanto ele permanecer no evento.</p>
+          <p>As credenciais precisam ser preenchidas com o nome das pessoas que vão trabalhar no evento até o prazo de envio do formulário. Todas podem ser retiradas por um único funcionário da empresa, mas devem ser entregues aos respectivos donos: <strong>não há acesso ao evento sem credencial</strong>.</p>
+
+          <h3>Cota gratuita por área do estande</h3>
+          <div class="tabwrap">
+            <table>
+              <thead><tr><th>Área do estande</th><th class="num">Credenciais de expositor</th><th class="num">Credenciais de serviço</th></tr></thead>
+              <tbody>
+                <tr><td><b>4 m²</b></td><td class="num">2</td><td class="num">1</td></tr>
+                <tr><td><b>9 m²</b></td><td class="num">3</td><td class="num">1</td></tr>
+                <tr><td><b>12 m²</b></td><td class="num">4</td><td class="num">2</td></tr>
+                <tr><td><b>18 m²</b></td><td class="num">6</td><td class="num">3</td></tr>
+                <tr><td><b>24 m²</b></td><td class="num">8</td><td class="num">4</td></tr>
+                <tr><td><b>36 m²</b></td><td class="num">12</td><td class="num">7</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="box nota">
+            <div class="rot">O limite da sua empresa</div>
+            <p id="limiteFrase"></p>
+          </div>
+
+          <h3>Credencial de expositor</h3>
+          <p>Destinada à diretoria e aos funcionários da empresa expositora, válida por todo o período do evento. Quem ultrapassar a cota gratuita solicita <strong>credencial adicional</strong>, mediante pagamento, pelo mesmo link de cadastro.</p>
+          <p>Retirada a partir das <strong>09h do dia 27 de agosto de 2026</strong>, no CAEX.</p>
+
+          <h3>Credencial de serviço ao expositor</h3>
+          <p>Destinada aos profissionais que prestam serviço ao expositor durante o funcionamento do evento, como recepcionistas, garçons e animadores. Vigias terceirizados não entram nesta categoria e têm credenciamento próprio.</p>
+          <p>Retirada a partir das <strong>09h do dia 27 de agosto de 2026</strong>, no CAEX. Ultrapassada a cota gratuita, solicite credencial adicional pelo formulário.</p>
+
+          <h3>Perda ou esquecimento de credencial</h3>
+          <div class="box atencao">
+            <div class="rot">O que fazer</div>
+            <p>Perda, extravio ou esquecimento deve ser comunicado imediatamente no CAEX, para checagem de dados e solicitação de nova credencial. A nova credencial sai da cota do expositor. Se a cota estiver esgotada, entra como credencial adicional, mediante pagamento.</p>
+          </div>
+
+          <h3>Credenciamento de imprensa</h3>
+          <p>Pedidos devem ser enviados para <a href="mailto:yasmin@scienceplay.com">yasmin@scienceplay.com</a> e <a href="mailto:contato@scienceplay.com">contato@scienceplay.com</a>.</p>
+        </section>
+
+        <!-- 07 -->
+        <section id="s7" data-cat="credenciamento">
+          <h2><span class="num">07</span>Cortesias de patrocinador</h2>
+          <p class="secsub">Convites gratuitos para a empresa distribuir a clientes, parceiros e equipe. Cada pessoa se inscreve sozinha pelo link, sem passar por planilha.</p>
+          <div id="blocoCortesia"></div>
+
+          <h3>Como funciona</h3>
+          <ol>
+            <li>A empresa envia o link de cortesia para o convidado, ou publica onde quiser.</li>
+            <li>O convidado abre o link, vê de quem é a cortesia e quantas ainda restam.</li>
+            <li>Ele preenche nome, e-mail, celular, estado e formação, e escolhe os módulos.</li>
+            <li>Cada módulo escolhido consome uma cortesia. A tela avisa o custo antes de confirmar.</li>
+            <li>A inscrição entra no sistema igual a uma compra, e o convidado recebe a confirmação por WhatsApp.</li>
+          </ol>
+
+          <h3>Regras da cota</h3>
+          <ul>
+            <li>A cota é da empresa, não da pessoa. Duas pessoas clicando na última cortesia ao mesmo tempo não consomem duas: a segunda recebe o aviso de cota esgotada.</li>
+            <li>Uma pessoa que escolhe dois módulos consome duas cortesias.</li>
+            <li>Repetir o mesmo módulo para a mesma pessoa é recusado, sem gastar cortesia.</li>
+            <li>Fora do prazo ou com a cota pausada, o link para de aceitar inscrições.</li>
+          </ul>
+
+          <div class="box nota">
+            <div class="rot">Precisa de mais cortesias</div>
+            <p>A cota é definida em contrato. Para ampliar, fale com a Yasmin no WhatsApp <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a> antes do prazo. Depois que a cota fecha, cada convite vira ingresso pago.</p>
+          </div>
+        </section>
+
+        <!-- 08 -->
+        <section id="s8" data-cat="montagem">
+          <h2><span class="num">08</span>Montagem e montadora</h2>
+
+          <h3>Montadora oficial</h3>
+          <div class="card" style="margin:0 0 22px">
+            <div class="cardrot">Montadora oficial e credenciada</div>
+            <div class="cardnome">Montadora Estilo Eventos</div>
+            <div class="cardfn">Contato: Edna Martins</div>
+            <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561984529472" target="_blank" rel="noopener">61 98452-9472</a></div>
+            <div class="cardlinha">E-mail: <a href="mailto:comercial@estiloeventos.com.br">comercial@estiloeventos.com.br</a></div>
+            <div class="cardlinha">Site: <a href="https://www.montadoraestiloeventos.com.br" target="_blank" rel="noopener">montadoraestiloeventos.com.br</a></div>
+          </div>
+
+          <h3>Datas de montagem e desmontagem</h3>
+          <div class="tabwrap">
+            <table>
+              <tbody>
+                <tr><td style="width:230px"><b>Montagem</b></td><td>25 de agosto de 2026, das 09h às 17h</td></tr>
+                <tr><td><b>Entrega dos estandes</b></td><td>27 de agosto de 2026, a partir das 09h</td></tr>
+                <tr><td><b>Desmontagem</b></td><td>Imediatamente após o término do evento, em 29 de agosto de 2026</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Apresentação de projetos</h3>
+          <ul>
+            <li>A montadora oficial está apta a realizar qualquer tipo de montagem, básica ou especial.</li>
+            <li>Toda montadora contratada pelo expositor para <strong>montagem especial</strong> precisa entregar à promotora cópia da guia de <strong>ART</strong> (Anotação de Responsabilidade Técnica) ou <strong>RRT</strong> (Registro de Responsabilidade Técnica) quitada, e manter a original no estande, porque a fiscalização pode solicitar o documento.</li>
+            <li>Os projetos enviados devem conter elevação, perspectiva, memorial com cotas, quantidade de energia elétrica necessária em kVA, descritivo com materiais de acabamento, detalhes construtivos, detalhes luminotécnicos e pontos de instalações elétricas.</li>
+            <li>Expositores que não usarem a montadora oficial são responsáveis por enviar este Manual à montadora escolhida.</li>
+          </ul>
+
+          <h3>Montadora não credenciada</h3>
+          <div class="box atencao">
+            <div class="rot">Regra do CCUG</div>
+            <p>Montadoras não credenciadas pagam uma taxa por estande construído, da montagem à desmontagem. Elas devem procurar diretamente o Departamento de Gestão de Parcerias e Fornecedores do CCUG para a devida liberação, porque a norma é do próprio regulamento do espaço.</p>
+            <p><strong>Joabe Nunes</strong>, telefone <a href="tel:+556121969005">61 2196-9005</a>, e-mail <a href="mailto:fornecedores@cicb.com.br">fornecedores@cicb.com.br</a>.</p>
+          </div>
+
+          <h3>Carga e descarga</h3>
+          <ul>
+            <li>O acesso é pelas <strong>docas do Centro de Convenções, das 08h às 17h</strong>.</li>
+            <li>A promotora não se responsabiliza pela permanência de caminhões nas proximidades do empreendimento, porque a liberação para carga e descarga só ocorre no horário acima.</li>
+            <li>A entrada de caminhões e automóveis nas áreas de carga e descarga segue a ordem de chegada, e a permanência do motorista dentro do veículo é obrigatória.</li>
+            <li>O Centro de Convenções não dispõe de carrinhos para transporte de cargas. Carregadores são responsabilidade de cada expositor.</li>
+            <li>Mercadorias não podem ser colocadas nos estandes durante o horário de funcionamento do evento.</li>
+            <li><strong>Não é permitido o uso de carrinhos ou paleteiras sem rodas pneumáticas.</strong> O expositor responde por qualquer dano causado ao piso, às canaletas ou aos elevadores.</li>
+          </ul>
+
+          <h3>Descarte de resíduos</h3>
+          <p>O expositor e sua montadora são responsáveis pela recolha e destinação do próprio lixo de montagem e desmontagem, entre eles sobras de marcenaria, lonas, carpetes e plantas.</p>
+          <div class="box atencao">
+            <div class="rot">Multa</div>
+            <p>Não é permitido descartar sobras de materiais nos contêineres do Centro de Convenções Ulysses Guimarães, sob pena de multa de <span class="multa">R$ 2.000,00</span> por infração.</p>
+          </div>
+        </section>
+
+        <!-- 09 -->
+        <section id="s9" data-cat="montagem">
+          <h2><span class="num">09</span>Regras de construção</h2>
+          <h3>Acabamento e paredes</h3>
+          <p>Todos os estandes devem ter acabamento perfeito nas paredes divisórias e nas estruturas voltadas aos estandes vizinhos, além das áreas visíveis ao ambiente do evento. Revestimentos de paredes e pisos das passagens e circulações devem ser de material resistente à propagação de chamas, segundo a norma técnica vigente, e isso precisa constar no projeto de segurança.</p>
+          <ul>
+            <li>É obrigatória a construção de paredes divisórias em todo o perímetro limítrofe com outros estandes.</li>
+            <li>Paredes cegas, como depósitos, não podem ultrapassar <strong>50% de cada lateral ou frente</strong> voltada para as circulações do evento.</li>
+          </ul>
+
+          <h3>Limite do estande e projeção horizontal</h3>
+          <p>Todos os elementos de montagem, incluindo vitrines e produtos expostos, devem estar totalmente contidos nos limites da área do estande. Vias de circulação e estandes contíguos não podem ser usados para depositar materiais, ferramentas ou produtos. Toda a operação é feita exclusivamente dentro dos limites do próprio estande. Exceções só com autorização prévia da promotora.</p>
+
+          <h3>Estruturas semiprontas</h3>
+          <p>Estandes com estruturas construídas devem entrar no pavilhão <strong>semiprontos</strong>, restando apenas detalhes de acabamento.</p>
+
+          <h3>Altura, recuo e decoração</h3>
+          <p>Móveis, plantas, jardins, recursos audiovisuais e painéis são considerados complemento do estande, e sua colocação não pode ultrapassar os limites da área. Elementos decorativos acima das alturas máximas permitidas só podem ser executados com autorização da promotora.</p>
+          <p>O material usado na decoração deve estar em conformidade com as normas do <strong>Corpo de Bombeiros Militar do Distrito Federal</strong>. Itens de construção e decoração fora destas regras não são liberados para montagem.</p>
+          <p>Plantas ornamentais e jardins são permitidos com autorização prévia da promotora, apenas em vasos ou recipientes apropriados, protegidos com material plástico para preservar o piso.</p>
+
+          <h3>Vias de circulação</h3>
+          <p>É proibido depositar materiais, ferramentas, caixas ou produtos nas vias de circulação e nos estandes vizinhos. Havendo necessidade de deixar material temporariamente na circulação, coloque junto à área do estande, sem obstruir a passagem de pessoas, carrinhos, equipamentos de emergência, equipes de resgate e brigadas de incêndio.</p>
+          <p>Durante a montagem, a promotora mantém serviço de limpeza nas vias de circulação. Depois da colocação das passadeiras, é proibido jogar lixo ou deixar qualquer material sobre elas.</p>
+          <div class="box atencao">
+            <div class="rot">Multa</div>
+            <p>Irregularidade na retirada do material e na liberação da área acarreta multa de <span class="multa">R$ 100,00/m²</span>.</p>
+          </div>
+
+          <h3>Proibições na montagem e na desmontagem</h3>
+          <ul class="regras nao">
+            <li>Trabalho e acesso de menores de 18 anos nas dependências do espaço do evento</li>
+            <li>Montagem de estandes com dois pisos (mezanino)</li>
+            <li>Demarcar, pintar, furar ou escavar o piso</li>
+            <li>Cola, pregos, parafusos ou objetos de perfuração, além de lixar ou emassar o solo e as paredes do Centro de Convenções. Para fixar carpetes ao chão, use fita dupla face referência 4880 da marca 3M</li>
+            <li>Tintas, colas ou similares cuja remoção ou utilização traga risco ou dano aos locais</li>
+            <li>Arrumação que exija fixação de letreiros, telas, cortinas, quadros ou qualquer material capaz de danificar tetos, estruturas metálicas e paredes</li>
+            <li>Construção em alvenaria ou similares</li>
+            <li>Montagem ou instalação de estruturas fora das áreas destinadas à exposição</li>
+            <li>Instalação de lavatórios, fogão a gás, carvão ou lenha na área de exposição</li>
+            <li>Material explosivo, inflamável ou pirotécnico de qualquer espécie</li>
+            <li>Entrada de serra circular de bancada e disco de corte para ferro e alumínio</li>
+            <li>Circular pelo Centro de Convenções durante montagem e desmontagem de bermuda, camiseta, chinelo, papete, salto alto, vestido ou saia</li>
+            <li>Usar os banheiros para limpeza de equipamentos, materiais, lavagem de pincéis ou pano de chão. Os sanitários de serviço ficam liberados para higiene pessoal dos funcionários das montadoras</li>
+            <li>Funcionamento de motores a combustão no interior do Centro de Convenções</li>
+            <li>Soldas à base de gases e equipamentos congêneres</li>
+            <li>Material ou instrumentos sonoros como cornetas e buzinas, além de confetes e serpentinas, especialmente metalizadas</li>
+          </ul>
+
+          <div class="box atencao">
+            <div class="rot">Embargo</div>
+            <p>A promotora se reserva o direito de embargar toda e qualquer montagem que não obedeça às normas estipuladas, para garantir a segurança e a integridade física de todos. O embargo ocorre após parecer da equipe operacional da promotora ou de entidades públicas, como o Corpo de Bombeiros.</p>
+          </div>
+        </section>
+
+        <!-- 10 -->
+        <section id="s10" data-cat="montagem">
+          <h2><span class="num">10</span>Instalações do estande</h2>
+          <h3>Instalação elétrica</h3>
+          <ul>
+            <li>Cada estande recebe <strong>uma tomada 220V com 0,5 kVA</strong>.</li>
+            <li>Cada equipamento precisa de uma tomada, porque <strong>não é permitido o uso de benjamins ou extensões</strong>. Tomadas adicionais são solicitadas diretamente à montadora oficial, que informa o valor unitário.</li>
+            <li>Não pode ser ligada à rede carga superior à alocada ao estande. O expositor responde por qualquer dano causado pelo excesso.</li>
+            <li>A equipe técnica da promotora afere a potência instalada em cada estande. <strong>Excesso de consumo comprovado durante o evento é cobrado do expositor.</strong></li>
+            <li>É proibido usar iluminação que cause interferência em equipamentos elétricos ou eletrônicos expostos em estandes de terceiros.</li>
+            <li>Ao término de cada dia, desligue as luzes do estande e deixe ligado apenas o que precisa de energia contínua, como frigobar. A montadora é responsável por informar ao expositor onde ficam o quadro de luz e as chaves.</li>
+            <li>Estandes que permanecerem ligados após o encerramento das atividades diárias podem ser desligados pela equipe do pavilhão. A equipe e a promotora não se responsabilizam por perdas decorrentes dessa operação.</li>
+            <li><strong>Trinta minutos após o encerramento das atividades diárias, a energia elétrica do pavilhão é desligada.</strong></li>
+          </ul>
+          <div class="box nota">
+            <div class="rot">A tomada é 220V</div>
+            <p>A corrente elétrica do CCUG é <strong>220V</strong>. Para qualquer aparelho 110V, o expositor deve providenciar transformador. Cabe ao expositor usar estabilizadores de tensão em equipamentos que precisem de energia estabilizada, para evitar danos por variação de tensão.</p>
+          </div>
+
+          <h3>Hidráulica, ar condicionado e pias</h3>
+          <p>Não há viabilidade técnica para instalação de ponto hidráulico no pavilhão.</p>
+          <p>É <strong>proibido</strong> o uso de aparelhos de ar condicionado em qualquer área interna do pavilhão, porque o espaço já é climatizado.</p>
+          <p>O expositor que precisar lavar refresqueiras pode usar o espaço com pias montado pela promotora.</p>
+        </section>
+
+        <!-- 11 -->
+        <section id="s11" data-cat="montagem">
+          <h2><span class="num">11</span>Expositores SEBRAE</h2>
+          <p>A montagem segue o formato básico (octanorm). Estrutura adicional pode ser solicitada por conta do expositor, e a personalização visual, entre ela adesivos, banners e materiais promocionais, é responsabilidade da empresa expositora.</p>
+          <div class="box atencao">
+            <div class="rot">Contrapartida obrigatória</div>
+            <p>A aplicação da logomarca no estande é <strong>obrigatória</strong>, no canto superior direito do balcão, em <strong>50 cm x 50 cm</strong>.</p>
+            <p>Prioridade para a logo padrão, azul com fundo branco. Em caso de personalização do estande, envie a arte final para <a href="mailto:yasmin@scienceplay.com">yasmin@scienceplay.com</a> para aprovação.</p>
+          </div>
+          <p><a href="https://drive.google.com/drive/folders/10rvkSvtKOeuHPCZOLVTAvIunUEpnjabO?usp=sharing" target="_blank" rel="noopener">Acessar o material do SEBRAE</a></p>
+        </section>
+
+        <!-- 12 -->
+        <section id="s12" data-cat="regras">
+          <h2><span class="num">12</span>Desmontagem</h2>
+          <p>O expositor é inteiramente responsável pela mercadoria de exposição enquanto ela permanecer no recinto.</p>
+          <p>Logo após o encerramento do evento, <strong>em 29 de agosto, das 19h às 22h</strong>, o expositor e seus fornecedores devem retirar todos os mostruários, objetos de valor, equipamentos, elementos de decoração e mobiliário, para evitar furtos, avarias e extravios.</p>
+          <div class="box atencao">
+            <div class="rot">Multa</div>
+            <p>Após o prazo estipulado, a promotora se reserva o direito de retirar esses objetos, sem se responsabilizar por perdas, danos ou pela guarda de materiais de terceiros, além de aplicar multa de <span class="multa">R$ 500,00/m²</span>, sem direito a apelação judicial e extrajudicial.</p>
+          </div>
+          <ul>
+            <li>Um funcionário da empresa expositora deve permanecer no estande até que todo material e equipamento sejam retirados.</li>
+            <li>A segurança oficial do evento está autorizada pela promotora a reter mercadorias para as devidas conferências.</li>
+            <li>Materiais e equipamentos remanescentes no interior do Centro de Convenções após o período permitido são retirados do pavilhão pelos organizadores, que não se responsabilizam por perdas, danos, avarias, roubos ou extravios daí decorrentes.</li>
+            <li>Recomendamos que os expositores usem os próprios carrinhos para transportar materiais.</li>
+          </ul>
+        </section>
+
+        <!-- 13 -->
+        <section id="s13" data-cat="seguranca">
+          <h2><span class="num">13</span>Prevenção e segurança</h2>
+          <h3>Extintor de incêndio</h3>
+          <p>Item obrigatório de acordo com as normas de fiscalização: NBR 23 (prevenção contra incêndio), NBR 14276/99 (brigada contra incêndio e pânico) e Decreto 46072/2001 (proteção contra incêndio).</p>
+          <p>Todo expositor deve manter no estande extintor do tipo <strong>PQS (Pó Químico Seco)</strong> ou <strong>CO2 (Gás Carbônico) de 6 kg</strong>, durante todo o período de montagem, evento e desmontagem, devidamente sinalizado. A proporção é de <strong>1 extintor a cada 25 m²</strong>, com carga compatível aos produtos expostos e aos materiais usados na montagem.</p>
+          <p>Se o expositor já tiver extintores com essas características, pode usá-los no estande. Caso prefira, pode contratá-los pela promotora, solicitando no formulário <strong>Extintor de Incêndio</strong>.</p>
+          <p>O descumprimento desta exigência transfere ao expositor toda a responsabilidade por danos ou prejuízos causados a terceiros e às dependências do pavilhão, além de quaisquer sanções decorrentes da fiscalização do Corpo de Bombeiros.</p>
+          <div class="card" style="margin:18px 0 0">
+            <div class="cardrot">Aluguel de extintores</div>
+            <div class="cardnome">Arcanjos Life</div>
+            <div class="cardlinha">Telefone: <span class="mono">61 8549-6884</span></div>
+          </div>
+
+          <h3>Equipamentos e materiais perigosos</h3>
+          <p>É proibido utilizar explosivos, gases não liquefeitos, tóxicos, combustíveis, botijões de gás (GLP) ou qualquer elemento que possa provocar incêndio ou explosão no espaço interno do pavilhão. Só é permitido o uso de fogões, aquecedores, torradeiras ou fornos com alimentação elétrica.</p>
+
+          <h3>EPI e trajes de trabalho</h3>
+          <p>É responsabilidade do expositor fornecer EPI aos funcionários que trabalharem na montagem e na desmontagem, de acordo com cada atividade, conforme a legislação vigente e as normas do Ministério do Trabalho e Emprego (NR-6, NR-15, NR-16, NR-18 e Portaria 3.214/78). Os equipamentos devem estar em perfeito estado de conservação e funcionamento.</p>
+          <p>Funcionários e contratados das empresas prestadoras de serviço só acessam o pavilhão para executar serviços de decoração ou instalações se estiverem de uniforme ou camiseta com identificação da empresa, calça comprida e sapato, devidamente credenciados. É proibida a entrada e a permanência de pessoas sem identificação.</p>
+          <p>De acordo com as normas do Corpo de Bombeiros, é proibido o acesso ao pavilhão nos períodos de montagem de pessoas com camiseta, bermuda, saia ou calção, e o uso de tamancos, sandálias ou chinelos. <strong>A regra vale para todas as pessoas presentes no pavilhão, incluindo expositores.</strong></p>
+
+          <h3>Acesso de menores</h3>
+          <p>Durante os períodos de montagem e desmontagem é expressamente proibida a entrada de menores de 18 anos, mesmo acompanhados dos responsáveis.</p>
+        </section>
+
+        <!-- 14 -->
+        <section id="s14" data-cat="operacao">
+          <h2><span class="num">14</span>Serviços disponíveis</h2>
+          <h3>Depósito e limpeza</h3>
+          <p>O depósito é contratado diretamente com a montadora oficial do evento, nas opções individual e compartilhado.</p>
+          <p>A limpeza das vias de circulação comum durante o evento é responsabilidade exclusiva da empresa oficial. <strong>Os expositores cuidam da limpeza dos próprios estandes.</strong></p>
+          <p>O expositor que levar fornecedor próprio para a limpeza do estande deve solicitar credenciais pelo formulário <strong>Credenciamento de Serviço ao Expositor</strong>, para que essa pessoa tenha acesso ao local.</p>
+
+          <h3>Vigilância</h3>
+          <p>O evento mantém serviço de vigilância geral durante montagem, funcionamento e desmontagem. A vigilância geral <strong>não</strong> é responsável por zelar pelos produtos e equipamentos expostos em cada estande. Recomendamos a todos os expositores a contratação de vigilante exclusivo.</p>
+          <p>O vigilante exclusivo pode ser contratado pela promotora, com o formulário <strong>Serviço de Vigilância</strong> na área do expositor, ou diretamente pelo expositor, nas condições abaixo.</p>
+          <h4>1. Funcionário da própria empresa registrado como vigia</h4>
+          <p>O expositor deve comunicar à DELESP, Delegacia de Controle de Segurança Privada, por ofício, a transferência do funcionário qualificado da própria segurança orgânica, com <strong>30 dias de antecedência</strong> do início da montagem, apresentando a documentação à promotora para conferência e arquivamento.</p>
+          <h4>2. Vigilante de empresa terceirizada</h4>
+          <p>Deve ser apresentada a documentação da empresa prestadora e do vigilante:</p>
+          <ul>
+            <li>Autorização para funcionamento, alvará em diário oficial, válido por um ano</li>
+            <li>Revisão de autorização para funcionamento, válida por um ano</li>
+            <li>Contrato entre o expositor e a empresa prestadora do serviço de vigilância</li>
+            <li>Certificado de conclusão de curso de formação de vigilante, válido por dois anos, e após esse prazo o certificado de reciclagem</li>
+            <li>Declaração de reciclagem de vigilantes, válida por dois anos</li>
+            <li>Cópia do RG e do CPF do vigilante</li>
+            <li>Contrato de prestação de serviços entre a empresa de vigilância e o vigilante, para demonstração de vínculo empregatício</li>
+          </ul>
+          <div class="box atencao">
+            <div class="rot">Regra da Polícia Federal</div>
+            <p>O serviço de vigilância é regulamentado pela Polícia Federal e só pode ser prestado por empresas especializadas e devidamente registradas. A liberação das credenciais só ocorre mediante apresentação dos documentos acima.</p>
+            <p>O profissional contratado deve usar uniforme e <strong>não pode portar armas</strong>. O expositor solicita a credencial pelo formulário <strong>Credenciamento de Vigia Terceirizado</strong>, independentemente de o prestador ficar de dia ou de noite no estande. O vigilante não pode solicitar o próprio credenciamento no local sem a presença do expositor.</p>
+          </div>
+
+          <h3>Telefonia, internet e estacionamento</h3>
+          <p>Telefonia e internet são contratadas diretamente com a empresa oficial do CCUG.</p>
+          <div class="card" style="margin:14px 0 18px">
+            <div class="cardrot">Aluguel de internet</div>
+            <div class="cardnome">Vitor Wixx</div>
+            <div class="cardlinha">Telefone: <span class="mono">61 8209-2255</span></div>
+          </div>
+          <p>O estacionamento é privado e cobrado pela administradora, conforme a tabela vigente. O evento não se responsabiliza por problemas ocorridos em área particular não controlada pela promotora.</p>
+
+          <h3>Alimentos e bebidas</h3>
+          <p>A comercialização de serviços de alimentos e bebidas no interior do Centro de Convenções é exclusividade dos fornecedores credenciados pelo CCUG. Expositores interessados em adquirir itens para uso no estande devem entrar em contato com a organização do evento.</p>
+        </section>
+
+        <!-- 15 -->
+        <section id="s15" data-cat="operacao">
+          <h2><span class="num">15</span>Operação durante o evento</h2>
+          <h3>Operação do estande</h3>
+          <p>Durante todo o período de realização, o estande deve ter <strong>pelo menos um funcionário do expositor capacitado a prestar informações</strong> sobre os produtos expostos.</p>
+          <p>A equipe deve chegar <strong>uma hora antes da abertura</strong>. A promotora se reserva o direito de antecipar o horário de abertura, para melhor atendimento ao público.</p>
+          <p>Não é permitido encerrar as atividades no estande antes do término do horário de realização do evento, <strong>nem no último dia</strong>.</p>
+
+          <h3>Mercadorias e reposições</h3>
+          <p>A promotora não recebe produtos dos expositores. O expositor deve manter no estande uma pessoa responsável pelo recebimento de qualquer mercadoria, equipamento ou objeto destinado à exposição.</p>
+          <p>É responsabilidade exclusiva do expositor a entrada e a saída dos equipamentos acompanhados de nota fiscal, e o cumprimento de toda exigência legal relativa à remessa de mercadorias, produtos, equipamentos e utensílios.</p>
+          <p>Mercadorias destinadas ao abastecimento só entram no pavilhão durante o período de recesso do evento. Não é permitido o uso de carrinhos pelas vias de circulação após o horário de abertura da feira.</p>
+
+          <h3>Som</h3>
+          <p>Não é permitido qualquer tipo de sonorização nos estandes, entre eles música e uso de microfones.</p>
+
+          <h3>Seguro</h3>
+          <p>Estandes, bens, produtos e pessoal, incluindo prepostos, transportadores e montadores, <strong>não estão cobertos por seguro</strong>, seja na montagem, durante o evento ou na desmontagem. A responsabilidade única e total por qualquer dano ou eventualidade é do expositor.</p>
+          <p>Recomendamos que o expositor providencie o próprio seguro contra quaisquer riscos, em especial para o pessoal em serviço no evento, além do estande, bens, produtos, equipamentos e materiais expostos ou utilizados. Em hipótese alguma a promotora assume responsabilidade por essas ocorrências ou pelo custo da apólice.</p>
+
+          <h3>Contratação de mão de obra</h3>
+          <p>Conforme solicitação do Ministério Público do Trabalho de 29/06/2011, a empresa participante e suas contratadas não podem firmar contrato com cooperativas quando estiverem presentes, entre tomadora e trabalhadores ou entre cooperativa e trabalhadores, os elementos que configuram relação de emprego, previstos nos artigos 2º e 3º da CLT.</p>
+          <p>Para uso de mão de obra eventual diretamente pelo expositor, os procedimentos legais devem ser observados com atenção especial. Na contratação de empresas prestadoras de serviços, solicite as comprovações de existência legal (contrato social, alvarás), as guias de recolhimento da previdência social (GRPS), cópias da ficha de registro de empregados e recolhimento de FGTS.</p>
+          <div class="tabwrap">
+            <table>
+              <thead><tr><th>Vínculo</th><th>Documentos que ficam no estande</th></tr></thead>
+              <tbody>
+                <tr><td><b>Empregados da empresa expositora</b></td><td>Segunda via da ficha de registro de empregados e cartão de ponto</td></tr>
+                <tr><td><b>Empregados de prestadoras de serviço</b></td><td>Contrato de prestação de serviços, segunda via da ficha de registro de empregados ou cartão de identificação tipo credencial com nome completo, função, data de admissão e número do PIS/PASEP, e cartão de ponto</td></tr>
+                <tr><td><b>Trabalhadores temporários</b></td><td>Contrato com a empresa de trabalho temporário e registro dela no Ministério do Trabalho</td></tr>
+                <tr><td><b>Autônomos</b></td><td>Cópia da inscrição do autônomo junto à Prefeitura e ao INSS</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>O expositor não pode utilizar mão de obra de menores de 16 anos, salvo maiores de 14 anos na condição de aprendiz, observadas as normas aplicáveis.</p>
+        </section>
+
+        <!-- 16 -->
+        <section id="s16" data-cat="operacao">
+          <h2><span class="num">16</span>Proibido e permitido</h2>
+          <h3>Proibido durante o evento</h3>
+          <ul class="regras nao">
+            <li>Arremessar ou jogar qualquer tipo de material promocional para os visitantes. O material do expositor que fizer isso é retido e só é devolvido em 29 de agosto, após o término do evento, além de multa de <span class="multa">R$ 5.000,00</span>. O expositor também responde por qualquer dano ou prejuízo causado a visitante, estande ou pavilhão</li>
+            <li>Qualquer promoção ou atividade fora dos limites da área locada, entre elas distribuição de brindes ou peças promocionais, letreiros e cartazes, desfiles, degustação de produtos e projeção de imagem e luz por qualquer meio</li>
+            <li>Presença de produtos, folhetos promocionais, logomarcas ou promoção de instituições, empresas ou pessoas sem contrato vigente ou autorização expressa da promotora</li>
+            <li>Colagem de adesivos ou similares nas credenciais de identificação do evento</li>
+            <li>Espetáculos pirotécnicos com fumaça, dirigíveis ou qualquer efeito que possa gerar pânico</li>
+            <li>Cilindros de alta pressão de trabalho, entre eles gás hélio e butano</li>
+            <li>Materiais ou substâncias de fácil combustão, motores de combustão e equipamentos que exalem gases, fumaça ou gordura</li>
+            <li>Qualquer tipo de fumaça, porque o pavilhão é equipado com detectores</li>
+            <li>Fogos de artifício, explosivos de qualquer natureza, confetes, balões de gás hélio, serpentinas, chuva de papel picado e produtos assemelhados</li>
+            <li>Fornos, fornos de convecção, forno combinado, chapas de grelhagem e grelhas para churrasco</li>
+            <li>Cocção com óleo de fritura em tachos, fritadeiras ou panelas sobre chamas</li>
+            <li>Uso e armazenamento de botijões de gás GLP e semelhantes para ignição, fogareiros, lamparinas e afins</li>
+            <li>Explosivos, gases não liquefeitos, tóxicos, combustíveis, armazenamento de álcool líquido e qualquer elemento que possa provocar incêndio ou explosão</li>
+            <li>Apresentação de modelos vivos de qualquer sexo seminus ou com tapa-sexo que atentem à moral e aos bons costumes</li>
+            <li>Animais de quaisquer espécies ou portes, inclusive aves, mesmo como parte da decoração do estande ou ligados à demonstração dos produtos</li>
+            <li>Equipamentos, aeronaves e veículos aéreos não tripulados ou remotamente pilotados, entre eles RPA, drones, zepelim e aeromodelos, em qualquer dependência do CCUG, incluindo estacionamentos, áreas externas e internas, carga e descarga, áreas comuns e salas, <strong>mesmo no interior dos estandes</strong></li>
+            <li>Meios de cozimento ou fritura, mesmo elétricos, que produzam vapores ou qualquer tipo de fumaça nas salas, copas ou foyers</li>
+          </ul>
+          <h3>Permitido, com condições</h3>
+          <ul class="regras sim">
+            <li>Degustação, desde que o estande mantenha recipientes para recolhimento de embalagens e restos, com a obrigação de levá-los à lixeira central do pavilhão sempre que a capacidade estiver perto do limite</li>
+            <li>Degustação e distribuição de brindes, amostras e folhetos limitadas ao interior do estande. Cabe à promotora interromper a ação sempre que gerar aglomeração que prejudique o fluxo normal dos visitantes</li>
+            <li>Moving lights dentro do estande, sem projeção para as vias de circulação ou para estandes vizinhos</li>
+          </ul>
+        </section>
+
+        <!-- 17 -->
+        <section id="s17" data-cat="regras">
+          <h2><span class="num">17</span>Quadro de multas</h2>
+          <p class="secsub">Todas as penalidades previstas neste Manual, reunidas. A cobrança é feita por nota de débito emitida pela organização.</p>
+          <div class="tabwrap">
+            <table>
+              <thead><tr><th>Infração</th><th>Valor</th><th>Onde está</th></tr></thead>
+              <tbody>
+                <tr><td><b>Arremessar material promocional para os visitantes</b><br>Inclui retenção do material até o fim do evento</td><td><span class="multa">R$ 5.000,00</span></td><td>Seção 16</td></tr>
+                <tr><td><b>Descartar sobras de material nos contêineres do CCUG</b></td><td><span class="multa">R$ 2.000,00</span><br>por infração</td><td>Seção 08</td></tr>
+                <tr><td><b>Não retirar o material até 29/08 às 22h</b></td><td><span class="multa">R$ 500,00/m²</span></td><td>Seção 12</td></tr>
+                <tr><td><b>Irregularidade na retirada de material e liberação da área</b></td><td><span class="multa">R$ 100,00/m²</span></td><td>Seção 09</td></tr>
+                <tr><td><b>Atraso na abertura ou fechamento antecipado do estande</b></td><td><span class="multa">Multa contratual</span></td><td>Seção 01</td></tr>
+                <tr><td><b>Excesso de consumo elétrico comprovado</b></td><td><span class="multa">Cobrado do expositor</span></td><td>Seção 10</td></tr>
+                <tr><td><b>Uso indevido de credencial</b></td><td><span class="multa">Apreensão, multa e cancelamento</span></td><td>Seção 06</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Disposições gerais</h3>
+          <p>Não há cobrança de taxas municipais na edição do Nutrição Brasil 2026.</p>
+          <p>A promotora se reserva o direito de arbitrar sobre casos omissos neste Manual, além de estabelecer novas normas necessárias ao bom funcionamento do evento, visando facilitar a harmonia entre os expositores.</p>
+          <p>O expositor se obriga a respeitar e a fazer respeitar, por funcionários e contratados, todas as cláusulas e disposições que regulamentam o evento, além de outras normas que venham a ser estabelecidas. Multas são aplicadas em caso de descumprimento. Por isso, recomendamos que o expositor e as empresas contratadas estabeleçam um termo entre si para o período total do evento, com multas para eventuais atrasos e falhas nos serviços.</p>
+          <p>Nenhuma alteração promovida pela promotora pode ser motivo de cancelamento do Contrato de Participação pelo expositor.</p>
+        </section>
+
+        <!-- 18 -->
+        <section id="s18" data-cat="prazos">
+          <h2><span class="num">18</span>Checklist final</h2>
+          <p class="secsub">Passe item a item com a sua equipe antes de sair para Brasília. Use o botão de imprimir no topo para levar em papel.</p>
+          <ul class="check">
+            <li><span class="caixa"></span><div><b>Equipe cadastrada até 22/08</b><span class="q">Nome completo, cargo no crachá, e-mail e WhatsApp de cada pessoa, e quem está autorizado a retirar os crachás</span></div></li>
+            <li><span class="caixa"></span><div><b>Credenciais dentro da cota</b><span class="q">Confira o medidor no topo deste manual. Acima do limite, solicite credencial adicional a R$ 50,00 cada</span></div></li>
+            <li><span class="caixa"></span><div><b>Cortesias distribuídas</b><span class="q">Cota que sobra não vira desconto nem crédito. Mande o link antes do prazo</span></div></li>
+            <li><span class="caixa"></span><div><b>Extintor definido</b><span class="q">PQS ou CO2 de 6 kg, 1 a cada 25 m². Próprio ou contratado pelo formulário</span></div></li>
+            <li><span class="caixa"></span><div><b>Projeto do estande aprovado</b><span class="q">Somente montagem especial: elevação, perspectiva, memorial com cotas, kVA, descritivo e ART ou RRT quitada</span></div></li>
+            <li><span class="caixa"></span><div><b>Montadora liberada pelo CCUG</b><span class="q">Somente montadora não credenciada: taxa paga e liberação junto ao Departamento de Fornecedores</span></div></li>
+            <li><span class="caixa"></span><div><b>Energia dimensionada</b><span class="q">O estande recebe 1 tomada 220V com 0,5 kVA. Uma tomada por equipamento, sem benjamim ou extensão</span></div></li>
+            <li><span class="caixa"></span><div><b>Transformador para equipamento 110V</b><span class="q">A corrente do CCUG é 220V</span></div></li>
+            <li><span class="caixa"></span><div><b>EPI para montagem e desmontagem</b><span class="q">Capacete, luva, óculos e calçado adequado, em bom estado</span></div></li>
+            <li><span class="caixa"></span><div><b>Traje correto para montagem</b><span class="q">Calça comprida, sapato fechado e camiseta identificada. Sem bermuda, chinelo ou salto</span></div></li>
+            <li><span class="caixa"></span><div><b>Documentos trabalhistas no estande</b><span class="q">Ficha de registro, cartão de ponto e contratos, à disposição da fiscalização</span></div></li>
+            <li><span class="caixa"></span><div><b>Seguro próprio contratado</b><span class="q">O evento não cobre estande, bens, produtos nem pessoal</span></div></li>
+            <li><span class="caixa"></span><div><b>Carrinho próprio com rodas pneumáticas</b><span class="q">O CCUG não fornece carrinhos e não aceita rodas sem pneu</span></div></li>
+            <li><span class="caixa"></span><div><b>Escala cobrindo todo o horário</b><span class="q">Chegada 1 hora antes da abertura e nenhum fechamento antecipado, nem no sábado</span></div></li>
+            <li><span class="caixa"></span><div><b>Logo SEBRAE aplicada</b><span class="q">Somente estandes SEBRAE: 50 cm x 50 cm no canto superior direito do balcão, arte final aprovada por e-mail</span></div></li>
+            <li><span class="caixa"></span><div><b>Desmontagem organizada para 29/08, 19h às 22h</b><span class="q">Equipe e transporte confirmados. Após 22h incide multa de R$ 500,00/m²</span></div></li>
+          </ul>
+        </section>
+
+        <!-- 19 -->
+        <section id="s19" data-cat="credenciamento">
+          <h2><span class="num">19</span>Perguntas frequentes</h2>
+          <p class="secsub">As dúvidas que mais chegam ao CAEX. Se a sua não estiver aqui, fale com a Yasmin.</p>
+          <div class="faq">
+            <details><summary>Quantas credenciais a minha empresa tem direito?</summary><div class="resp"><p>O número está no medidor no topo deste manual, puxado do sistema. Ele nasce da área contratada do estande, conforme a tabela da seção 6. Acima desse número, cada credencial adicional custa R$ 50,00.</p></div></details>
+            <details><summary>Consigo incluir gente depois do dia 22/08?</summary><div class="resp"><p>Depois do prazo a lista trava e a inclusão passa a depender de aprovação da organização. Não é impossível, mas deixa de ser automático: vira pedido no CAEX no dia, com fila na frente. Cadastre antes.</p></div></details>
+            <details><summary>Todo mundo precisa ir ao CAEX buscar o próprio crachá?</summary><div class="resp"><p>Não. Uma pessoa só pode retirar todos os crachás da empresa, desde que esteja marcada no cadastro como autorizada a retirar. Mas cada crachá tem que ser entregue ao dono, porque ninguém entra sem o seu.</p></div></details>
+            <details><summary>Esqueci o crachá no hotel. Consigo entrar?</summary><div class="resp"><p>Não sem credencial. Vá ao CAEX, informe o ocorrido e peça a segunda via. Ela sai da cota da empresa. Se a cota já estiver esgotada, entra como credencial adicional, mediante pagamento.</p></div></details>
+            <details><summary>Posso usar a minha montadora, em vez da oficial?</summary><div class="resp"><p>Pode. Duas condições: montadora não credenciada paga taxa por estande direto ao CCUG, pelo Departamento de Fornecedores, e você é responsável por entregar este manual a ela. Montagem especial ainda exige ART ou RRT quitada.</p></div></details>
+            <details><summary>Preciso mesmo de ART ou RRT?</summary><div class="resp"><p>Somente em montagem especial. Estande básico octanorm da montadora oficial não exige. A guia precisa estar quitada, com a cópia entregue à organização e a original no estande, porque a fiscalização pode pedir.</p></div></details>
+            <details><summary>Quantas tomadas vêm no estande?</summary><div class="resp"><p>Uma, de 220V com 0,5 kVA. Cada equipamento precisa da própria tomada, porque benjamim e extensão são proibidos. Tomadas extras são contratadas com a montadora oficial. Aparelho 110V exige transformador seu.</p></div></details>
+            <details><summary>Posso levar ar condicionado portátil para o estande?</summary><div class="resp"><p>Não. O pavilhão é climatizado e o uso de ar condicionado é proibido em qualquer área interna.</p></div></details>
+            <details><summary>Posso servir comida ou fazer degustação?</summary><div class="resp"><p>Degustação pode, dentro do estande, com recipiente próprio para embalagens e restos. O que não pode é cozinhar, fritar ou grelhar, nem produzir fumaça ou vapor. Comprar alimentos e bebidas para o estande passa pelos fornecedores credenciados do CCUG, via organização.</p></div></details>
+            <details><summary>Posso colocar música no estande?</summary><div class="resp"><p>Não. Nenhum tipo de sonorização é permitido nos estandes, o que inclui música e microfone.</p></div></details>
+            <details><summary>Posso distribuir brinde no corredor?</summary><div class="resp"><p>Não. Toda ação fica dentro dos limites da área locada. Arremessar material promocional para os visitantes gera multa de R$ 5.000,00 e retenção do material até o fim do evento.</p></div></details>
+            <details><summary>Extintor é obrigatório mesmo em estande pequeno?</summary><div class="resp"><p>Sim. É 1 extintor a cada 25 m², tipo PQS ou CO2 de 6 kg, sinalizado, durante montagem, evento e desmontagem. Pode ser o seu, ou contratado pelo formulário de Extintor de Incêndio.</p></div></details>
+            <details><summary>Posso fechar o estande mais cedo no sábado?</summary><div class="resp"><p>Não. Fechar antes do horário de encerramento, inclusive no último dia, acarreta multa e penalidades contratuais. A equipe também deve chegar uma hora antes da abertura.</p></div></details>
+            <details><summary>Até que horas posso desmontar?</summary><div class="resp"><p>A retirada acontece em 29 de agosto, das 19h às 22h. Depois das 22h a organização retira o que ficou, sem responsabilidade por perdas, e aplica multa de R$ 500,00/m².</p></div></details>
+            <details><summary>Os meus produtos estão cobertos por algum seguro do evento?</summary><div class="resp"><p>Não. Estande, bens, produtos, equipamentos e pessoal não têm cobertura em nenhuma fase. A recomendação é contratar seguro próprio.</p></div></details>
+            <details><summary>Como funcionam as cortesias que a minha empresa tem?</summary><div class="resp"><p>Você recebe um link único. Quem abre se inscreve sozinho e recebe a confirmação por WhatsApp, igual a quem comprou. Cada módulo escolhido consome uma cortesia. O saldo em tempo real está no medidor no topo deste manual, e o detalhe está na seção 7.</p></div></details>
+            <details><summary>Posso usar drone para filmar o estande?</summary><div class="resp"><p>Não. Drones e qualquer veículo aéreo não tripulado são proibidos em todas as dependências do CCUG, incluindo estacionamento e áreas externas, mesmo dentro do estande.</p></div></details>
+            <details><summary>Quem resolve problema no dia do evento?</summary><div class="resp"><p>O CAEX, Centro de Atendimento ao Expositor. É o canal único para montagem, realização e desmontagem. Antes do evento, fale com a Yasmin no WhatsApp <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a>.</p></div></details>
+          </div>
+        </section>
+
+        <!-- 20 -->
+        <section id="s20" data-cat="operacao">
+          <h2><span class="num">20</span>Contatos</h2>
+          <div class="cards">
+            <div class="card">
+              <div class="cardrot">Produção e comercial</div>
+              <div class="cardnome">Yasmin Aguiar</div>
+              <div class="cardfn">Expositores e credenciamento</div>
+              <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a></div>
+              <div class="cardlinha">E-mail: <a href="mailto:yasmin@scienceplay.com">yasmin@scienceplay.com</a></div>
+            </div>
+            <div class="card">
+              <div class="cardrot">Central do evento</div>
+              <div class="cardnome">Nutrição Brasil</div>
+              <div class="cardfn">Informações gerais</div>
+              <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561998318817" target="_blank" rel="noopener">61 99831-8817</a></div>
+              <div class="cardlinha">E-mail: <a href="mailto:contato@scienceplay.com">contato@scienceplay.com</a></div>
+              <div class="cardlinha">Instagram: <a href="https://www.instagram.com/nutricaobrasiloficial" target="_blank" rel="noopener">@nutricaobrasiloficial</a></div>
+            </div>
+            <div class="card">
+              <div class="cardrot">Montadora oficial</div>
+              <div class="cardnome">Estilo Eventos</div>
+              <div class="cardfn">Edna Martins</div>
+              <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561984529472" target="_blank" rel="noopener">61 98452-9472</a></div>
+              <div class="cardlinha">E-mail: <a href="mailto:comercial@estiloeventos.com.br">comercial@estiloeventos.com.br</a></div>
+            </div>
+            <div class="card">
+              <div class="cardrot">CCUG · Fornecedores</div>
+              <div class="cardnome">Joabe Nunes</div>
+              <div class="cardfn">Liberação de montadora não credenciada</div>
+              <div class="cardlinha">Telefone: <a href="tel:+556121969005">61 2196-9005</a></div>
+              <div class="cardlinha">E-mail: <a href="mailto:fornecedores@cicb.com.br">fornecedores@cicb.com.br</a></div>
+            </div>
+          </div>
+        </section>
+
       </div>
 
-      <nav id="sumario" aria-label="Sumário">
-        <div class="rot">Sumário</div>
-        <ol>
-          <li><a href="#s1"><span class="n">01</span>Datas e horários</a></li>
-          <li><a href="#s2"><span class="n">02</span>Apresentação</a></li>
-          <li><a href="#s3"><span class="n">03</span>Informações gerais</a></li>
-          <li><a href="#s4"><span class="n">04</span>Normas gerais</a></li>
-          <li><a href="#s5"><span class="n">05</span>Prazos dos formulários</a></li>
-          <li><a href="#s6"><span class="n">06</span>Credenciamento</a></li>
-          <li><a href="#s7"><span class="n">07</span>Montagem e montadora</a></li>
-          <li><a href="#s8"><span class="n">08</span>Regras de construção</a></li>
-          <li><a href="#s9"><span class="n">09</span>Instalações do estande</a></li>
-          <li><a href="#s10"><span class="n">10</span>Expositores SEBRAE</a></li>
-          <li><a href="#s11"><span class="n">11</span>Desmontagem</a></li>
-          <li><a href="#s12"><span class="n">12</span>Prevenção e segurança</a></li>
-          <li><a href="#s13"><span class="n">13</span>Serviços disponíveis</a></li>
-          <li><a href="#s14"><span class="n">14</span>Operação durante o evento</a></li>
-          <li><a href="#s15"><span class="n">15</span>Proibido e permitido</a></li>
-          <li><a href="#s16"><span class="n">16</span>Quadro de multas</a></li>
-          <li><a href="#s17"><span class="n">17</span>Disposições gerais</a></li>
-          <li><a href="#s18"><span class="n">18</span>Contatos</a></li>
-          <li><a href="#s19"><span class="n">19</span>Checklist final</a></li>
-        </ol>
-      </nav>
-    </header>
-
-    <!-- 01 -->
-    <section id="s1">
-      <h2><span class="num">01</span>Datas e horários</h2>
-      <p class="secsub">O estande precisa estar operando em todo o horário de visitação, da abertura ao encerramento.</p>
-
-      <h3>Visitação da feira</h3>
-      <div class="tabwrap">
-        <table>
-          <thead><tr><th>Data</th><th>Dia da semana</th><th>Horário</th></tr></thead>
-          <tbody>
-            <tr><td><b>27/08/2026</b></td><td>Quinta-feira</td><td><b>17h00 às 21h30</b></td></tr>
-            <tr><td><b>28/08/2026</b></td><td>Sexta-feira</td><td><b>08h00 às 19h00</b></td></tr>
-            <tr><td><b>29/08/2026</b></td><td>Sábado</td><td><b>08h30 às 19h00</b></td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Calendário completo de operação</h3>
-      <div class="tabwrap">
-        <table>
-          <thead><tr><th>Data</th><th>Dia</th><th>O que acontece</th></tr></thead>
-          <tbody>
-            <tr><td><b>25/08</b></td><td>Terça-feira</td><td>Montagem dos estandes, 09h às 17h</td></tr>
-            <tr class="destaque">
-              <td><b>27/08</b></td><td>Quinta-feira</td>
-              <td>Entrega dos estandes e credenciamento do expositor a partir das 09h<br>
-                  Decoração das 09h às 15h<br>
-                  Manutenção das 15h às 15h50<br>
-                  <b>Visitação das 17h00 às 21h30</b></td>
-            </tr>
-            <tr>
-              <td><b>28/08</b></td><td>Sexta-feira</td>
-              <td>Manutenção das 07h às 07h50<br><b>Visitação das 08h00 às 19h00</b></td>
-            </tr>
-            <tr>
-              <td><b>29/08</b></td><td>Sábado</td>
-              <td>Manutenção das 07h às 07h50<br><b>Visitação das 08h30 às 19h00</b><br>Retirada de material das 19h às 22h</td>
-            </tr>
-            <tr><td><b>30/08</b></td><td>Domingo</td><td>NB Run, largada às 07h, Praça do Buriti</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="box atencao">
-        <div class="rot">Importante</div>
-        <p>O expositor se compromete a manter o estande em pleno funcionamento durante <strong>todo o período de visitação</strong>, da abertura ao encerramento, que pode se estender além do horário estimado. Atraso na abertura ou fechamento antecipado do estande acarreta <strong>multa e demais penalidades contratuais</strong>.</p>
-      </div>
-    </section>
-
-    <!-- 02 -->
-    <section id="s2">
-      <h2><span class="num">02</span>Apresentação</h2>
-      <p>Este Manual reúne as informações necessárias para o bom funcionamento do <strong>Nutrição Brasil 2026</strong>, realizado de 27 a 29 de agosto de 2026 no Centro de Convenções Ulysses Guimarães, em Brasília, Distrito Federal.</p>
-      <p>O documento é <strong>parte integrante do Contrato de Participação</strong>, conforme a cláusula 5, item 4b: "Observar e se manter adstrito ao que dispõe o Manual do Expositor", estabelecida entre a Science Play e as empresas expositoras.</p>
-      <p>O desconhecimento das normas e regulamentos aqui estabelecidos não isenta o expositor nem seus contratados, entre eles montadora e demais prestadores de serviço, das penalidades, multas, sanções e responsabilidades previstas neste Manual. Em caso de descumprimento, as multas são cobradas conforme a norma descumprida, por nota de débito emitida pela organização.</p>
-      <p>Recomendamos que todas as normas sejam lidas e transmitidas a funcionários e contratados, para evitar transtornos de última hora.</p>
-      <div class="box nota">
-        <div class="rot">CAEX</div>
-        <p>Qualquer dúvida surgida em qualquer período do evento, seja na montagem, na realização ou na desmontagem, é resolvida exclusivamente pela Science Play. O expositor e seus prestadores de serviço devem procurar o <strong>CAEX, Centro de Atendimento ao Expositor</strong>, destinado à mediação, condução e resolução das questões.</p>
-      </div>
-      <p>A promotora não se responsabiliza por problemas decorrentes do não cumprimento das exigências feitas neste Manual.</p>
-    </section>
-
-    <!-- 03 -->
-    <section id="s3">
-      <h2><span class="num">03</span>Informações gerais</h2>
-      <div class="tabwrap">
-        <table>
-          <tbody>
-            <tr><td style="width:210px"><b>Local do evento</b></td><td>Centro de Convenções Ulysses Guimarães (CCUG)<br>SDC, Ulysses Guimarães, Brasília, Distrito Federal, CEP 70655-775</td></tr>
-            <tr><td><b>Organização e promoção</b></td><td>Science Play</td></tr>
-            <tr><td><b>Período do evento</b></td><td>27 a 29 de agosto de 2026</td></tr>
-            <tr><td><b>NB Run</b></td><td>30 de agosto de 2026, Praça do Buriti, largada às 07h</td></tr>
-            <tr><td><b>Corrente elétrica</b></td><td>220V</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 04 -->
-    <section id="s4">
-      <h2><span class="num">04</span>Normas gerais</h2>
-
-      <h3>Transferência de responsabilidade</h3>
-      <p>O expositor não pode transferir, total ou parcialmente, quaisquer responsabilidades ou direitos assumidos com a promotora, nem sublocar ou ceder parcela ou totalidade da área alugada.</p>
-
-      <h3>Promoção de terceiros</h3>
-      <p>É vetada a exposição, a distribuição de brindes e a publicidade direta ou indireta de produtos de empresas não participantes dentro do estande.</p>
-      <p>O expositor pode solicitar por escrito à promotora, que autoriza ou não a seu critério, a apresentação de produtos que não fabrica nem representa com exclusividade, desde que necessários à complementação da sua linha. <strong>Autorização verbal não vale.</strong> Esses produtos precisam ser de fabricação de outras empresas participantes do evento, e no estande não pode constar nenhuma menção promocional ou de agradecimento.</p>
-
-      <h3>Isenção de responsabilidade da promotora</h3>
-      <p>A promotora não se responsabiliza por danos ou prejuízos causados a pessoas ou produtos expostos antes, durante ou após a realização do evento, incluindo roubo, furto, sabotagem, convulsão civil, deficiências ou interrupções no fornecimento de energia elétrica e água, ou sinistros de qualquer espécie.</p>
-      <p>A promotora e seus prepostos também não respondem, nem subsidiariamente, por qualquer vínculo empregatício ou encargo social decorrente dos serviços executados na área do Centro de Convenções.</p>
-    </section>
-
-    <!-- 05 -->
-    <section id="s5">
-      <h2><span class="num">05</span>Prazos dos formulários</h2>
-      <p class="secsub">O preenchimento é online, pelo link personalizado da sua empresa. Solicitações fora do prazo ficam sujeitas a confirmação.</p>
-      <div class="tabwrap">
-        <table>
-          <thead><tr><th>Formulário</th><th>Situação</th><th class="num">Prazo</th></tr></thead>
-          <tbody>
-            <tr><td><b>Credenciamento de Expositor</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
-            <tr><td><b>Credenciamento de Serviço ao Expositor</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
-            <tr><td><b>Credenciais adicionais</b> (R$ 50,00 cada)</td><td>Opcional</td><td class="num"><b>22/08/2026</b></td></tr>
-            <tr><td><b>Extintor de incêndio</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="box ok">
-        <div class="rot">Link do seu cadastro</div>
-        <p>O formulário da sua empresa já está aberto no endereço abaixo. Guarde este link, é por ele que a equipe é cadastrada e editada até o prazo.</p>
-        <p class="mono" id="linkCadastroTexto"></p>
-      </div>
-    </section>
-
-    <!-- 06 -->
-    <section id="s6">
-      <h2><span class="num">06</span>Credenciamento</h2>
-      <p>Nenhum profissional entra no evento sem estar devidamente credenciado e portando credencial. Todas as credenciais são <strong>pessoais e intransferíveis</strong>, sem direito a acompanhantes. O uso indevido implica apreensão, multa e cancelamento.</p>
-      <p>A credencial deve ser usada na altura do peito pelo titular enquanto ele permanecer no evento.</p>
-      <p>As credenciais precisam ser preenchidas com o nome das pessoas que vão trabalhar no evento até o prazo de envio do formulário. Todas podem ser retiradas por um único funcionário da empresa, mas devem ser entregues aos respectivos donos: <strong>não há acesso ao evento sem credencial</strong>.</p>
-
-      <h3>Cota gratuita por área do estande</h3>
-      <div class="tabwrap">
-        <table>
-          <thead><tr><th>Área do estande</th><th class="num">Credenciais de expositor</th><th class="num">Credenciais de serviço</th></tr></thead>
-          <tbody>
-            <tr><td><b>4 m²</b></td><td class="num">2</td><td class="num">1</td></tr>
-            <tr><td><b>9 m²</b></td><td class="num">3</td><td class="num">1</td></tr>
-            <tr><td><b>12 m²</b></td><td class="num">4</td><td class="num">2</td></tr>
-            <tr><td><b>18 m²</b></td><td class="num">6</td><td class="num">3</td></tr>
-            <tr><td><b>24 m²</b></td><td class="num">8</td><td class="num">4</td></tr>
-            <tr><td><b>36 m²</b></td><td class="num">12</td><td class="num">7</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="box nota">
-        <div class="rot">O limite da sua empresa</div>
-        <p id="limiteFrase"></p>
-      </div>
-
-      <h3>Credencial de expositor</h3>
-      <p>Destinada à diretoria e aos funcionários da empresa expositora, válida por todo o período do evento. Quem ultrapassar a cota gratuita solicita <strong>credencial adicional</strong>, mediante pagamento, pelo mesmo link de cadastro.</p>
-      <p>Retirada a partir das <strong>09h do dia 27 de agosto de 2026</strong>, no CAEX.</p>
-
-      <h3>Credencial de serviço ao expositor</h3>
-      <p>Destinada aos profissionais que prestam serviço ao expositor durante o funcionamento do evento, como recepcionistas, garçons e animadores. Vigias terceirizados não entram nesta categoria e têm credenciamento próprio.</p>
-      <p>Retirada a partir das <strong>09h do dia 27 de agosto de 2026</strong>, no CAEX. Ultrapassada a cota gratuita, solicite credencial adicional pelo formulário.</p>
-
-      <div class="box atencao">
-        <div class="rot">Perda ou esquecimento</div>
-        <p>Perda, extravio ou esquecimento de credencial deve ser comunicado imediatamente no CAEX, para checagem de dados e solicitação de nova credencial. A nova credencial sai da cota do expositor. Se a cota estiver esgotada, entra como credencial adicional, mediante pagamento.</p>
-      </div>
-
-      <h3>Credenciamento de imprensa</h3>
-      <p>Pedidos devem ser enviados para <a href="mailto:yasmin@scienceplay.com">yasmin@scienceplay.com</a> e <a href="mailto:contato@scienceplay.com">contato@scienceplay.com</a>.</p>
-    </section>
-
-    <!-- 07 -->
-    <section id="s7">
-      <h2><span class="num">07</span>Montagem e montadora</h2>
-
-      <div class="card" style="margin:0 0 24px">
-        <div class="cardrot">Montadora oficial e credenciada</div>
-        <div class="cardnome">Montadora Estilo Eventos</div>
-        <div class="cardfn">Contato: Edna Martins</div>
-        <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561984529472" target="_blank" rel="noopener">61 98452-9472</a></div>
-        <div class="cardlinha">E-mail: <a href="mailto:comercial@estiloeventos.com.br">comercial@estiloeventos.com.br</a></div>
-        <div class="cardlinha">Site: <a href="https://www.montadoraestiloeventos.com.br" target="_blank" rel="noopener">montadoraestiloeventos.com.br</a></div>
-      </div>
-
-      <h3>Datas</h3>
-      <div class="tabwrap">
-        <table>
-          <tbody>
-            <tr><td style="width:230px"><b>Montagem</b></td><td>25 de agosto de 2026, das 09h às 17h</td></tr>
-            <tr><td><b>Entrega dos estandes</b></td><td>27 de agosto de 2026, a partir das 09h</td></tr>
-            <tr><td><b>Desmontagem</b></td><td>Imediatamente após o término do evento, em 29 de agosto de 2026</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Apresentação de projetos</h3>
-      <ul>
-        <li>A montadora oficial está apta a realizar qualquer tipo de montagem, básica ou especial.</li>
-        <li>Toda montadora contratada pelo expositor para <strong>montagem especial</strong> precisa entregar à promotora cópia da guia de <strong>ART</strong> (Anotação de Responsabilidade Técnica) ou <strong>RRT</strong> (Registro de Responsabilidade Técnica) quitada, e manter a original no estande, porque a fiscalização pode solicitar o documento.</li>
-        <li>Os projetos enviados devem conter elevação, perspectiva, memorial com cotas, quantidade de energia elétrica necessária em kVA, descritivo com materiais de acabamento, detalhes construtivos, detalhes luminotécnicos e pontos de instalações elétricas.</li>
-        <li>Expositores que não usarem a montadora oficial são responsáveis por enviar este Manual à montadora escolhida.</li>
-      </ul>
-
-      <div class="box atencao">
-        <div class="rot">Regra do CCUG: montadora não credenciada</div>
-        <p>Montadoras não credenciadas pagam uma taxa por estande construído, da montagem à desmontagem. Elas devem procurar diretamente o Departamento de Gestão de Parcerias e Fornecedores do CCUG para a devida liberação, porque a norma é do próprio regulamento do espaço.</p>
-        <p><strong>Joabe Nunes</strong>, telefone <a href="tel:+556121969005">61 2196-9005</a>, e-mail <a href="mailto:fornecedores@cicb.com.br">fornecedores@cicb.com.br</a>.</p>
-      </div>
-
-      <h3>Carga e descarga</h3>
-      <ul>
-        <li>O acesso é pelas <strong>docas do Centro de Convenções, das 08h às 17h</strong>.</li>
-        <li>A promotora não se responsabiliza pela permanência de caminhões nas proximidades do empreendimento, porque a liberação para carga e descarga só ocorre no horário acima.</li>
-        <li>A entrada de caminhões e automóveis nas áreas de carga e descarga segue a ordem de chegada, e a permanência do motorista dentro do veículo é obrigatória.</li>
-        <li>O Centro de Convenções não dispõe de carrinhos para transporte de cargas. Carregadores são responsabilidade de cada expositor.</li>
-        <li>Mercadorias não podem ser colocadas nos estandes durante o horário de funcionamento do evento.</li>
-        <li><strong>Não é permitido o uso de carrinhos ou paleteiras sem rodas pneumáticas.</strong> O expositor responde por qualquer dano causado ao piso, às canaletas ou aos elevadores.</li>
-      </ul>
-
-      <h3>Descarte de resíduos</h3>
-      <p>O expositor e sua montadora são responsáveis pela recolha e destinação do próprio lixo de montagem e desmontagem, entre eles sobras de marcenaria, lonas, carpetes e plantas.</p>
-      <div class="box atencao">
-        <div class="rot">Multa</div>
-        <p>Não é permitido descartar sobras de materiais nos contêineres do Centro de Convenções Ulysses Guimarães, sob pena de multa de <span class="multa">R$ 2.000,00</span> por infração.</p>
-      </div>
-    </section>
-
-    <!-- 08 -->
-    <section id="s8">
-      <h2><span class="num">08</span>Regras de construção</h2>
-
-      <h3>Acabamento</h3>
-      <p>Todos os estandes devem ter acabamento perfeito nas paredes divisórias e nas estruturas voltadas aos estandes vizinhos, além das áreas visíveis ao ambiente do evento. Revestimentos de paredes e pisos das passagens e circulações devem ser de material resistente à propagação de chamas, segundo a norma técnica vigente, e isso precisa constar no projeto de segurança.</p>
-
-      <h3>Paredes divisórias e paredes cegas</h3>
-      <ul>
-        <li>É obrigatória a construção de paredes divisórias em todo o perímetro limítrofe com outros estandes.</li>
-        <li>Paredes cegas, como depósitos, não podem ultrapassar <strong>50% de cada lateral ou frente</strong> voltada para as circulações do evento.</li>
-      </ul>
-
-      <h3>Limite do estande e projeção horizontal</h3>
-      <p>Todos os elementos de montagem, incluindo vitrines e produtos expostos, devem estar totalmente contidos nos limites da área do estande. Vias de circulação e estandes contíguos não podem ser usados para depositar materiais, ferramentas ou produtos. Toda a operação é feita exclusivamente dentro dos limites do próprio estande. Exceções só com autorização prévia da promotora.</p>
-
-      <h3>Estruturas semiprontas</h3>
-      <p>Estandes com estruturas construídas devem entrar no pavilhão <strong>semiprontos</strong>, restando apenas detalhes de acabamento.</p>
-
-      <h3>EPI</h3>
-      <p>Expositores, montadoras e demais empresas devem fornecer Equipamentos de Proteção Individual (capacete, luva, óculos, bota ou sapato adequado) aos colaboradores que trabalharem na montagem e na desmontagem. Os equipamentos precisam estar em perfeito estado de conservação e funcionamento.</p>
-
-      <h3>Altura, recuo e decoração</h3>
-      <p>Móveis, plantas, jardins, recursos audiovisuais e painéis são considerados complemento do estande, e sua colocação não pode ultrapassar os limites da área. Elementos decorativos acima das alturas máximas permitidas só podem ser executados com autorização da promotora.</p>
-      <p>O material usado na decoração deve estar em conformidade com as normas do <strong>Corpo de Bombeiros Militar do Distrito Federal</strong>. Itens de construção e decoração fora destas regras não são liberados para montagem.</p>
-
-      <h3>Plantas e jardins</h3>
-      <p>Plantas ornamentais e jardins são permitidos com autorização prévia da promotora, apenas em vasos ou recipientes apropriados, protegidos com material plástico para preservar o piso.</p>
-
-      <h3>Vias de circulação</h3>
-      <p>É proibido depositar materiais, ferramentas, caixas ou produtos nas vias de circulação e nos estandes vizinhos. Havendo necessidade de deixar material temporariamente na circulação, coloque junto à área do estande, sem obstruir a passagem de pessoas, carrinhos, equipamentos de emergência, equipes de resgate e brigadas de incêndio.</p>
-      <p>Durante a montagem, a promotora mantém serviço de limpeza nas vias de circulação. Depois da colocação das passadeiras, é proibido jogar lixo ou deixar qualquer material sobre elas.</p>
-      <div class="box atencao">
-        <div class="rot">Multa</div>
-        <p>Irregularidade na retirada do material e na liberação da área acarreta multa de <span class="multa">R$ 100,00/m²</span>.</p>
-      </div>
-
-      <h3>Proibições na montagem e na desmontagem</h3>
-      <ul class="regras nao">
-        <li>Trabalho e acesso de menores de 18 anos nas dependências do espaço do evento</li>
-        <li>Montagem de estandes com dois pisos (mezanino)</li>
-        <li>Demarcar, pintar, furar ou escavar o piso</li>
-        <li>Cola, pregos, parafusos ou objetos de perfuração, além de lixar ou emassar o solo e as paredes do Centro de Convenções. Para fixar carpetes ao chão, use fita dupla face referência 4880 da marca 3M</li>
-        <li>Tintas, colas ou similares cuja remoção ou utilização traga risco ou dano aos locais</li>
-        <li>Arrumação que exija fixação de letreiros, telas, cortinas, quadros ou qualquer material capaz de danificar tetos, estruturas metálicas e paredes</li>
-        <li>Construção em alvenaria ou similares</li>
-        <li>Montagem ou instalação de estruturas fora das áreas destinadas à exposição</li>
-        <li>Instalação de lavatórios, fogão a gás, carvão ou lenha na área de exposição</li>
-        <li>Material explosivo, inflamável ou pirotécnico de qualquer espécie</li>
-        <li>Entrada de serra circular de bancada e disco de corte para ferro e alumínio</li>
-        <li>Circular pelo Centro de Convenções durante montagem e desmontagem de bermuda, camiseta, chinelo, papete, salto alto, vestido ou saia</li>
-        <li>Usar os banheiros para limpeza de equipamentos, materiais, lavagem de pincéis ou pano de chão. Os sanitários de serviço ficam liberados para higiene pessoal dos funcionários das montadoras</li>
-        <li>Funcionamento de motores a combustão no interior do Centro de Convenções</li>
-        <li>Soldas à base de gases e equipamentos congêneres</li>
-        <li>Material ou instrumentos sonoros como cornetas e buzinas, além de confetes e serpentinas, especialmente metalizadas</li>
-      </ul>
-
-      <div class="box atencao">
-        <div class="rot">Embargo</div>
-        <p>A promotora se reserva o direito de embargar toda e qualquer montagem que não obedeça às normas estipuladas, para garantir a segurança e a integridade física de todos. O embargo ocorre após parecer da equipe operacional da promotora ou de entidades públicas, como o Corpo de Bombeiros.</p>
-      </div>
-    </section>
-
-    <!-- 09 -->
-    <section id="s9">
-      <h2><span class="num">09</span>Instalações do estande</h2>
-
-      <h3>Instalação elétrica</h3>
-      <ul>
-        <li>Cada estande recebe <strong>uma tomada 220V com 0,5 kVA</strong>.</li>
-        <li>Cada equipamento precisa de uma tomada, porque <strong>não é permitido o uso de benjamins ou extensões</strong>. Tomadas adicionais são solicitadas diretamente à montadora oficial, que informa o valor unitário.</li>
-        <li>Não pode ser ligada à rede carga superior à alocada ao estande. O expositor responde por qualquer dano causado pelo excesso.</li>
-        <li>A equipe técnica da promotora afere a potência instalada em cada estande. <strong>Excesso de consumo comprovado durante o evento é cobrado do expositor.</strong></li>
-        <li>É proibido usar iluminação que cause interferência em equipamentos elétricos ou eletrônicos expostos em estandes de terceiros.</li>
-        <li>Ao término de cada dia, desligue as luzes do estande e deixe ligado apenas o que precisa de energia contínua, como frigobar. A montadora é responsável por informar ao expositor onde ficam o quadro de luz e as chaves.</li>
-        <li>Estandes que permanecerem ligados após o encerramento das atividades diárias podem ser desligados pela equipe do pavilhão. A equipe e a promotora não se responsabilizam por perdas decorrentes dessa operação.</li>
-        <li><strong>Trinta minutos após o encerramento das atividades diárias, a energia elétrica do pavilhão é desligada.</strong></li>
-      </ul>
-      <div class="box nota">
-        <div class="rot">220V</div>
-        <p>A corrente elétrica do CCUG é <strong>220V</strong>. Para qualquer aparelho 110V, o expositor deve providenciar transformador. Cabe ao expositor usar estabilizadores de tensão em equipamentos que precisem de energia estabilizada, para evitar danos por variação de tensão.</p>
-      </div>
-
-      <h3>Instalação hidráulica</h3>
-      <p>Não há viabilidade técnica para instalação de ponto hidráulico no pavilhão.</p>
-
-      <h3>Ar condicionado</h3>
-      <p>É <strong>proibido</strong> o uso de aparelhos de ar condicionado em qualquer área interna do pavilhão, porque o espaço já é climatizado.</p>
-
-      <h3>Lavatório para refresqueiras</h3>
-      <p>O expositor que precisar lavar refresqueiras pode usar o espaço com pias montado pela promotora.</p>
-    </section>
-
-    <!-- 10 -->
-    <section id="s10">
-      <h2><span class="num">10</span>Expositores SEBRAE</h2>
-      <p>A montagem segue o formato básico (octanorm). Estrutura adicional pode ser solicitada por conta do expositor, e a personalização visual, entre ela adesivos, banners e materiais promocionais, é responsabilidade da empresa expositora.</p>
-      <div class="box atencao">
-        <div class="rot">Contrapartida obrigatória</div>
-        <p>A aplicação da logomarca no estande é <strong>obrigatória</strong>, no canto superior direito do balcão, em <strong>50 cm x 50 cm</strong>.</p>
-        <p>Prioridade para a logo padrão, azul com fundo branco. Em caso de personalização do estande, envie a arte final para <a href="mailto:yasmin@scienceplay.com">yasmin@scienceplay.com</a> para aprovação.</p>
-      </div>
-      <p><a href="https://drive.google.com/drive/folders/10rvkSvtKOeuHPCZOLVTAvIunUEpnjabO?usp=sharing" target="_blank" rel="noopener">Acessar o material do SEBRAE</a></p>
-    </section>
-
-    <!-- 11 -->
-    <section id="s11">
-      <h2><span class="num">11</span>Desmontagem</h2>
-      <p>O expositor é inteiramente responsável pela mercadoria de exposição enquanto ela permanecer no recinto.</p>
-      <p>Logo após o encerramento do evento, <strong>em 29 de agosto, das 19h às 22h</strong>, o expositor e seus fornecedores devem retirar todos os mostruários, objetos de valor, equipamentos, elementos de decoração e mobiliário, para evitar furtos, avarias e extravios.</p>
-      <div class="box atencao">
-        <div class="rot">Multa</div>
-        <p>Após o prazo estipulado, a promotora se reserva o direito de retirar esses objetos, sem se responsabilizar por perdas, danos ou pela guarda de materiais de terceiros, além de aplicar multa de <span class="multa">R$ 500,00/m²</span>, sem direito a apelação judicial e extrajudicial.</p>
-      </div>
-      <ul>
-        <li>Um funcionário da empresa expositora deve permanecer no estande até que todo material e equipamento sejam retirados.</li>
-        <li>A segurança oficial do evento está autorizada pela promotora a reter mercadorias para as devidas conferências.</li>
-        <li>Materiais e equipamentos remanescentes no interior do Centro de Convenções após o período permitido são retirados do pavilhão pelos organizadores, que não se responsabilizam por perdas, danos, avarias, roubos ou extravios daí decorrentes.</li>
-        <li>Recomendamos que os expositores usem os próprios carrinhos para transportar materiais.</li>
-      </ul>
-    </section>
-
-    <!-- 12 -->
-    <section id="s12">
-      <h2><span class="num">12</span>Prevenção e segurança</h2>
-
-      <h3>Extintor de incêndio</h3>
-      <p>Item obrigatório de acordo com as normas de fiscalização: NBR 23 (prevenção contra incêndio), NBR 14276/99 (brigada contra incêndio e pânico) e Decreto 46072/2001 (proteção contra incêndio).</p>
-      <p>Todo expositor deve manter no estande extintor do tipo <strong>PQS (Pó Químico Seco)</strong> ou <strong>CO2 (Gás Carbônico) de 6 kg</strong>, durante todo o período de montagem, evento e desmontagem, devidamente sinalizado. A proporção é de <strong>1 extintor a cada 25 m²</strong>, com carga compatível aos produtos expostos e aos materiais usados na montagem.</p>
-      <p>Se o expositor já tiver extintores com essas características, pode usá-los no estande. Caso prefira, pode contratá-los pela promotora, solicitando no formulário <strong>Extintor de Incêndio</strong>.</p>
-      <p>O descumprimento desta exigência transfere ao expositor toda a responsabilidade por danos ou prejuízos causados a terceiros e às dependências do pavilhão, além de quaisquer sanções decorrentes da fiscalização do Corpo de Bombeiros.</p>
-      <div class="card" style="margin:18px 0 0">
-        <div class="cardrot">Aluguel de extintores</div>
-        <div class="cardnome">Arcanjos Life</div>
-        <div class="cardlinha">Telefone: <span class="mono">61 8549-6884</span></div>
-      </div>
-
-      <h3>Equipamentos e materiais perigosos</h3>
-      <p>É proibido utilizar explosivos, gases não liquefeitos, tóxicos, combustíveis, botijões de gás (GLP) ou qualquer elemento que possa provocar incêndio ou explosão no espaço interno do pavilhão. Só é permitido o uso de fogões, aquecedores, torradeiras ou fornos com alimentação elétrica.</p>
-
-      <h3>EPI</h3>
-      <p>É responsabilidade do expositor fornecer EPI aos funcionários que trabalharem na montagem e na desmontagem, de acordo com cada atividade, conforme a legislação vigente e as normas do Ministério do Trabalho e Emprego (NR-6, NR-15, NR-16, NR-18 e Portaria 3.214/78). Os equipamentos devem estar em perfeito estado de conservação e funcionamento.</p>
-
-      <h3>Trajes de trabalho</h3>
-      <p>Funcionários e contratados das empresas prestadoras de serviço só acessam o pavilhão para executar serviços de decoração ou instalações se estiverem de uniforme ou camiseta com identificação da empresa, calça comprida e sapato, devidamente credenciados. É proibida a entrada e a permanência de pessoas sem identificação.</p>
-      <p>De acordo com as normas do Corpo de Bombeiros, é proibido o acesso ao pavilhão nos períodos de montagem de pessoas com camiseta, bermuda, saia ou calção, e o uso de tamancos, sandálias ou chinelos. <strong>A regra vale para todas as pessoas presentes no pavilhão, incluindo expositores.</strong></p>
-
-      <h3>Acesso de menores</h3>
-      <p>Durante os períodos de montagem e desmontagem é expressamente proibida a entrada de menores de 18 anos, mesmo acompanhados dos responsáveis.</p>
-    </section>
-
-    <!-- 13 -->
-    <section id="s13">
-      <h2><span class="num">13</span>Serviços disponíveis</h2>
-
-      <h3>Depósito</h3>
-      <p>Contratado diretamente com a montadora oficial do evento, nas opções individual e compartilhado.</p>
-
-      <h3>Limpeza</h3>
-      <p>A limpeza das vias de circulação comum durante o evento é responsabilidade exclusiva da empresa oficial. <strong>Os expositores cuidam da limpeza dos próprios estandes.</strong></p>
-      <p>O expositor que levar fornecedor próprio para a limpeza do estande deve solicitar credenciais pelo formulário <strong>Credenciamento de Serviço ao Expositor</strong>, para que essa pessoa tenha acesso ao local.</p>
-
-      <h3>Vigilância</h3>
-      <p>O evento mantém serviço de vigilância geral durante montagem, funcionamento e desmontagem. A vigilância geral <strong>não</strong> é responsável por zelar pelos produtos e equipamentos expostos em cada estande. Recomendamos a todos os expositores a contratação de vigilante exclusivo.</p>
-      <p>O vigilante exclusivo pode ser contratado pela promotora, com o formulário <strong>Serviço de Vigilância</strong> na área do expositor, ou diretamente pelo expositor, nas condições abaixo.</p>
-
-      <h4>1. Funcionário da própria empresa registrado como vigia</h4>
-      <p>O expositor deve comunicar à DELESP, Delegacia de Controle de Segurança Privada, por ofício, a transferência do funcionário qualificado da própria segurança orgânica, com <strong>30 dias de antecedência</strong> do início da montagem, apresentando a documentação à promotora para conferência e arquivamento.</p>
-
-      <h4>2. Vigilante de empresa terceirizada</h4>
-      <p>Deve ser apresentada a documentação da empresa prestadora e do vigilante:</p>
-      <ul>
-        <li>Autorização para funcionamento, alvará em diário oficial, válido por um ano</li>
-        <li>Revisão de autorização para funcionamento, válida por um ano</li>
-        <li>Contrato entre o expositor e a empresa prestadora do serviço de vigilância</li>
-        <li>Certificado de conclusão de curso de formação de vigilante, válido por dois anos, e após esse prazo o certificado de reciclagem</li>
-        <li>Declaração de reciclagem de vigilantes, válida por dois anos</li>
-        <li>Cópia do RG e do CPF do vigilante</li>
-        <li>Contrato de prestação de serviços entre a empresa de vigilância e o vigilante, para demonstração de vínculo empregatício</li>
-      </ul>
-      <div class="box atencao">
-        <div class="rot">Regra da Polícia Federal</div>
-        <p>O serviço de vigilância é regulamentado pela Polícia Federal e só pode ser prestado por empresas especializadas e devidamente registradas. A liberação das credenciais só ocorre mediante apresentação dos documentos acima.</p>
-        <p>O profissional contratado deve usar uniforme e <strong>não pode portar armas</strong>. O expositor solicita a credencial pelo formulário <strong>Credenciamento de Vigia Terceirizado</strong>, independentemente de o prestador ficar de dia ou de noite no estande. O vigilante não pode solicitar o próprio credenciamento no local sem a presença do expositor.</p>
-      </div>
-      <p>A empresa oficial responsável pela segurança e vigilância do evento auxilia a promotora a recolher e arquivar a documentação, para facilitar o trabalho em uma eventual fiscalização do órgão competente.</p>
-
-      <h3>Telefonia e internet</h3>
-      <p>Contratados diretamente com a empresa oficial do CCUG.</p>
-      <div class="card" style="margin:14px 0 0">
-        <div class="cardrot">Aluguel de internet</div>
-        <div class="cardnome">Vitor Wixx</div>
-        <div class="cardlinha">Telefone: <span class="mono">61 8209-2255</span></div>
-      </div>
-
-      <h3>Estacionamento</h3>
-      <p>O estacionamento é privado e cobrado pela administradora, conforme a tabela vigente. O evento não se responsabiliza por problemas ocorridos em área particular não controlada pela promotora.</p>
-
-      <h3>Alimentos e bebidas</h3>
-      <p>A comercialização de serviços de alimentos e bebidas no interior do Centro de Convenções é exclusividade dos fornecedores credenciados pelo CCUG. Expositores interessados em adquirir itens para uso no estande devem entrar em contato com a organização do evento.</p>
-    </section>
-
-    <!-- 14 -->
-    <section id="s14">
-      <h2><span class="num">14</span>Operação durante o evento</h2>
-
-      <h3>Operação do estande</h3>
-      <p>Durante todo o período de realização, o estande deve ter <strong>pelo menos um funcionário do expositor capacitado a prestar informações</strong> sobre os produtos expostos.</p>
-      <p>A equipe deve chegar <strong>uma hora antes da abertura</strong>. A promotora se reserva o direito de antecipar o horário de abertura, para melhor atendimento ao público.</p>
-      <p>Não é permitido encerrar as atividades no estande antes do término do horário de realização do evento, <strong>nem no último dia</strong>.</p>
-
-      <h3>Recebimento de mercadorias e materiais</h3>
-      <p>A promotora não recebe produtos dos expositores. O expositor deve manter no estande uma pessoa responsável pelo recebimento de qualquer mercadoria, equipamento ou objeto destinado à exposição.</p>
-      <p>É responsabilidade exclusiva do expositor a entrada e a saída dos equipamentos acompanhados de nota fiscal, e o cumprimento de toda exigência legal relativa à remessa de mercadorias, produtos, equipamentos e utensílios.</p>
-
-      <h3>Reposições nos estandes</h3>
-      <p>Mercadorias destinadas ao abastecimento só entram no pavilhão durante o período de recesso do evento. Não é permitido o uso de carrinhos pelas vias de circulação após o horário de abertura da feira.</p>
-
-      <h3>Som</h3>
-      <p>Não é permitido qualquer tipo de sonorização nos estandes, entre eles música e uso de microfones.</p>
-
-      <h3>Seguro</h3>
-      <p>Estandes, bens, produtos e pessoal, incluindo prepostos, transportadores e montadores, <strong>não estão cobertos por seguro</strong>, seja na montagem, durante o evento ou na desmontagem. A responsabilidade única e total por qualquer dano ou eventualidade é do expositor.</p>
-      <p>Recomendamos que o expositor providencie o próprio seguro contra quaisquer riscos, em especial para o pessoal em serviço no evento, além do estande, bens, produtos, equipamentos e materiais expostos ou utilizados. Em hipótese alguma a promotora assume responsabilidade por essas ocorrências ou pelo custo da apólice.</p>
-
-      <h3>Contratação de mão de obra</h3>
-      <p>Conforme solicitação do Ministério Público do Trabalho de 29/06/2011, a empresa participante e suas contratadas não podem firmar contrato com cooperativas quando estiverem presentes, entre tomadora e trabalhadores ou entre cooperativa e trabalhadores, os elementos que configuram relação de emprego, previstos nos artigos 2º e 3º da CLT.</p>
-      <p>Para uso de mão de obra eventual diretamente pelo expositor, os procedimentos legais devem ser observados com atenção especial. Na contratação de empresas prestadoras de serviços, solicite as comprovações de existência legal (contrato social, alvarás), as guias de recolhimento da previdência social (GRPS), cópias da ficha de registro de empregados e recolhimento de FGTS.</p>
-      <h4>Documentos que devem permanecer no estande à disposição da fiscalização trabalhista</h4>
-      <div class="tabwrap">
-        <table>
-          <thead><tr><th>Vínculo</th><th>Documentos</th></tr></thead>
-          <tbody>
-            <tr><td><b>Empregados da empresa expositora</b></td><td>Segunda via da ficha de registro de empregados e cartão de ponto</td></tr>
-            <tr><td><b>Empregados de prestadoras de serviço</b></td><td>Contrato de prestação de serviços, segunda via da ficha de registro de empregados ou cartão de identificação tipo credencial com nome completo, função, data de admissão e número do PIS/PASEP, e cartão de ponto</td></tr>
-            <tr><td><b>Trabalhadores temporários</b></td><td>Contrato com a empresa de trabalho temporário e registro dela no Ministério do Trabalho</td></tr>
-            <tr><td><b>Autônomos</b></td><td>Cópia da inscrição do autônomo junto à Prefeitura e ao INSS</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>O expositor não pode utilizar mão de obra de menores de 16 anos, salvo maiores de 14 anos na condição de aprendiz, observadas as normas aplicáveis.</p>
-    </section>
-
-    <!-- 15 -->
-    <section id="s15">
-      <h2><span class="num">15</span>Proibido e permitido</h2>
-
-      <h3>Proibido durante o evento</h3>
-      <ul class="regras nao">
-        <li>Arremessar ou jogar qualquer tipo de material promocional para os visitantes. O material do expositor que fizer isso é retido e só é devolvido em 29 de agosto, após o término do evento, além de multa de <span class="multa">R$ 5.000,00</span>. O expositor também responde por qualquer dano ou prejuízo causado a visitante, estande ou pavilhão</li>
-        <li>Qualquer promoção ou atividade fora dos limites da área locada, entre elas distribuição de brindes ou peças promocionais, letreiros e cartazes, desfiles, degustação de produtos e projeção de imagem e luz por qualquer meio</li>
-        <li>Presença de produtos, folhetos promocionais, logomarcas ou promoção de instituições, empresas ou pessoas sem contrato vigente ou autorização expressa da promotora</li>
-        <li>Colagem de adesivos ou similares nas credenciais de identificação do evento</li>
-        <li>Espetáculos pirotécnicos com fumaça, dirigíveis ou qualquer efeito que possa gerar pânico</li>
-        <li>Cilindros de alta pressão de trabalho, entre eles gás hélio e butano</li>
-        <li>Materiais ou substâncias de fácil combustão, motores de combustão e equipamentos que exalem gases, fumaça ou gordura</li>
-        <li>Qualquer tipo de fumaça, porque o pavilhão é equipado com detectores</li>
-        <li>Fogos de artifício, explosivos de qualquer natureza, confetes, balões de gás hélio, serpentinas, chuva de papel picado e produtos assemelhados</li>
-        <li>Fornos, fornos de convecção, forno combinado, chapas de grelhagem e grelhas para churrasco</li>
-        <li>Cocção com óleo de fritura em tachos, fritadeiras ou panelas sobre chamas</li>
-        <li>Uso e armazenamento de botijões de gás GLP e semelhantes para ignição, fogareiros, lamparinas e afins</li>
-        <li>Explosivos, gases não liquefeitos, tóxicos, combustíveis, armazenamento de álcool líquido e qualquer elemento que possa provocar incêndio ou explosão</li>
-        <li>Apresentação de modelos vivos de qualquer sexo seminus ou com tapa-sexo que atentem à moral e aos bons costumes</li>
-        <li>Animais de quaisquer espécies ou portes, inclusive aves, mesmo como parte da decoração do estande ou ligados à demonstração dos produtos</li>
-        <li>Equipamentos, aeronaves e veículos aéreos não tripulados ou remotamente pilotados, entre eles RPA, drones, zepelim e aeromodelos, em qualquer dependência do CCUG, incluindo estacionamentos, áreas externas e internas, carga e descarga, áreas comuns e salas, <strong>mesmo no interior dos estandes</strong></li>
-        <li>Meios de cozimento ou fritura, mesmo elétricos, que produzam vapores ou qualquer tipo de fumaça nas salas, copas ou foyers</li>
-      </ul>
-
-      <h3>Permitido, com condições</h3>
-      <ul class="regras sim">
-        <li>Degustação, desde que o estande mantenha recipientes para recolhimento de embalagens e restos, com a obrigação de levá-los à lixeira central do pavilhão sempre que a capacidade estiver perto do limite</li>
-        <li>Degustação e distribuição de brindes, amostras e folhetos limitadas ao interior do estande. Cabe à promotora interromper a ação sempre que gerar aglomeração que prejudique o fluxo normal dos visitantes</li>
-        <li>Moving lights dentro do estande, sem projeção para as vias de circulação ou para estandes vizinhos</li>
-      </ul>
-    </section>
-
-    <!-- 16 -->
-    <section id="s16">
-      <h2><span class="num">16</span>Quadro de multas</h2>
-      <p class="secsub">Todas as penalidades previstas neste Manual, reunidas. A cobrança é feita por nota de débito emitida pela organização.</p>
-      <div class="tabwrap">
-        <table>
-          <thead><tr><th>Infração</th><th>Valor</th><th>Onde está</th></tr></thead>
-          <tbody>
-            <tr><td><b>Arremessar material promocional para os visitantes</b><br>Inclui retenção do material até o fim do evento</td><td><span class="multa">R$ 5.000,00</span></td><td>Seção 15</td></tr>
-            <tr><td><b>Descartar sobras de material nos contêineres do CCUG</b></td><td><span class="multa">R$ 2.000,00</span><br>por infração</td><td>Seção 07</td></tr>
-            <tr><td><b>Não retirar o material até 29/08 às 22h</b></td><td><span class="multa">R$ 500,00/m²</span></td><td>Seção 11</td></tr>
-            <tr><td><b>Irregularidade na retirada de material e liberação da área</b></td><td><span class="multa">R$ 100,00/m²</span></td><td>Seção 08</td></tr>
-            <tr><td><b>Atraso na abertura ou fechamento antecipado do estande</b></td><td><span class="multa">Multa contratual</span></td><td>Seção 01</td></tr>
-            <tr><td><b>Excesso de consumo elétrico comprovado</b></td><td><span class="multa">Cobrado do expositor</span></td><td>Seção 09</td></tr>
-            <tr><td><b>Uso indevido de credencial</b></td><td><span class="multa">Apreensão, multa e cancelamento</span></td><td>Seção 06</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 17 -->
-    <section id="s17">
-      <h2><span class="num">17</span>Disposições gerais</h2>
-      <h3>Taxas municipais</h3>
-      <p>Não há cobrança de taxas municipais na edição do Nutrição Brasil 2026.</p>
-      <h3>Casos omissos</h3>
-      <p>A promotora se reserva o direito de arbitrar sobre casos omissos neste Manual, além de estabelecer novas normas necessárias ao bom funcionamento do evento, visando facilitar a harmonia entre os expositores.</p>
-      <p>O expositor se obriga a respeitar e a fazer respeitar, por funcionários e contratados, todas as cláusulas e disposições que regulamentam o evento, além de outras normas que venham a ser estabelecidas. Multas são aplicadas em caso de descumprimento. Por isso, recomendamos que o expositor e as empresas contratadas estabeleçam um termo entre si para o período total do evento, com multas para eventuais atrasos e falhas nos serviços.</p>
-      <p>Nenhuma alteração promovida pela promotora pode ser motivo de cancelamento do Contrato de Participação pelo expositor.</p>
-    </section>
-
-    <!-- 18 -->
-    <section id="s18">
-      <h2><span class="num">18</span>Contatos</h2>
-      <div class="contatos">
-        <div class="card">
-          <div class="cardrot">Produção e comercial</div>
-          <div class="cardnome">Yasmin Aguiar</div>
-          <div class="cardfn">Expositores e credenciamento</div>
-          <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a></div>
-          <div class="cardlinha">E-mail: <a href="mailto:yasmin@scienceplay.com">yasmin@scienceplay.com</a></div>
-        </div>
-        <div class="card">
-          <div class="cardrot">Central do evento</div>
-          <div class="cardnome">Nutrição Brasil</div>
-          <div class="cardfn">Informações gerais</div>
-          <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561998318817" target="_blank" rel="noopener">61 99831-8817</a></div>
-          <div class="cardlinha">E-mail: <a href="mailto:contato@scienceplay.com">contato@scienceplay.com</a></div>
-          <div class="cardlinha">Instagram: <a href="https://www.instagram.com/nutricaobrasiloficial" target="_blank" rel="noopener">@nutricaobrasiloficial</a></div>
-        </div>
-        <div class="card">
-          <div class="cardrot">Montadora oficial</div>
-          <div class="cardnome">Estilo Eventos</div>
-          <div class="cardfn">Edna Martins</div>
-          <div class="cardlinha">WhatsApp: <a href="https://wa.me/5561984529472" target="_blank" rel="noopener">61 98452-9472</a></div>
-          <div class="cardlinha">E-mail: <a href="mailto:comercial@estiloeventos.com.br">comercial@estiloeventos.com.br</a></div>
-        </div>
-        <div class="card">
-          <div class="cardrot">CCUG · Fornecedores</div>
-          <div class="cardnome">Joabe Nunes</div>
-          <div class="cardfn">Liberação de montadora não credenciada</div>
-          <div class="cardlinha">Telefone: <a href="tel:+556121969005">61 2196-9005</a></div>
-          <div class="cardlinha">E-mail: <a href="mailto:fornecedores@cicb.com.br">fornecedores@cicb.com.br</a></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 19 -->
-    <section id="s19">
-      <h2><span class="num">19</span>Checklist final</h2>
-      <p class="secsub">Imprima esta página e passe item a item com a sua equipe antes de sair para Brasília.</p>
-      <ul class="check">
-        <li><span class="caixa"></span><div><b>Equipe cadastrada até 22/08</b><span class="q">Nome completo, cargo no crachá, e-mail e WhatsApp de cada pessoa, e quem está autorizado a retirar os crachás</span></div></li>
-        <li><span class="caixa"></span><div><b>Credenciais dentro da cota</b><span class="q">Confira o limite da sua empresa no painel no topo deste manual. Acima disso, solicite credencial adicional a R$ 50,00 cada</span></div></li>
-        <li><span class="caixa"></span><div><b>Extintor definido</b><span class="q">PQS ou CO2 de 6 kg, 1 a cada 25 m². Próprio ou contratado pelo formulário</span></div></li>
-        <li><span class="caixa"></span><div><b>Projeto do estande aprovado</b><span class="q">Somente montagem especial: elevação, perspectiva, memorial com cotas, kVA, descritivo e ART ou RRT quitada</span></div></li>
-        <li><span class="caixa"></span><div><b>Montadora liberada pelo CCUG</b><span class="q">Somente montadora não credenciada: taxa paga e liberação junto ao Departamento de Fornecedores</span></div></li>
-        <li><span class="caixa"></span><div><b>Energia dimensionada</b><span class="q">O estande recebe 1 tomada 220V com 0,5 kVA. Uma tomada por equipamento, sem benjamim ou extensão. Tomadas extras com a montadora</span></div></li>
-        <li><span class="caixa"></span><div><b>Transformador para equipamento 110V</b><span class="q">A corrente do CCUG é 220V</span></div></li>
-        <li><span class="caixa"></span><div><b>EPI para montagem e desmontagem</b><span class="q">Capacete, luva, óculos e calçado adequado, em bom estado</span></div></li>
-        <li><span class="caixa"></span><div><b>Traje correto para montagem</b><span class="q">Calça comprida, sapato fechado e camiseta identificada. Sem bermuda, chinelo ou salto</span></div></li>
-        <li><span class="caixa"></span><div><b>Documentos trabalhistas no estande</b><span class="q">Ficha de registro, cartão de ponto e contratos, à disposição da fiscalização</span></div></li>
-        <li><span class="caixa"></span><div><b>Seguro próprio contratado</b><span class="q">O evento não cobre estande, bens, produtos nem pessoal</span></div></li>
-        <li><span class="caixa"></span><div><b>Carrinho próprio com rodas pneumáticas</b><span class="q">O CCUG não fornece carrinhos e não aceita rodas sem pneu</span></div></li>
-        <li><span class="caixa"></span><div><b>Escala da equipe cobrindo todo o horário</b><span class="q">Chegada 1 hora antes da abertura e nenhum fechamento antecipado, nem no sábado</span></div></li>
-        <li><span class="caixa"></span><div><b>Logo SEBRAE aplicada</b><span class="q">Somente estandes SEBRAE: 50 cm x 50 cm no canto superior direito do balcão, arte final aprovada por e-mail</span></div></li>
-        <li><span class="caixa"></span><div><b>Desmontagem organizada para 29/08, 19h às 22h</b><span class="q">Equipe e transporte confirmados. Após 22h incide multa de R$ 500,00/m²</span></div></li>
-      </ul>
-    </section>
-
-    <footer>
-      <img src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1776336705/Logo_SP_negativa_izuzur.png" alt="Science Play">
-      <p><strong style="color:var(--nb-text-2)">Nutrição Brasil 2026 · Brasília</strong></p>
-      <p>27 a 29 de agosto de 2026 · Centro de Convenções Ulysses Guimarães</p>
-      <p>Realização Science Play · <a href="https://www.instagram.com/nutricaobrasiloficial" target="_blank" rel="noopener">@nutricaobrasiloficial</a> · <a href="https://wa.me/5561998318817" target="_blank" rel="noopener">61 99831-8817</a></p>
-      <p style="margin-top:14px;font-size:12px">Manual do Expositor, versão de agosto de 2026. Documento de acesso restrito, parte integrante do Contrato de Participação.</p>
-    </footer>
-
+      <footer>
+        <img data-logo-sp src="https://res.cloudinary.com/dlzrfhwin/image/upload/v1776336705/Logo_SP_negativa_izuzur.png" alt="Science Play">
+        <p><strong style="color:var(--t2)">Nutrição Brasil 2026 · Brasília</strong></p>
+        <p>27 a 29 de agosto de 2026 · Centro de Convenções Ulysses Guimarães</p>
+        <p>Realização Science Play · <a href="https://www.instagram.com/nutricaobrasiloficial" target="_blank" rel="noopener">@nutricaobrasiloficial</a> · <a href="https://wa.me/5561998318817" target="_blank" rel="noopener">61 99831-8817</a></p>
+        <p style="margin-top:14px;font-size:12px">Manual do Expositor, versão de agosto de 2026. Documento de acesso restrito, parte integrante do Contrato de Participação.</p>
+      </footer>
+
+    </main>
   </div>
 </div>
 
+<div id="toast" role="status" aria-live="polite"></div>
+
 <script>
 (function(){
-  'use strict';
+'use strict';
 
-  var SB_URL = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
-  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
-  var FORM_URL = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time';
-  var GUARDA = 'nb_manual_expo';
-  var VALIDADE = 30 * 24 * 60 * 60 * 1000;
+/* ======================= CONFIG ======================= */
+var SB   = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
+var KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
+var BASE = 'https://checkin.nutricaobrasil.com.br';
+var GUARDA = 'nb_manual_expo_v2', TEMA = 'nb_manual_tema', VALIDADE = 30*24*60*60*1000;
+var LOGO_ESCURO = 'https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png';
+var LOGO_CLARO  = 'https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583230/nb_logotipo_hor_06_qz4okc.png';
+var SP_ESCURO   = 'https://res.cloudinary.com/dlzrfhwin/image/upload/v1776336705/Logo_SP_negativa_izuzur.png';
+var SP_CLARO    = 'https://res.cloudinary.com/dlzrfhwin/image/upload/v1776336705/Logo_SciencePlay_wbnimh.png';
+var WA_YASMIN   = 'https://wa.me/5561994502691';
 
-  var $ = function(id){ return document.getElementById(id); };
-  var portaria = $('portaria'), manual = $('manual');
-  var input = $('codigo'), botao = $('entrar'), aviso = $('aviso');
+var $  = function(s,r){ return (r||document).querySelector(s); };
+var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+var esc = function(t){ var d=document.createElement('div'); d.textContent=t==null?'':String(t); return d.innerHTML; };
 
-  function mostrarAviso(html){
-    aviso.innerHTML = html;
-    aviso.classList.add('on');
-    input.classList.add('erro');
+var dados = null, linkCadastro = '', linkCortesia = '';
+
+/* ======================= TEMA ======================= */
+function aplicarTema(t){
+  document.documentElement.setAttribute('data-tema', t);
+  var claro = t === 'claro';
+  $$('[data-logo]').forEach(function(i){ i.src = claro ? LOGO_CLARO : LOGO_ESCURO; });
+  var sp = $('[data-logo-sp]'); if(sp) sp.src = claro ? SP_CLARO : SP_ESCURO;
+  var mt = $('meta[name="theme-color"]'); if(mt) mt.setAttribute('content', claro ? '#f4f0fa' : '#0d0618');
+  var ic = $('#iconeTema');
+  if(ic) ic.innerHTML = claro
+    ? '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+    : '<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>';
+  try{ localStorage.setItem(TEMA, t); }catch(e){}
+}
+(function(){
+  var t = null;
+  try{ t = localStorage.getItem(TEMA); }catch(e){}
+  if(t !== 'claro' && t !== 'escuro') t = 'escuro';  /* dark-first, conforme o brandbook */
+  aplicarTema(t);
+})();
+
+/* ======================= TOAST ======================= */
+var tmToast;
+function toast(msg){
+  var el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(tmToast); tmToast = setTimeout(function(){ el.classList.remove('on'); }, 2200);
+}
+function copiar(txt, recado){
+  function fallback(){
+    var ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast(recado); }
+    catch(e){ toast('Não consegui copiar. Selecione o link e copie à mão.'); }
+    document.body.removeChild(ta);
   }
-  function limparAviso(){
-    aviso.classList.remove('on');
-    input.classList.remove('erro');
-  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toast(recado); }, fallback);
+  } else fallback();
+}
 
-  function guardar(dados){
-    try{
-      localStorage.setItem(GUARDA, JSON.stringify({ t: Date.now(), d: dados }));
-    }catch(e){}
-  }
-  function lembrar(){
-    try{
-      var bruto = localStorage.getItem(GUARDA);
-      if(!bruto) return null;
-      var o = JSON.parse(bruto);
-      if(!o || !o.d || !o.t) return null;
-      if(Date.now() - o.t > VALIDADE) return null;
-      return o.d;
-    }catch(e){ return null; }
-  }
+/* ======================= PORTARIA ======================= */
+var input = $('#codigo'), botao = $('#entrar'), aviso = $('#aviso');
 
-  function frase(limite){
-    if(limite && limite > 0){
-      return 'A sua empresa tem <strong>' + limite + ' ' +
-             (limite === 1 ? 'credencial' : 'credenciais') +
-             '</strong> liberadas no sistema. O formulário trava sozinho ao atingir esse número. ' +
-             'Se precisar de mais, fale com a Yasmin antes do prazo, porque resolver isso no balcão custa fila e tempo da sua equipe.';
+function mostrarAviso(html){ aviso.innerHTML = html; aviso.classList.add('on'); input.classList.add('erro'); }
+function limparAviso(){ aviso.classList.remove('on'); input.classList.remove('erro'); }
+
+function guardar(d){ try{ localStorage.setItem(GUARDA, JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
+function lembrar(){
+  try{
+    var o = JSON.parse(localStorage.getItem(GUARDA) || 'null');
+    if(!o || !o.d || !o.t || Date.now()-o.t > VALIDADE) return null;
+    return o.d;
+  }catch(e){ return null; }
+}
+
+function chamar(codigo){
+  return fetch(SB + '/rest/v1/rpc/expo_manual', {
+    method:'POST',
+    headers:{ apikey:KEY, Authorization:'Bearer '+KEY, 'Content-Type':'application/json' },
+    body: JSON.stringify({ p_codigo: codigo })
+  }).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); });
+}
+
+function tentar(codigo, silencioso){
+  codigo = (codigo||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(codigo.length < 5){
+    if(!silencioso) mostrarAviso('<b>Código incompleto.</b> Ele tem 7 caracteres e começa com NB.');
+    return;
+  }
+  limparAviso();
+  botao.disabled = true; botao.textContent = 'Verificando...';
+
+  chamar(codigo).then(function(r){
+    botao.disabled = false; botao.textContent = 'Abrir o manual';
+    if(!r || typeof r !== 'object'){
+      mostrarAviso('<b>Não consegui verificar o código agora.</b> Tente de novo em alguns segundos.'); return;
     }
-    return 'O número de credenciais da sua empresa é definido pela área contratada. Confirme com a Yasmin antes de cadastrar a equipe.';
-  }
-
-  function abrir(d){
-    var codigo = (d.codigo || '').toUpperCase();
-    var link = FORM_URL + '?e=' + encodeURIComponent(codigo);
-
-    $('barraEmpresa').textContent  = d.empresa || 'Expositor';
-    $('painelEmpresa').textContent = d.empresa || 'Expositor';
-    $('painelCodigo').textContent  = codigo || 'n/d';
-    $('painelEstande').textContent = d.estande || 'A definir';
-    $('painelCota').textContent    = d.cota || 'Expositor';
-    $('painelLimite').textContent  = (d.limite && d.limite > 0) ? d.limite : 'A definir';
-
-    $('linkCadastro').href = link;
-    $('linkCadastroTexto').textContent = link;
-    $('limiteFrase').innerHTML = frase(d.limite);
-
-    document.title = 'Manual do Expositor · ' + (d.empresa || 'Nutrição Brasil 2026');
-
-    portaria.style.display = 'none';
-    manual.classList.add('on');
-
-    try{
-      history.replaceState(null, '', location.pathname + '?e=' + encodeURIComponent(codigo));
-    }catch(e){}
-
-    window.scrollTo(0, 0);
-  }
-
-  function validar(codigo){
-    return fetch(SB_URL + '/rest/v1/rpc/expo_abre', {
-      method: 'POST',
-      headers: {
-        'apikey': SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_codigo: codigo })
-    }).then(function(r){
-      if(!r.ok) throw new Error('http ' + r.status);
-      return r.json();
-    });
-  }
-
-  function tentar(codigo, silencioso){
-    codigo = (codigo || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if(codigo.length < 5){
-      if(!silencioso) mostrarAviso('<b>Código incompleto.</b> Ele tem 7 caracteres e começa com NB.');
-      return;
+    if(r.erro === 'bloqueado' || r.bloqueado === true){
+      mostrarAviso('<b>Cadastro da empresa bloqueado.</b> Fale com a Yasmin no WhatsApp <a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a> para regularizar.'); return;
     }
+    if(r.erro){
+      mostrarAviso('<b>Código não encontrado.</b> Confira se digitou exatamente como recebeu, com os 7 caracteres. Se continuar, chame a Yasmin no WhatsApp <a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.'); return;
+    }
+    guardar(r); abrir(r);
+  }).catch(function(){
+    botao.disabled = false; botao.textContent = 'Abrir o manual';
+    mostrarAviso('<b>Falha de conexão.</b> Confira a internet e tente de novo. Se persistir, chame a Yasmin no WhatsApp <a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.');
+  });
+}
 
-    limparAviso();
-    botao.disabled = true;
-    botao.textContent = 'Verificando...';
+/* ======================= MEDIDORES ======================= */
+function rosca(pc, cor){
+  var C = 263.9, off = C - (Math.min(100, Math.max(0, pc))/100)*C;
+  return '<div class="rosca">'
+    + '<svg viewBox="0 0 112 112" aria-hidden="true">'
+    + '<circle class="trilho" cx="56" cy="56" r="42"></circle>'
+    + '<circle class="barra" cx="56" cy="56" r="42" stroke="'+cor+'" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'" data-off="'+off+'"></circle>'
+    + '</svg>'
+    + '<div class="meio"><div class="pc" style="color:'+cor+'">'+Math.round(pc)+'%</div><div class="pl">preenchido</div></div></div>';
+}
 
-    validar(codigo).then(function(r){
-      botao.disabled = false;
-      botao.textContent = 'Abrir o manual';
-
-      if(!r || typeof r !== 'object'){
-        mostrarAviso('<b>Não consegui verificar o código agora.</b> Tente novamente em alguns segundos.');
-        return;
-      }
-      if(r.erro === 'bloqueado' || r.bloqueado === true){
-        mostrarAviso('<b>Cadastro da empresa bloqueado.</b> Fale com a Yasmin no WhatsApp <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a> para regularizar.');
-        return;
-      }
-      if(r.erro){
-        mostrarAviso('<b>Código não encontrado.</b> Confira se digitou exatamente como recebeu, com os 7 caracteres. Se o problema continuar, chame a Yasmin no WhatsApp <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a>.');
-        return;
-      }
-
-      var dados = {
-        codigo:  r.codigo || codigo,
-        empresa: r.empresa || '',
-        estande: r.estande || '',
-        cota:    r.cota || '',
-        limite:  r.limite || 0
-      };
-      guardar(dados);
-      abrir(dados);
-
-    }).catch(function(){
-      botao.disabled = false;
-      botao.textContent = 'Abrir o manual';
-      mostrarAviso('<b>Falha de conexão.</b> Confira a internet e tente de novo. Se persistir, chame a Yasmin no WhatsApp <a href="https://wa.me/5561994502691" target="_blank" rel="noopener">61 99450-2691</a>.');
-    });
+function medidorCredenciais(c){
+  var el = $('#medCred');
+  var lim = c.limite||0, fei = c.preenchidas||0, ret = c.retiradas||0;
+  if(lim <= 0){
+    el.innerHTML = '<div class="cab"><span class="rot">Credenciais da equipe</span><span class="selo nu">Falta configuração</span></div>'
+      + '<div class="estado"><b>O limite de credenciais ainda não foi definido</b>'
+      + 'O número vem da área contratada do estande. Fale com a Yasmin no WhatsApp '
+      + '<a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a> para liberar antes de cadastrar a equipe.</div>';
+    return;
   }
+  var pc = Math.min(100, (fei/lim)*100);
+  var falta = Math.max(0, lim-fei), excedeu = fei > lim;
+  var cor = excedeu ? 'var(--alerta)' : (fei >= lim ? 'var(--verde)' : 'var(--gold)');
+  var selo = excedeu ? '<span class="selo ur">Acima do limite</span>'
+           : fei >= lim ? '<span class="selo ok">Equipe completa</span>'
+           : fei === 0 ? '<span class="selo ur">Nada cadastrado</span>'
+           : '<span class="selo at">Faltam '+falta+'</span>';
 
-  /* ---------- eventos ---------- */
-  input.addEventListener('input', function(){
-    var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
-    this.value = v;
-    if(aviso.classList.contains('on')) limparAviso();
+  el.innerHTML = '<div class="cab"><span class="rot">Credenciais da equipe</span>'+selo+'</div>'
+    + '<div class="linha">' + rosca(pc, cor)
+    + '<div class="numeros"><div class="big">'+fei+' <span>de '+lim+'</span></div>'
+    + '<div class="leg">'+(excedeu
+        ? 'A lista passou do limite contratado. Regularize antes do prazo.'
+        : (falta > 0 ? 'Faltam '+falta+' '+(falta===1?'pessoa':'pessoas')+' para completar a cota.' : 'Cota preenchida por inteiro.'))+'</div>'
+    + '<div class="quebra"><span class="tag">Crachás retirados: <b>'+ret+'</b></span>'
+    + '<span class="tag">Prazo: <b>22/08</b></span></div></div></div>'
+    + '<div class="rodape"><p>O crachá só é impresso para quem está na lista. Quem não estiver cadastrado até o prazo resolve no balcão, no dia.</p>'
+    + '<a class="btn btn-conversao btn-sm" data-cta-cadastro href="'+esc(linkCadastro)+'" target="_blank" rel="noopener">Cadastrar minha equipe</a></div>';
+}
+
+function medidorCortesias(c){
+  var el = $('#medCort');
+  var tot = c.total||0, usa = c.usadas||0, res = c.restantes||0;
+
+  if(tot <= 0){
+    el.innerHTML = '<div class="cab"><span class="rot">Cortesias de patrocinador</span><span class="selo nu">Falta configuração</span></div>'
+      + '<div class="estado"><b>A sua empresa ainda não tem cortesias liberadas</b>'
+      + 'Cortesia é convite gratuito para clientes e parceiros, definido em contrato. Para liberar, fale com a Yasmin no WhatsApp '
+      + '<a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.</div>';
+    return;
+  }
+  var pc = Math.min(100, (usa/tot)*100);
+  var cor = c.pausado || c.vencido ? 'var(--alerta)' : (res === 0 ? 'var(--verde)' : 'var(--cta)');
+  var selo = c.pausado ? '<span class="selo ur">Pausado</span>'
+           : c.vencido ? '<span class="selo ur">Prazo vencido</span>'
+           : res === 0 ? '<span class="selo ok">Tudo usado</span>'
+           : '<span class="selo at">'+res+' '+(res===1?'restante':'restantes')+'</span>';
+
+  el.innerHTML = '<div class="cab"><span class="rot">Cortesias de patrocinador</span>'+selo+'</div>'
+    + '<div class="linha">' + rosca(pc, cor)
+    + '<div class="numeros"><div class="big">'+usa+' <span>de '+tot+'</span></div>'
+    + '<div class="leg">'+(res > 0
+        ? res+' '+(res===1?'cortesia ainda disponível':'cortesias ainda disponíveis')+'.'
+        : 'Todas as cortesias já foram usadas.')+'</div>'
+    + '<div class="quebra">'
+    + (c.codigo ? '<span class="tag">Código: <b>'+esc(c.codigo)+'</b></span>' : '')
+    + (c.prazo ? '<span class="tag">Prazo: <b>'+esc(c.prazo)+'</b></span>' : '')
+    + '</div></div></div>'
+    + '<div class="rodape"><p>'
+    + (c.pausado ? 'A distribuição está pausada pela organização. Fale com a Yasmin para reabrir.'
+      : c.vencido ? 'O prazo para usar as cortesias terminou. Fale com a Yasmin.'
+      : 'Cortesia que sobra não vira desconto nem crédito. Mande o link enquanto há saldo.')+'</p>'
+    + (c.codigo ? '<a class="btn btn-conversao btn-sm" href="'+esc(linkCortesia)+'" target="_blank" rel="noopener">Abrir a página de cortesias</a>' : '')
+    + '</div>';
+}
+
+function faixaCortesia(c){
+  var el = $('#faixaCortesia');
+  if(!c.total || !c.codigo){ el.innerHTML = ''; return; }
+  var ativo = !c.pausado && !c.vencido && c.restantes > 0;
+  el.innerHTML = '<div class="faixa-cortesia"><div class="txt">'
+    + '<div class="rot">Convide com cortesias</div>'
+    + '<h3>'+(ativo ? c.restantes+' '+(c.restantes===1?'convite gratuito disponível':'convites gratuitos disponíveis') : 'Distribuição encerrada')+'</h3>'
+    + '<p>'+(ativo
+        ? 'Mande este link para clientes, parceiros e equipe. Cada pessoa se inscreve sozinha e recebe a confirmação por WhatsApp.'
+        : 'O saldo acabou ou a distribuição foi encerrada. Fale com a Yasmin para reabrir.')+'</p></div>'
+    + '<div class="acoes">'
+    + '<a class="btn btn-conversao'+(ativo?'':' btn-ghost')+'" href="'+esc(linkCortesia)+'" target="_blank" rel="noopener">Abrir a página de cortesias</a>'
+    + '<button class="btn btn-ghost btn-sm" data-copiar="cortesia" type="button">Copiar link</button>'
+    + '</div></div>';
+}
+
+function animarRoscas(){
+  var mov = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  $$('.rosca .barra').forEach(function(c){
+    var off = c.getAttribute('data-off');
+    if(!mov){ c.style.strokeDashoffset = off; return; }
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.style.strokeDashoffset = off; }); });
+  });
+}
+
+/* ======================= ABRIR ======================= */
+function fraseLimite(c){
+  var lim = c.limite||0, fei = c.preenchidas||0;
+  if(lim <= 0) return 'O número de credenciais da sua empresa ainda não foi definido no sistema. Confirme com a Yasmin antes de cadastrar a equipe.';
+  if(fei > lim) return 'A sua empresa tem <strong>'+lim+'</strong> '+(lim===1?'credencial liberada':'credenciais liberadas')+', e a lista já está com <strong>'+fei+' '+(fei===1?'pessoa':'pessoas')+'</strong>. O excedente precisa ser regularizado como credencial adicional, a R$ 50,00 cada, antes do prazo.';
+  return 'A sua empresa tem <strong>'+lim+'</strong> '+(lim===1?'credencial liberada':'credenciais liberadas')+', e <strong>'+fei+'</strong> já '+(fei===1?'está preenchida':'estão preenchidas')+'. O formulário trava sozinho ao atingir o limite. Se precisar de mais, fale com a Yasmin antes do prazo, porque resolver isso no balcão custa fila e tempo da sua equipe.';
+}
+
+function abrir(d){
+  dados = d;
+  var cod = (d.codigo||'').toUpperCase();
+  var cred = d.credenciais || {}, cort = d.cortesias || {};
+
+  linkCadastro = BASE + '/expositor-cadastro-time?e=' + encodeURIComponent(cod);
+  linkCortesia = cort.codigo ? BASE + '/cortesias?c=' + encodeURIComponent(cort.codigo) : BASE + '/cortesias';
+
+  $('#topoEmpresa').textContent   = d.empresa || 'Expositor';
+  $('#painelEmpresa').textContent = d.empresa || 'Expositor';
+  $('#painelCodigo').textContent  = cod || 'n/d';
+  $('#painelEstande').textContent = d.estande || 'A definir';
+  $('#painelCota').textContent    = d.cota || 'Expositor';
+  $('#painelStatus').textContent  = d.travado ? 'Lista travada' : (d.status === 'preenchido' ? 'Cadastro feito' : 'Aguardando cadastro');
+  $('#limiteFrase').innerHTML     = fraseLimite(cred);
+
+  medidorCredenciais(cred);
+  medidorCortesias(cort);
+  faixaCortesia(cort);
+  blocoCortesiaSecao(cort);
+
+  $$('[data-cta-cadastro], #ctaCadastro').forEach(function(a){ a.href = linkCadastro; });
+
+  document.title = 'Manual do Expositor · ' + (d.empresa || 'Nutrição Brasil 2026');
+  $('#portaria').style.display = 'none';
+  $('#app').classList.add('on');
+
+  try{ history.replaceState(null, '', location.pathname + '?e=' + encodeURIComponent(cod)); }catch(e){}
+
+  montarNav();
+  animarRoscas();
+  window.scrollTo(0,0);
+}
+
+function blocoCortesiaSecao(c){
+  var el = $('#blocoCortesia');
+  if(!c.total || !c.codigo){
+    el.innerHTML = '<div class="box nota"><div class="rot">Sem cortesias no contrato</div>'
+      + '<p>A sua empresa ainda não tem cortesias liberadas. Para incluir, fale com a Yasmin no WhatsApp '
+      + '<a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="box ok"><div class="rot">Link de cortesias da sua empresa</div>'
+    + '<p>Código <strong>'+esc(c.codigo)+'</strong>, com <strong>'+c.restantes+'</strong> de <strong>'+c.total+'</strong> ainda disponíveis'
+    + (c.prazo ? ', até <strong>'+esc(c.prazo)+'</strong>' : '') + '.</p>'
+    + '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">'
+    + '<a class="btn btn-conversao" href="'+esc(linkCortesia)+'" target="_blank" rel="noopener">Abrir a página de cortesias</a>'
+    + '<button class="btn btn-ghost btn-sm" data-copiar="cortesia" type="button">Copiar link</button></div></div>';
+}
+
+/* ======================= NAVEGAÇÃO ======================= */
+var itens = [];
+
+function montarNav(){
+  var nav = $('#nav'), ul = document.createElement('ul');
+  itens = [];
+
+  $$('#texto > section').forEach(function(sec){
+    var h2 = $('h2', sec); if(!h2) return;
+    var num = $('.num', h2) ? $('.num', h2).textContent.trim() : '';
+    var titulo = h2.textContent.replace(num, '').trim();
+    var subs = $$('h3', sec);
+
+    var li = document.createElement('li');
+    li.dataset.cat = sec.dataset.cat || '';
+    li.dataset.busca = (titulo + ' ' + sec.textContent).toLowerCase();
+
+    var bt = document.createElement('button');
+    bt.type = 'button'; bt.className = 'item'; bt.dataset.alvo = sec.id;
+    bt.innerHTML = '<span class="n">' + esc(num) + '</span><span class="tx">' + esc(titulo) + '</span>'
+      + (subs.length ? '<svg class="seta" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>' : '');
+    li.appendChild(bt);
+
+    if(subs.length){
+      var sub = document.createElement('div'); sub.className = 'subs';
+      subs.forEach(function(h3, i){
+        if(!h3.id) h3.id = sec.id + '-h' + i;
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'sub'; b.dataset.alvo = h3.id;
+        b.textContent = h3.textContent;
+        sub.appendChild(b);
+      });
+      li.appendChild(sub);
+    }
+    ul.appendChild(li);
+    itens.push({ li: li, sec: sec, bt: bt });
   });
 
-  $('form').addEventListener('submit', function(e){
+  nav.innerHTML = ''; nav.appendChild(ul);
+
+  nav.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-alvo]'); if(!b) return;
+    var alvo = document.getElementById(b.dataset.alvo); if(!alvo) return;
+    if(b.classList.contains('item')){
+      var li = b.parentElement;
+      if($('.subs', li)) li.classList.toggle('aberto');
+    }
+    alvo.scrollIntoView({ behavior:'smooth', block:'start' });
+    if(window.innerWidth <= 1100) fecharGaveta();
+  });
+
+  espiar();
+}
+
+function espiar(){
+  var alvos = $$('#texto > section');
+  if(!('IntersectionObserver' in window)) return;
+  var obs = new IntersectionObserver(function(entradas){
+    entradas.forEach(function(en){
+      if(!en.isIntersecting) return;
+      var id = en.target.id;
+      $$('#nav .item').forEach(function(b){
+        var on = b.dataset.alvo === id;
+        b.classList.toggle('ativo', on);
+        if(on){
+          var li = b.parentElement;
+          if($('.subs', li)) li.classList.add('aberto');
+          var lat = $('#lateral'), r = b.getBoundingClientRect(), lr = lat.getBoundingClientRect();
+          if(r.top < lr.top + 12 || r.bottom > lr.bottom - 12) b.scrollIntoView({ block:'nearest' });
+        }
+      });
+    });
+  }, { rootMargin: '-72px 0px -68% 0px', threshold: 0 });
+  alvos.forEach(function(a){ obs.observe(a); });
+}
+
+/* ---- gaveta ---- */
+function abrirGaveta(){
+  document.documentElement.classList.add('gaveta');
+  $('#btnLateral').setAttribute('aria-expanded','true');
+}
+function fecharGaveta(){
+  document.documentElement.classList.remove('gaveta');
+  $('#btnLateral').setAttribute('aria-expanded','false');
+}
+$('#btnLateral').addEventListener('click', function(){
+  if(window.innerWidth <= 1100){
+    document.documentElement.classList.contains('gaveta') ? fecharGaveta() : abrirGaveta();
+  } else {
+    var r = document.documentElement.classList.toggle('recolhido');
+    this.setAttribute('aria-expanded', r ? 'false' : 'true');
+  }
+});
+$('#veu').addEventListener('click', fecharGaveta);
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){ fecharGaveta(); if($('#busca').value){ zerarBusca(); } }
+  if((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)){
     e.preventDefault();
-    tentar(input.value, false);
-  });
-
-  $('btnSumario').addEventListener('click', function(){
-    var s = $('sumario');
-    var aberto = s.classList.toggle('on');
-    this.setAttribute('aria-expanded', aberto ? 'true' : 'false');
-    if(aberto) s.scrollIntoView({ block: 'nearest' });
-  });
-
-  document.querySelectorAll('#sumario a').forEach(function(a){
-    a.addEventListener('click', function(){
-      $('sumario').classList.remove('on');
-      $('btnSumario').setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  /* ---------- entrada ---------- */
-  var url = new URLSearchParams(location.search);
-  var doLink = (url.get('e') || url.get('codigo') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  var memoria = lembrar();
-
-  if(doLink){
-    input.value = doLink;
-    tentar(doLink, true);
-  }else if(memoria && memoria.codigo){
-    abrir(memoria);
-  }else{
-    setTimeout(function(){ input.focus(); }, 120);
+    if(window.innerWidth <= 1100) abrirGaveta();
+    document.documentElement.classList.remove('recolhido');
+    $('#busca').focus(); $('#busca').select();
   }
+});
+
+/* ======================= FILTROS ======================= */
+var catAtual = 'todos';
+$('#chips').addEventListener('click', function(e){
+  var c = e.target.closest('.chip'); if(!c) return;
+  catAtual = c.dataset.cat;
+  $$('.chip').forEach(function(x){ x.setAttribute('aria-pressed', x === c ? 'true' : 'false'); });
+  aplicarFiltros();
+});
+
+/* ======================= BUSCA ======================= */
+var campoBusca = $('#busca'), tmBusca;
+
+function tirarMarcas(){
+  $$('#texto mark[data-busca]').forEach(function(m){
+    var pai = m.parentNode;
+    pai.replaceChild(document.createTextNode(m.textContent), m);
+    pai.normalize();
+  });
+}
+
+function marcar(termo){
+  if(termo.length < 2) return 0;
+  var alvo = termo.toLowerCase(), achados = 0;
+  var w = document.createTreeWalker($('#texto'), NodeFilter.SHOW_TEXT, {
+    acceptNode: function(n){
+      if(!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      var p = n.parentNode;
+      if(!p || /^(SCRIPT|STYLE|MARK)$/.test(p.nodeName)) return NodeFilter.FILTER_REJECT;
+      return n.nodeValue.toLowerCase().indexOf(alvo) >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  var nos = [], n;
+  while((n = w.nextNode())) nos.push(n);
+  nos.forEach(function(no){
+    var txt = no.nodeValue, baixo = txt.toLowerCase(), i = 0, frag = document.createDocumentFragment(), p;
+    while((p = baixo.indexOf(alvo, i)) >= 0){
+      if(p > i) frag.appendChild(document.createTextNode(txt.slice(i, p)));
+      var m = document.createElement('mark');
+      m.setAttribute('data-busca','1');
+      m.textContent = txt.slice(p, p + alvo.length);
+      frag.appendChild(m); achados++;
+      i = p + alvo.length;
+    }
+    if(i < txt.length) frag.appendChild(document.createTextNode(txt.slice(i)));
+    no.parentNode.replaceChild(frag, no);
+  });
+  return achados;
+}
+
+function aplicarFiltros(){
+  var termo = campoBusca.value.trim().toLowerCase();
+  var visiveis = 0;
+
+  itens.forEach(function(it){
+    var okCat = catAtual === 'todos' || it.li.dataset.cat === catAtual;
+    var okTermo = termo.length < 2 || it.li.dataset.busca.indexOf(termo) >= 0;
+    var on = okCat && okTermo;
+    it.li.classList.toggle('oculto', !on);
+    if(on) visiveis++;
+    if(termo.length >= 2 && on && $('.subs', it.li)) it.li.classList.add('aberto');
+  });
+
+  $('#vazioNav').classList.toggle('on', visiveis === 0);
+  $('#limparBusca').classList.toggle('on', campoBusca.value.length > 0);
+
+  tirarMarcas();
+  var res = $('#resultado');
+  if(termo.length >= 2){
+    var n = marcar(campoBusca.value.trim());
+    res.innerHTML = n
+      ? '<b>' + n + '</b> ' + (n === 1 ? 'ocorrência' : 'ocorrências') + ' em <b>' + visiveis + '</b> ' + (visiveis === 1 ? 'seção' : 'seções')
+      : 'Nada encontrado para esta palavra';
+    res.classList.add('on');
+  } else {
+    res.classList.remove('on');
+  }
+}
+
+function zerarBusca(){
+  campoBusca.value = '';
+  aplicarFiltros();
+  campoBusca.focus();
+}
+
+campoBusca.addEventListener('input', function(){
+  clearTimeout(tmBusca);
+  tmBusca = setTimeout(aplicarFiltros, 170);
+});
+$('#limparBusca').addEventListener('click', zerarBusca);
+
+/* ======================= AÇÕES ======================= */
+$('#btnTema').addEventListener('click', function(){
+  aplicarTema(document.documentElement.getAttribute('data-tema') === 'claro' ? 'escuro' : 'claro');
+});
+$('#btnImprimir').addEventListener('click', function(){ window.print(); });
+
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-copiar]'); if(!b) return;
+  if(b.dataset.copiar === 'cadastro') copiar(linkCadastro, 'Link do cadastro copiado');
+  if(b.dataset.copiar === 'cortesia') copiar(linkCortesia, 'Link de cortesias copiado');
+});
+
+input.addEventListener('input', function(){
+  this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7);
+  if(aviso.classList.contains('on')) limparAviso();
+});
+$('#form').addEventListener('submit', function(e){ e.preventDefault(); tentar(input.value, false); });
+
+/* ======================= ENTRADA ======================= */
+var url = new URLSearchParams(location.search);
+var doLink = (url.get('e') || url.get('codigo') || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+var memoria = lembrar();
+
+if(doLink){ input.value = doLink; tentar(doLink, true); }
+else if(memoria && memoria.codigo){ abrir(memoria); }
+else { setTimeout(function(){ input.focus(); }, 120); }
+
 })();
 </script>
 </body>
