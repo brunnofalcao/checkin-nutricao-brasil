@@ -387,6 +387,54 @@ footer p{color:var(--t3);font-size:13px;margin:0 0 7px}
 footer a{color:var(--t2)}
 
 /* ================= TOAST ================= */
+/* ================= ONBOARDING ================= */
+#onb{
+  position:fixed;inset:0;z-index:130;display:none;
+  align-items:center;justify-content:center;padding:22px;
+  background:rgba(4,1,10,.72);backdrop-filter:blur(3px);
+}
+html[data-tema="claro"] #onb{background:rgba(40,25,66,.46)}
+#onb.on{display:flex}
+.onb-cx{
+  width:100%;max-width:472px;background:var(--sup);border:1px solid var(--linha);
+  border-radius:18px;box-shadow:var(--sombra);overflow:hidden;
+  transform:translateY(12px) scale(.985);opacity:0;
+  transition:transform .24s cubic-bezier(.22,.9,.3,1),opacity .24s ease;
+}
+#onb.on .onb-cx{transform:none;opacity:1}
+@media (prefers-reduced-motion:reduce){.onb-cx{transform:none;opacity:1;transition:none}}
+.onb-topo{display:flex;align-items:center;gap:12px;padding:16px 18px 0}
+.onb-passos{display:flex;gap:6px;flex:1 1 auto}
+.onb-ponto{height:3px;flex:1 1 auto;border-radius:2px;background:var(--trilho);transition:background .2s ease}
+.onb-ponto.on{background:var(--verde)}
+.onb-x{
+  flex:0 0 auto;width:30px;height:30px;border-radius:9px;border:1px solid var(--linha);
+  background:transparent;color:var(--t3);cursor:pointer;font-size:17px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.onb-x:hover{border-color:var(--alerta);color:var(--alerta-txt)}
+.onb-corpo{padding:22px 26px 4px;min-height:186px}
+.onb-rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--info-txt);margin-bottom:9px}
+.onb-corpo h3{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:-.6px;line-height:1.2}
+.onb-corpo p{margin:0 0 12px;font-size:14.5px;color:var(--t2);line-height:1.6}
+.onb-corpo p:last-child{margin-bottom:0}
+.onb-corpo b{color:var(--t1)}
+.onb-fato{
+  display:inline-flex;align-items:baseline;gap:7px;margin-top:4px;
+  background:var(--sup2);border-radius:10px;padding:9px 14px;font-size:13.5px;color:var(--t2);
+}
+.onb-fato b{font-size:17px;font-weight:800;letter-spacing:-.4px}
+.onb-pe{display:flex;align-items:center;gap:10px;padding:18px 26px 22px}
+.onb-pe .btn{flex:0 0 auto}
+.onb-pe .esp{flex:1 1 auto}
+.onb-pular{background:transparent;border:0;color:var(--t3);font-size:13.5px;cursor:pointer;padding:6px 2px}
+.onb-pular:hover{color:var(--t1);text-decoration:underline}
+@media(max-width:520px){
+  .onb-corpo{padding:20px 20px 4px;min-height:0}
+  .onb-pe{padding:16px 20px 20px}
+  .onb-pe .btn{flex:1 1 auto}
+}
 #toast{
   position:fixed;left:50%;bottom:26px;transform:translate(-50%,18px);z-index:120;
   background:var(--verde);color:#07130d;font-size:14px;font-weight:700;
@@ -399,7 +447,7 @@ footer a{color:var(--t2)}
 @media print{
   html{--bg:#fff}
   body{background:#fff;color:#111;font-size:11pt}
-  .topo,.lateral,.veu,#toast,.btn,.faixa-cortesia .acoes,.prazo .acoes{display:none!important}
+  .topo,.lateral,.veu,#toast,#onb,.btn,.faixa-cortesia .acoes,.prazo .acoes{display:none!important}
   #app{display:block!important}
   .corpo{display:block}
   .conteudo{max-width:none;padding:0}
@@ -452,6 +500,9 @@ footer a{color:var(--t2)}
       <div class="emp">Manual do Expositor · <b id="topoEmpresa"></b></div>
       <button class="icone" id="btnTema" type="button" aria-label="Alternar tema claro e escuro">
         <svg viewBox="0 0 24 24" id="iconeTema"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+      </button>
+      <button class="icone" id="btnGuia" type="button" aria-label="Ver o guia rápido de novo" title="Guia rápido">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M9.6 9.2a2.5 2.5 0 114 2.1c-.9.6-1.6 1-1.6 2"/><path d="M12 16.6h.01"/></svg>
       </button>
       <button class="icone" id="btnImprimir" type="button" aria-label="Imprimir o manual">
         <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg>
@@ -1136,6 +1187,22 @@ footer a{color:var(--t2)}
   </div>
 </div>
 
+<div id="onb" role="dialog" aria-modal="true" aria-labelledby="onbTitulo" aria-hidden="true">
+  <div class="onb-cx">
+    <div class="onb-topo">
+      <div class="onb-passos" id="onbPassos" aria-hidden="true"></div>
+      <button class="onb-x" id="onbFechar" type="button" aria-label="Fechar o guia rápido">&times;</button>
+    </div>
+    <div class="onb-corpo" id="onbCorpo"></div>
+    <div class="onb-pe">
+      <button class="onb-pular" id="onbPular" type="button">Pular</button>
+      <span class="esp"></span>
+      <button class="btn btn-ghost btn-sm" id="onbVoltar" type="button">Voltar</button>
+      <button class="btn btn-conversao btn-sm" id="onbAvancar" type="button">Avançar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1391,6 +1458,7 @@ function abrir(d){
   montarNav();
   animarRoscas();
   window.scrollTo(0,0);
+  setTimeout(abrirOnb, 420);
 }
 
 function blocoCortesiaSecao(c){
@@ -1602,6 +1670,131 @@ campoBusca.addEventListener('input', function(){
   tmBusca = setTimeout(aplicarFiltros, 170);
 });
 $('#limparBusca').addEventListener('click', zerarBusca);
+
+/* ======================= ONBOARDING ======================= */
+var onb = { passos: [], i: 0, foco: null, aberto: false };
+
+function montarPassos(d){
+  var cred = d.credenciais || {}, cort = d.cortesias || {};
+  var lim = cred.limite||0, fei = cred.preenchidas||0, falta = Math.max(0, lim-fei);
+  var p = [];
+
+  var fato;
+  if(lim <= 0) fato = 'O limite de credenciais da sua empresa ainda não foi definido no sistema.';
+  else if(fei > lim) fato = '<span class="onb-fato"><b>'+fei+' de '+lim+'</b> credenciais usadas, acima do contratado</span>';
+  else if(falta === 0) fato = '<span class="onb-fato"><b>'+fei+' de '+lim+'</b> credenciais preenchidas, equipe completa</span>';
+  else fato = '<span class="onb-fato"><b>'+falta+'</b> '+(falta===1?'credencial ainda sem nome':'credenciais ainda sem nome')+'</span>';
+
+  p.push({
+    rot: 'Guia rápido, passo 1',
+    tit: 'Olá, ' + esc(d.empresa || 'expositor'),
+    txt: '<p>Este é o manual oficial do seu estande no Nutrição Brasil 2026. Ele vale como parte do contrato, então tudo que está aqui é regra, não sugestão.</p>'
+       + '<p>O quadro no topo mostra a situação da sua empresa em tempo real, puxada do sistema de credenciamento.</p>' + fato
+  });
+
+  p.push({
+    rot: 'Guia rápido, passo 2',
+    tit: 'Ache o que precisa em segundos',
+    txt: '<p>O menu à esquerda lista as 20 seções e abre os subtópicos de cada uma. Ele pode ser recolhido pelo botão de três linhas no topo.</p>'
+       + '<p>A <b>busca</b> destaca a palavra dentro do texto e filtra o menu ao mesmo tempo. Atalho: <b>Ctrl+K</b>, ou <b>Cmd+K</b> no Mac.</p>'
+       + '<p>Os <b>filtros</b> logo abaixo reduzem o menu por assunto: prazos, montagem, segurança, operação.</p>'
+  });
+
+  if(cort.total > 0 && cort.codigo){
+    var ativo = !cort.pausado && !cort.vencido && cort.restantes > 0;
+    p.push({
+      rot: 'Guia rápido, passo 3',
+      tit: ativo ? 'Você tem cortesias para distribuir' : 'Suas cortesias',
+      txt: '<p>Cortesia é convite gratuito para clientes, parceiros e equipe. Cada pessoa se inscreve sozinha pelo seu link e recebe a confirmação por WhatsApp.</p>'
+         + '<p>' + (ativo
+             ? 'O saldo aparece no painel e na faixa logo abaixo dele. Cortesia que sobra não vira desconto nem crédito.'
+             : 'A distribuição está encerrada ou pausada. Fale com a Yasmin para reabrir.') + '</p>'
+         + '<span class="onb-fato"><b>'+cort.restantes+' de '+cort.total+'</b> ainda '+(cort.restantes===1?'disponível':'disponíveis')+'</span>'
+    });
+  } else {
+    p.push({
+      rot: 'Guia rápido, passo 3',
+      tit: 'Prazo que muda o seu dia 27',
+      txt: '<p>A equipe do estande precisa estar cadastrada até <b>22 de agosto</b>. O crachá só é impresso para quem está na lista.</p>'
+         + '<p>Depois do prazo a lista trava, e incluir alguém passa a depender de aprovação, resolvida no balcão do CAEX com fila na frente.</p>'
+    });
+  }
+
+  p.push({
+    rot: 'Guia rápido, último passo',
+    tit: 'Antes de viajar para Brasília',
+    txt: '<p>A seção <b>Checklist final</b> tem os 16 itens para conferir com a sua equipe. O botão de impressora no topo gera a versão em papel do manual inteiro.</p>'
+       + '<p>As <b>Perguntas frequentes</b> respondem o que mais chega ao CAEX. O que não estiver lá, chame a Yasmin no WhatsApp <a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.</p>'
+  });
+
+  return p;
+}
+
+function pintarOnb(){
+  var p = onb.passos[onb.i];
+  $('#onbCorpo').innerHTML = '<div class="onb-rot">'+p.rot+'</div><h3 id="onbTitulo">'+p.tit+'</h3>'+p.txt;
+  $('#onbPassos').innerHTML = onb.passos.map(function(_,i){
+    return '<span class="onb-ponto'+(i <= onb.i ? ' on' : '')+'"></span>';
+  }).join('');
+  $('#onbVoltar').style.display = onb.i === 0 ? 'none' : '';
+  var ultimo = onb.i === onb.passos.length - 1;
+  $('#onbAvancar').textContent = ultimo ? 'Começar' : 'Avançar';
+  $('#onbPular').style.display = ultimo ? 'none' : '';
+}
+
+function abrirOnb(){
+  if(!dados) return;
+  onb.passos = montarPassos(dados);
+  onb.i = 0;
+  onb.foco = document.activeElement;
+  onb.aberto = true;
+  pintarOnb();
+  var el = $('#onb');
+  el.classList.add('on');
+  el.setAttribute('aria-hidden','false');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ $('#onbAvancar').focus(); }, 60);
+}
+
+function fecharOnb(){
+  if(!onb.aberto) return;
+  onb.aberto = false;
+  var el = $('#onb');
+  el.classList.remove('on');
+  el.setAttribute('aria-hidden','true');
+  document.body.style.overflow = '';
+  if(onb.foco && onb.foco.focus) onb.foco.focus();
+}
+
+function andarOnb(passo){
+  var novo = onb.i + passo;
+  if(novo < 0) return;
+  if(novo >= onb.passos.length){ fecharOnb(); return; }
+  onb.i = novo;
+  pintarOnb();
+}
+
+$('#onbAvancar').addEventListener('click', function(){ andarOnb(1); });
+$('#onbVoltar').addEventListener('click', function(){ andarOnb(-1); });
+$('#onbPular').addEventListener('click', fecharOnb);
+$('#onbFechar').addEventListener('click', fecharOnb);
+$('#onb').addEventListener('click', function(e){ if(e.target === this) fecharOnb(); });
+$('#btnGuia').addEventListener('click', abrirOnb);
+
+/* teclado dentro do guia: setas navegam, Tab não escapa da caixa */
+document.addEventListener('keydown', function(e){
+  if(!onb.aberto) return;
+  if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); fecharOnb(); return; }
+  if(e.key === 'ArrowRight'){ e.preventDefault(); andarOnb(1); return; }
+  if(e.key === 'ArrowLeft'){ e.preventDefault(); andarOnb(-1); return; }
+  if(e.key === 'Tab'){
+    var f = $$('#onb button, #onb a[href]').filter(function(b){ return b.offsetParent !== null; });
+    if(!f.length) return;
+    var pri = f[0], ult = f[f.length-1];
+    if(e.shiftKey && document.activeElement === pri){ e.preventDefault(); ult.focus(); }
+    else if(!e.shiftKey && document.activeElement === ult){ e.preventDefault(); pri.focus(); }
+  }
+}, true);
 
 /* ======================= AÇÕES ======================= */
 $('#btnTema').addEventListener('click', function(){
