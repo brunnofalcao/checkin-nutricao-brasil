@@ -2554,6 +2554,37 @@
   user-select: all;
 }
 
+/* ── os três endereços, dentro da empresa ──
+   Saíram da linha da lista porque lá obrigavam a escolher antes de
+   entender. Aqui cada um vem com o nome do que abre. */
+.exp-links { margin-top: 22px; }
+.exp-link-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.exp-link-item:last-child { padding-bottom: 0; }
+.exp-link-item > div:first-child { min-width: 0; flex: 1; }
+.exp-link-item .exp-link-box { margin-top: 8px; }
+.exp-link-item .btn { flex: none; }
+
+.exp-modal-acoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 560px) {
+  .exp-link-item { flex-direction: column; align-items: stretch; }
+  .exp-link-item .btn { width: 100%; justify-content: center; }
+}
+
 /* ── rodapé: entrada de visitante ── */
 .exp-visitante {
   display: flex;
@@ -2675,3 +2706,16 @@
   .lote-drop { flex-direction: column; align-items: stretch; }
   .lote-drop-acoes .btn { flex: 1; justify-content: center; }
 }
+
+
+/* ═══ CORTESIAS ═══ */
+.ct-lista {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  max-height: 260px;
+  overflow: auto;
+  margin-top: 6px;
+}
+.ct-lista .table th, .ct-lista .table td { font-size: 12.5px; padding: 9px 12px; }
+.ct-import { margin-top: 6px; }
+.ct-import .lote-drop { margin-top: 4px; }

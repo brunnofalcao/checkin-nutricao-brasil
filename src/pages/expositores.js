@@ -19,8 +19,13 @@ import { abreLote } from './expo-lote.js';
 import { abreNovaEmpresa } from './expo-nova.js';
 import { telefoneBonito } from '../core/utils.js';
 import { abreCrachas } from './crachas.js';
+import { abreCortesias } from './expo-cortesias.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
+// O manual NÃO leva o código na URL — a página pede que a pessoa digite.
+// Por isso ele é igual para todas as empresas, e por isso o código sempre
+// tem que ir junto no texto.
+const BASE_MANUAL = 'https://checkin.nutricaobrasil.com.br/manual-expositor';
 
 // view fica no estado porque ações de dentro de um modal (mudar o limite)
 // precisam repintar a faixa de números — só trocar a lista deixa o painel
@@ -34,6 +39,8 @@ async function carrega(eventId) {
     // retirou). Sem nomear a constraint, o PostgREST não sabe qual seguir.
     .select('id, codigo, token, empresa, cnpj, estande, cota, limite_credenciais, status, ' +
             'resp_nome, resp_whatsapp, cad_nome, preenchido_em, ' +
+            'cortesias_total, cortesias_codigo, cortesias_pausado, cortesias_prazo, ' +
+            'cortesias_uso(id), ' +
             'exhibitor_members(id, cargo, pode_retirar, retirado_em, retirado_por_nome, ' +
             'participants!exhibitor_members_participant_id_fkey(id, name, phone, email, code, checked))')
     .eq('event_id', eventId)
@@ -53,7 +60,8 @@ async function carrega(eventId) {
       nome: m.participants?.name, phone: m.participants?.phone, email: m.participants?.email,
       participant_id: m.participants?.id, code: m.participants?.code
     })).sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
-    return { ...x, time, retirados: time.filter((p) => p.retirado_em).length };
+    return { ...x, time, retirados: time.filter((p) => p.retirado_em).length,
+             cortesias_usadas: (x.cortesias_uso ?? []).length };
   });
 }
 
@@ -89,7 +97,10 @@ function contas() {
     pessoas: emp.reduce((s, x) => s + x.time.length, 0),
     vagas: emp.reduce((s, x) => s + (x.limite_credenciais || 0), 0),
     retirados: emp.reduce((s, x) => s + x.retirados, 0),
-    estourou: emp.filter((x) => x.time.length > x.limite_credenciais).length
+    estourou: emp.filter((x) => x.time.length > x.limite_credenciais).length,
+    ctTotal: emp.reduce((s, x) => s + (x.cortesias_total || 0), 0),
+    ctUsadas: emp.reduce((s, x) => s + (x.cortesias_usadas || 0), 0),
+    ctEmpresas: emp.filter((x) => (x.cortesias_total || 0) > 0).length
   };
 }
 
@@ -126,6 +137,8 @@ function pinta(view) {
       faixaItem('Faltam preencher', c.faltam, c.faltam ? 'alerta' : 'ok'),
       faixaItem('Credenciais usadas', `${c.pessoas} de ${c.vagas}`),
       faixaItem('Crachás retirados', c.retirados),
+      c.ctTotal ? faixaItem('Cortesias usadas', `${c.ctUsadas} de ${c.ctTotal}`,
+        c.ctUsadas >= c.ctTotal ? 'alerta' : '') : null,
       c.estourou ? faixaItem('Acima do limite', c.estourou, 'ruim') : null
     ),
 
@@ -211,6 +224,7 @@ function lista() {
         h('th', { style: { width: '110px' } }, 'Cota'),
         h('th', { style: { width: '80px' } }, 'Estande'),
         h('th', { style: { width: '140px' } }, 'Credenciais'),
+        h('th', { style: { width: '120px' } }, 'Cortesias'),
         h('th', { style: { width: '130px' } }, 'Situação'),
         h('th', { style: { width: '190px' } }, '')
       )),
@@ -259,20 +273,68 @@ function linha(x) {
             x.retirados === 1 ? '1 crachá retirado' : `${x.retirados} crachás retirados`)
         : null),
 
+    h('td', { dataset: { rot: 'Cortesias' } },
+      x.cortesias_total
+        ? h('div', {},
+            h('span', { class: 'mono' }, `${x.cortesias_usadas || 0} de ${x.cortesias_total}`),
+            x.cortesias_pausado
+              ? h('div', { class: 'row-sub ruim' }, 'pausado')
+              : h('div', { class: 'row-sub' }, x.cortesias_codigo || ''))
+        : h('span', { class: 'muted' }, '—')),
+
     h('td', { dataset: { rot: 'Situação' } },
       preenchida
         ? h('span', { class: 'status live' }, 'Preenchida')
         : h('span', { class: 'status warn' }, 'Não preencheu'),
       estourou ? h('div', { class: 'row-sub ruim' }, 'acima do limite') : null),
 
-    // Dois botões, não três: "Equipe" saiu porque a linha inteira já abre a
-    // equipe e o número de pessoas já está na coluna de credenciais. Com três,
-    // a coluna quebrava em três alturas e cada linha virava um quarteirão.
+    // UM botão, não três. Três links na linha obrigavam a escolher antes de
+    // entender, e a escolha errada gerava a pergunta que o comercial não sabia
+    // responder: "mando qual?". O manual é a porta única — abre credencial,
+    // cortesia e o resto. Os outros links continuam existindo, mas dentro da
+    // empresa, onde já se sabe do que se está falando.
     h('td', { class: 'exp-acoes' },
-      btn('Link', 'Copiar o link do formulário',
-        () => copia(BASE_FORM + x.codigo, 'Link copiado. Mande para a empresa.')),
-      btn('Credenciais', 'Alterar o número de credenciais', () => mudaLimite(x)),
+      btn('Copiar manual', 'Link do manual + o código desta empresa',
+        () => copia(textoManual(x), 'Manual e código copiados. Cole no WhatsApp.')),
       h('span', { class: 'exp-seta', 'aria-hidden': 'true' }, '›')));
+}
+
+// O link do manual sozinho não serve: a página pede o código digitado. Quem
+// copia só a URL manda a empresa para uma tela que ela não consegue abrir —
+// foi exatamente isso que travou o comercial. Então o que se copia é sempre
+// o par, nunca só o endereço.
+function textoManual(x) {
+  return `${BASE_MANUAL}\nCódigo da ${x.empresa || 'empresa'}: ${x.codigo}`;
+}
+
+function textoConvite(x) {
+  const ev = E.eventos.find((e) => e.id === E.eventId);
+  const linhas = [
+    'Oi! Aqui é do *Nutrição Brasil*.',
+    '',
+    `A *${x.empresa}* está confirmada na exposição${ev ? ' — ' + rotuloEvento(ev) : ''}` +
+      `${x.estande ? `, no estande *${x.estande}*` : ''}.`,
+    '',
+    'Tudo que vocês precisam está no manual do expositor: montagem, cadastro da equipe' +
+      (x.cortesias_total ? ', cortesias' : '') + ' e prazos.',
+    '',
+    `🔗 ${BASE_MANUAL}`,
+    `🔑 Código da empresa: *${x.codigo}*`,
+    '',
+    'É só abrir o link e digitar o código.',
+    '',
+    `Vocês têm direito a *${x.limite_credenciais} ` +
+      `${x.limite_credenciais === 1 ? 'credencial' : 'credenciais'}* para a equipe` +
+      (x.cortesias_total
+        ? ` e *${x.cortesias_total} ${x.cortesias_total === 1 ? 'cortesia' : 'cortesias'}* ` +
+          'para convidar clientes e parceiros'
+        : '') + '.',
+    '',
+    'Qualquer dúvida, é só responder aqui.',
+    '',
+    '*Nutrição Brasil*'
+  ];
+  return linhas.join('\n');
 }
 
 // A equipe abre em painel. Aberta dentro da linha, empurrava a página
@@ -311,15 +373,49 @@ function abreEquipe(x) {
         : h('div', { class: 'empty', style: { padding: '28px 10px' } },
             h('div', { class: 'empty-title' }, 'Ninguém cadastrado ainda'),
             h('div', { class: 'empty-body' },
-              'A empresa ainda não abriu o link. Copie e mande de novo para o contato dela.')),
+              'A empresa ainda não abriu o manual. Copie o convite e mande de novo.')),
 
-      h('div', { class: 'exp-link-box mono' }, link)),
+      // Os três endereços moram aqui, com a explicação do que cada um abre.
+      // Na linha da lista eles só geravam dúvida; aqui, com a empresa aberta
+      // na frente, a diferença fica óbvia.
+      h('div', { class: 'exp-links' },
+        h('div', { class: 'page-sub', style: { marginBottom: '10px' } }, 'Links desta empresa'),
+        linkDaEmpresa('Manual do expositor',
+          'Abre tudo: montagem, equipe, cortesias e prazos. É o que se manda.',
+          BASE_MANUAL, () => copia(textoManual(x), 'Manual e código copiados.')),
+        linkDaEmpresa('Cadastro da equipe',
+          'Atalho direto para credenciar, já com o código na URL.',
+          link, () => copia(link, 'Link do cadastro de equipe copiado.')),
+        x.cortesias_total
+          ? linkDaEmpresa('Cortesias',
+              `${x.cortesias_usadas} de ${x.cortesias_total} usadas. Código ${x.cortesias_codigo || '—'}.`,
+              null, () => cortesias(x), 'Abrir cortesias')
+          : null),
+
+      h('div', { class: 'exp-modal-acoes' },
+        h('button', { class: 'btn btn-ghost btn-sm', onclick: () => mudaLimite(x) },
+          'Alterar credenciais'),
+        h('button', { class: 'btn btn-ghost btn-sm', onclick: () => cortesias(x) },
+          x.cortesias_total ? 'Gerenciar cortesias' : 'Dar cortesias'))),
     actions: [
       { label: 'Fechar', kind: 'btn-ghost', onClick: (fechar) => fechar() },
-      { label: 'Copiar link', kind: 'btn-primary',
-        onClick: () => copia(link, 'Link copiado. Mande para a empresa.') }
+      { label: 'Copiar só o manual', kind: 'btn-secondary',
+        onClick: () => copia(textoManual(x), 'Manual e código copiados.') },
+      { label: 'Copiar convite', kind: 'btn-primary',
+        onClick: () => copia(textoConvite(x), 'Convite copiado. Cole no WhatsApp.') }
     ]
   });
+}
+
+// Cada link com o nome do que ele abre por cima do endereço. Sem a linha de
+// explicação, três URLs parecidas viram três chances de mandar a errada.
+function linkDaEmpresa(titulo, explica, url, onClick, rotulo) {
+  return h('div', { class: 'exp-link-item' },
+    h('div', {},
+      h('div', { class: 'row-name' }, titulo),
+      h('div', { class: 'row-sub' }, explica),
+      url ? h('div', { class: 'exp-link-box mono' }, url) : null),
+    h('button', { class: 'btn btn-ghost btn-sm', onclick: onClick }, rotulo || 'Copiar'));
 }
 
 // Entrada de visitante: o QR da porta. Fica no fim porque é configuração,
@@ -374,6 +470,15 @@ function imprimeCrachas() {
     return;
   }
   abreCrachas({ evento: ev, participantes: pessoas });
+}
+
+function cortesias(x) {
+  const ev = E.eventos.find((e) => e.id === E.eventId);
+  abreCortesias({
+    empresa: x,
+    evento: rotuloEvento(ev),
+    aoTerminar: () => { if (E.view) recarrega(E.view); }
+  });
 }
 
 function loteDeConvites(view) {
