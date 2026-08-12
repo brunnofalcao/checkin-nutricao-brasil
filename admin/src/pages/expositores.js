@@ -22,6 +22,10 @@ import { abreCrachas } from './crachas.js';
 import { abreCortesias } from './expo-cortesias.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
+// O manual NÃO leva o código na URL — a página pede que a pessoa digite.
+// Por isso ele é igual para todas as empresas, e por isso o código sempre
+// tem que ir junto no texto.
+const BASE_MANUAL = 'https://checkin.nutricaobrasil.com.br/manual-expositor';
 
 // view fica no estado porque ações de dentro de um modal (mudar o limite)
 // precisam repintar a faixa de números — só trocar a lista deixa o painel
@@ -33,7 +37,7 @@ async function carrega(eventId) {
   const emp = await supabase.from('exhibitors')
     // exhibitor_members tem DUAS ligações com participants (o dono do crachá e quem
     // retirou). Sem nomear a constraint, o PostgREST não sabe qual seguir.
-    .select('id, codigo, token, empresa, cnpj, estande, cota, limite_credenciais, status, ' +
+    .select('id, codigo, token, empresa, cnpj, estande, cota, limite_credenciais, status, observacoes, ' +
             'resp_nome, resp_whatsapp, cad_nome, preenchido_em, ' +
             'cortesias_total, cortesias_codigo, cortesias_pausado, cortesias_prazo, ' +
             'cortesias_uso(id), ' +
@@ -243,7 +247,7 @@ function linha(x) {
       onclick: (e) => { e.stopPropagation(); fn(); }
     }, rot);
 
-  return h('tr', { class: 'exp-linha', onclick: () => abreEquipe(x) },
+  return h('tr', { class: 'exp-linha', onclick: () => abreEmpresa(x) },
     h('td', { dataset: { rot: 'Empresa' } },
       h('div', { class: 'row-name' },
         x.empresa || h('span', { class: 'muted' }, 'sem nome')),
@@ -284,30 +288,195 @@ function linha(x) {
         : h('span', { class: 'status warn' }, 'Não preencheu'),
       estourou ? h('div', { class: 'row-sub ruim' }, 'acima do limite') : null),
 
-    // Dois botões, não três: "Equipe" saiu porque a linha inteira já abre a
-    // equipe e o número de pessoas já está na coluna de credenciais. Com três,
-    // a coluna quebrava em três alturas e cada linha virava um quarteirão.
+    // UM botão, não três. Três links na linha obrigavam a escolher antes de
+    // entender, e a escolha errada gerava a pergunta que o comercial não sabia
+    // responder: "mando qual?". O manual é a porta única — abre credencial,
+    // cortesia e o resto. Os outros links continuam existindo, mas dentro da
+    // empresa, onde já se sabe do que se está falando.
     h('td', { class: 'exp-acoes' },
-      btn('Link', 'Copiar o link do formulário',
-        () => copia(BASE_FORM + x.codigo, 'Link copiado. Mande para a empresa.')),
-      btn('Credenciais', 'Alterar o número de credenciais', () => mudaLimite(x)),
-      btn(x.cortesias_total ? 'Cortesias' : '+ Cortesias',
-        'Cota, código e quem já usou', () => cortesias(x)),
+      btn('Copiar manual', 'Link do manual + o código desta empresa',
+        () => copia(textoManual(x), 'Manual e código copiados. Cole no WhatsApp.')),
       h('span', { class: 'exp-seta', 'aria-hidden': 'true' }, '›')));
 }
 
+// O link do manual sozinho não serve: a página pede o código digitado. Quem
+// copia só a URL manda a empresa para uma tela que ela não consegue abrir —
+// foi exatamente isso que travou o comercial. Então o que se copia é sempre
+// o par, nunca só o endereço.
+function textoManual(x) {
+  return `${BASE_MANUAL}\nCódigo da ${x.empresa || 'empresa'}: ${x.codigo}`;
+}
 // A equipe abre em painel. Aberta dentro da linha, empurrava a página
 // inteira para baixo e fazia perder o lugar da leitura.
-function abreEquipe(x) {
+// PAINEL ÚNICO DA EMPRESA
+//
+// Antes eram três lugares: a linha copiava um link, "Credenciais" abria um
+// modal só para um número, "Cortesias" abria outro. Quem opera tinha que
+// saber de cor onde ficava cada coisa, e a lista virava um painel de
+// controle que ninguém pediu.
+//
+// Agora a empresa abre inteira aqui: ficha, links, equipe. Editar é ato
+// deliberado — o cadeado destrava, salva e volta a trancar. Durante o
+// evento, com pressa e tablet, campo aberto por padrão é campo alterado
+// sem querer.
+function abreEmpresa(x) {
   const link = BASE_FORM + x.codigo;
+  let editando = false;
+  let salvando = false;
+  const c = {};                       // referências dos campos do formulário
+  const ficha = h('div', { class: 'exp-ficha' });
+  const barra = h('div', { class: 'exp-modal-acoes' });
+
+  const dado = (rot, valor, tom) =>
+    h('div', { class: 'exp-dado' },
+      h('div', { class: 'exp-dado-rot' }, rot),
+      h('div', { class: 'exp-dado-val' + (tom ? ' ' + tom : '') }, valor || '—'));
+
+  const campo = (rot, chave, props) =>
+    h('div', { class: 'exp-dado' },
+      h('label', { class: 'exp-dado-rot' }, rot),
+      h('input', Object.assign({ class: 'input', ref: (el) => { c[chave] = el; } }, props)));
+
+  function pintaLeitura() {
+    ficha.replaceChildren(
+      dado('Empresa', x.empresa),
+      dado('CNPJ', x.cnpj),
+      dado('Cota', x.cota),
+      dado('Estande', x.estande),
+      dado('Credenciais', `${x.time.length} de ${x.limite_credenciais}`,
+        x.time.length > x.limite_credenciais ? 'ruim' : null),
+      dado('Cortesias', x.cortesias_total
+        ? `${x.cortesias_usadas} de ${x.cortesias_total}` +
+          (x.cortesias_pausado ? ' · pausadas' : '')
+        : 'sem cortesias'),
+      dado('Código das cortesias', x.cortesias_total ? x.cortesias_codigo : null),
+      dado('Prazo das cortesias', x.cortesias_prazo ? dataBonita(x.cortesias_prazo) : null),
+      dado('Responsável', x.resp_nome),
+      dado('Observações', x.observacoes));
+  }
+
+  function pintaEdicao() {
+    ficha.replaceChildren(
+      campo('Empresa', 'empresa', { value: x.empresa || '' }),
+      campo('CNPJ', 'cnpj', { value: x.cnpj || '' }),
+      campo('Cota', 'cota', { value: x.cota || '' }),
+      campo('Estande', 'estande', { value: x.estande || '' }),
+      campo('Credenciais', 'limite', { type: 'number', min: '1', max: '200',
+        value: String(x.limite_credenciais || 0) }),
+      campo('Cortesias', 'cortesias', { type: 'number', min: '0', max: '500',
+        value: String(x.cortesias_total || 0) }),
+      campo('Código das cortesias', 'cortcod',
+        { value: x.cortesias_codigo || '', placeholder: 'deixe vazio que eu gero' }),
+      campo('Prazo das cortesias', 'cortprazo', { type: 'date', value: x.cortesias_prazo || '' }),
+      campo('Observações', 'obs', { value: x.observacoes || '' }));
+  }
+
+  function pintaBarra() {
+    barra.replaceChildren(...(editando
+      ? [
+          h('button', { class: 'btn btn-primary btn-sm', onclick: salva },
+            salvando ? 'Salvando…' : 'Salvar e fechar o cadeado'),
+          h('button', { class: 'btn btn-ghost btn-sm', onclick: () => destranca(false) }, 'Cancelar')
+        ]
+      : [
+          h('button', { class: 'btn btn-secondary btn-sm', onclick: () => destranca(true) },
+            '🔒 Editar esta empresa'),
+          h('button', { class: 'btn btn-ghost btn-sm', onclick: () => cortesias(x) },
+            x.cortesias_total ? 'Ver quem usou as cortesias' : 'Dar cortesias')
+        ]));
+  }
+
+  function destranca(abrir) {
+    editando = abrir;
+    if (abrir) pintaEdicao(); else pintaLeitura();
+    pintaBarra();
+  }
+
+  async function salva() {
+    if (salvando) return;
+
+    const nome = (c.empresa.value || '').trim();
+    if (!nome) { toast.danger('A empresa precisa de nome.'); c.empresa.focus(); return; }
+
+    const lim = parseInt(c.limite.value, 10);
+    if (!lim || lim < 1) { toast.danger('Credenciais precisa ser maior que zero.'); return; }
+    if (lim < x.time.length) {
+      toast.danger(`A empresa já cadastrou ${x.time.length} pessoas. Não dá para baixar para ${lim}.`);
+      return;
+    }
+
+    const cort = parseInt(c.cortesias.value, 10) || 0;
+    if (cort < x.cortesias_usadas) {
+      toast.danger(`Já foram usadas ${x.cortesias_usadas} cortesias. Não dá para baixar para ${cort}.`);
+      return;
+    }
+
+    let cod = (c.cortcod.value || '').trim().toUpperCase();
+    if (cort > 0 && !cod) cod = geraCodigoCortesia(nome);
+    if (cod && !/^[A-Z0-9-]{4,20}$/.test(cod)) {
+      toast.danger('O código das cortesias aceita letras, números e hífen, de 4 a 20 caracteres.');
+      return;
+    }
+
+    const patch = {
+      empresa: nome,
+      cnpj: (c.cnpj.value || '').trim() || null,
+      cota: (c.cota.value || '').trim() || null,
+      estande: (c.estande.value || '').trim() || null,
+      limite_credenciais: lim,
+      cortesias_total: cort,
+      cortesias_codigo: cort > 0 ? cod : null,
+      cortesias_prazo: c.cortprazo.value || null,
+      observacoes: (c.obs.value || '').trim() || null
+    };
+
+    salvando = true; pintaBarra();
+    const { error } = await supabase.from('exhibitors').update(patch).eq('id', x.id);
+    salvando = false;
+
+    if (error) {
+      pintaBarra();
+      toast.danger(/duplicate|unique/i.test(error.message)
+        ? 'Já existe outra empresa com esse código de cortesia. Escolha outro.'
+        : error.message);
+      return;
+    }
+
+    Object.assign(x, patch);
+    destranca(false);
+    // Repinta a página inteira: os totais do topo e o contador de "acima do
+    // limite" dependem desses números.
+    if (E.view) pinta(E.view); else redesenha();
+    toast.success(`${nome} salva.`);
+  }
+
+  pintaLeitura();
+  pintaBarra();
+
   openModal({
     title: x.empresa || 'Empresa sem nome',
     body: h('div', {},
       h('div', { class: 'exp-modal-topo' },
         h('span', { class: 'exp-codigo mono' }, x.codigo),
-        x.cota ? h('span', { class: 'row-sub' }, x.cota) : null,
-        x.estande ? h('span', { class: 'row-sub' }, 'estande ' + x.estande) : null,
-        h('span', { class: 'row-sub' }, `${x.time.length} de ${x.limite_credenciais} credenciais`)),
+        h('span', { class: 'row-sub' },
+          x.status === 'convidado' ? 'não preencheu ainda' : 'preenchida')),
+
+      ficha,
+      barra,
+
+      // Os endereços moram aqui, cada um com o que abre. Na linha da lista
+      // eles obrigavam a escolher antes de entender.
+      h('div', { class: 'exp-links' },
+        h('div', { class: 'page-sub', style: { marginBottom: '10px' } }, 'Links desta empresa'),
+        linkDaEmpresa('Manual do expositor',
+          'Abre tudo: montagem, equipe, cortesias e prazos. É o que se manda.',
+          BASE_MANUAL, () => copia(textoManual(x), 'Manual e código copiados.')),
+        linkDaEmpresa('Cadastro da equipe',
+          'Atalho direto para credenciar, já com o código na URL.',
+          link, () => copia(link, 'Link do cadastro de equipe copiado.'))),
+
+      h('div', { class: 'page-sub', style: { margin: '22px 0 8px' } },
+        `Equipe · ${x.time.length} de ${x.limite_credenciais}`),
 
       x.time.length
         ? h('table', { class: 'table' },
@@ -332,15 +501,40 @@ function abreEquipe(x) {
         : h('div', { class: 'empty', style: { padding: '28px 10px' } },
             h('div', { class: 'empty-title' }, 'Ninguém cadastrado ainda'),
             h('div', { class: 'empty-body' },
-              'A empresa ainda não abriu o link. Copie e mande de novo para o contato dela.')),
-
-      h('div', { class: 'exp-link-box mono' }, link)),
+              'A empresa ainda não abriu o manual. Copie o link e mande de novo.'))),
     actions: [
       { label: 'Fechar', kind: 'btn-ghost', onClick: (fechar) => fechar() },
-      { label: 'Copiar link', kind: 'btn-primary',
-        onClick: () => copia(link, 'Link copiado. Mande para a empresa.') }
+      { label: 'Copiar manual', kind: 'btn-primary',
+        onClick: () => copia(textoManual(x), 'Manual e código copiados.') }
     ]
   });
+}
+
+// "2026-08-26" -> "26/08". Data por extenso não cabe na ficha e a pessoa só
+// precisa saber se já passou.
+function dataBonita(iso) {
+  const [a, m, d] = String(iso).split('-');
+  return d && m ? `${d}/${m}` : iso;
+}
+
+// Mesma regra do painel de cortesias: sigla da empresa + quantidade.
+function geraCodigoCortesia(empresa) {
+  const base = String(empresa || 'NB')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  return (base || 'NB') + Math.floor(Math.random() * 90 + 10);
+}
+
+
+// Cada link com o nome do que ele abre por cima do endereço. Sem a linha de
+// explicação, três URLs parecidas viram três chances de mandar a errada.
+function linkDaEmpresa(titulo, explica, url, onClick, rotulo) {
+  return h('div', { class: 'exp-link-item' },
+    h('div', {},
+      h('div', { class: 'row-name' }, titulo),
+      h('div', { class: 'row-sub' }, explica),
+      url ? h('div', { class: 'exp-link-box mono' }, url) : null),
+    h('button', { class: 'btn btn-ghost btn-sm', onclick: onClick }, rotulo || 'Copiar'));
 }
 
 // Entrada de visitante: o QR da porta. Fica no fim porque é configuração,
@@ -416,40 +610,6 @@ function loteDeConvites(view) {
     aoTerminar: () => recarrega(view)
   });
 }
-
-function mudaLimite(x) {
-  let campo;
-  openModal({
-    title: 'Credenciais da ' + (x.empresa || 'empresa'),
-    body: h('div', {},
-      h('p', { class: 'page-sub' },
-        `A empresa já cadastrou ${x.time.length} pessoa(s). O limite define até quantos crachás ela pode gerar.`),
-      h('label', { class: 'campo-rot' }, 'Número de credenciais'),
-      h('input', { class: 'input', type: 'number', min: '1', max: '200',
-        value: String(x.limite_credenciais || 5), ref: (el) => { campo = el; } })),
-    actions: [
-      { label: 'Cancelar', kind: 'btn-ghost', onClick: (fechar) => fechar() },
-      { label: 'Salvar', kind: 'btn-primary', onClick: async (fechar) => {
-          const n = parseInt(campo.value, 10);
-          if (!n || n < 1) { toast.danger('Precisa ser um número maior que zero.'); return; }
-          if (n < x.time.length) {
-            toast.danger(`A empresa já tem ${x.time.length} pessoas. Não dá para baixar para ${n}.`);
-            return;
-          }
-          const { error } = await supabase.from('exhibitors')
-            .update({ limite_credenciais: n }).eq('id', x.id);
-          if (error) { toast.danger(error.message); return; }
-          x.limite_credenciais = n;
-          fechar();
-          // Repinta a página inteira, não só a lista: o total de vagas e o
-          // contador de "acima do limite" mudaram junto.
-          if (E.view) pinta(E.view); else redesenha();
-          toast.success(`${x.empresa}: limite agora é ${n} credenciais.`);
-        } }
-    ]
-  });
-}
-
 // "Expositores – Brasília" → "Nutrição Brasil Brasília", que é como a empresa
 // conhece o evento. Ninguém comprou estande no "evento de expositores".
 function rotuloEvento(ev) {
