@@ -127,15 +127,21 @@ let EXHIBITORS = [
   // Preenchida, com equipe e um crachá já retirado por outra pessoa —
   // é o caso que o CAEX precisa mostrar direito.
   { id: 'x1', event_id: 'ev-expo', codigo: 'NBAAA11', token: 't1', empresa: 'Nestlé Nutrition & Health', estande: '12', cota: 'Diamante', limite_credenciais: 8, status: 'preenchido', resp_nome: 'Brunno', resp_whatsapp: '5561999990000', cad_nome: 'Yasmin', preenchido_em: '2026-07-10T10:00:00Z',
+    cortesias_total: 20, cortesias_codigo: 'NESTLE20', cortesias_pausado: false, cortesias_prazo: '2026-08-26',
+    cortesias_uso: [{ id: 1 }, { id: 2 }, { id: 3 }],
     exhibitor_members: [
       mem('m100001', 'Yasmin Moura', 'Gerente de Marketing', { pode_retirar: true }),
       mem('m100002', 'Caio Bertolini', 'Nutricionista', { retirado_em: '2026-08-27T09:12:00Z', retirado_por_nome: 'Yasmin Moura' }),
       mem('m100003', 'Renata Prado', 'Promotora')
     ] },
-  { id: 'x2', event_id: 'ev-expo', codigo: 'NBBBB22', token: 't2', empresa: 'Rousselot', estande: '07', cota: 'Ouro', limite_credenciais: 5, status: 'convidado', resp_nome: null, resp_whatsapp: null, cad_nome: null, preenchido_em: null, exhibitor_members: [] },
+  { id: 'x2', event_id: 'ev-expo', codigo: 'NBBBB22', token: 't2', empresa: 'Rousselot', estande: '07', cota: 'Ouro', limite_credenciais: 5, status: 'convidado', resp_nome: null, resp_whatsapp: null, cad_nome: null, preenchido_em: null,
+    cortesias_total: 0, cortesias_codigo: null, cortesias_pausado: false, cortesias_prazo: null, cortesias_uso: [],
+    exhibitor_members: [] },
   // Acima do limite: 4 pessoas para 3 credenciais. Existe para a tela ter
   // que mostrar o estouro em vez de esconder.
   { id: 'x3', event_id: 'ev-expo', codigo: 'NBCCC33', token: 't3', empresa: 'Prana Bebidas Leves', estande: '22', cota: 'Prata', limite_credenciais: 3, status: 'preenchido', resp_nome: 'Marina', resp_whatsapp: '5561988887777', cad_nome: 'Marina', preenchido_em: '2026-07-22T14:00:00Z',
+    cortesias_total: 10, cortesias_codigo: 'PRANA10', cortesias_pausado: true, cortesias_prazo: '2026-08-26',
+    cortesias_uso: [{ id: 4 }],
     exhibitor_members: [
       mem('m300001', 'Marina Lopes', 'Fundadora', { pode_retirar: true }),
       mem('m300002', 'Pedro Sales', 'Comercial'),
@@ -143,6 +149,13 @@ let EXHIBITORS = [
       mem('m300004', 'Léo Andrade', 'Apoio')
     ] }
 ];
+const CORTESIAS_USO = [
+  { id: 1, exhibitor_id: 'x1', nome: 'Camila Reis', email: 'camila@exemplo.com', modulo: 'Plenária Principal', origem: 'convidado', criado_em: '2026-08-11T14:20:00Z' },
+  { id: 2, exhibitor_id: 'x1', nome: 'Camila Reis', email: 'camila@exemplo.com', modulo: 'Nutrição Esportiva', origem: 'convidado', criado_em: '2026-08-11T14:20:00Z' },
+  { id: 3, exhibitor_id: 'x1', nome: 'Rafael Dias', email: 'rafael@exemplo.com', modulo: 'NB Universitário', origem: 'patrocinador', criado_em: '2026-08-12T09:05:00Z' },
+  { id: 4, exhibitor_id: 'x3', nome: 'Ana Prado', email: 'ana@exemplo.com', modulo: 'Plenária Principal', origem: 'convidado', criado_em: '2026-08-10T18:40:00Z' }
+];
+
 let PERFIS = [
   { id: 'u1', email: 'jaqueline@scienceplay.com', display_name: null, role: 'admin', created_at: '2026-05-15T15:46:55Z' },
   { id: 'u2', email: 'contato@scienceplay.com', display_name: null, role: 'operadora', created_at: '2026-05-15T15:47:34Z' },
@@ -162,6 +175,7 @@ const TABELAS = {
   participants: () => INSCRICOES,
   cert_modulos: () => CERT_MODULOS,
   exhibitors: () => EXHIBITORS,
+  cortesias_uso: () => CORTESIAS_USO,
   nb_publico: () => NB_PUBLICO,
   race_profiles: () => RACE_PROFILES,
   exhibitor_members: () => EXHIBITOR_MEMBERS,
@@ -359,6 +373,20 @@ export function createClient() {
         );
       }
       return { data: true, error: null };
+    },
+    functions: {
+      // A QA não fala com a nuvem: registra a chamada e devolve um resultado
+      // coerente com o que a função real responderia.
+      invoke: async (nome, opts) => {
+        window.__QA_FN = window.__QA_FN || [];
+        window.__QA_FN.push({ nome, body: opts?.body });
+        const pessoas = opts?.body?.pessoas || [];
+        const criados = pessoas.flatMap((p) =>
+          (p.modulos || []).map((m) => ({ modulo: m, email: p.email, nome: p.primeiro_nome })));
+        return { data: { ok: true, empresa: 'Nestlé Nutrition & Health',
+          criados, recusados: [], avisos: [], usadas: 3 + criados.length,
+          total: 20, restantes: 17 - criados.length }, error: null };
+      }
     },
     auth: {
       // ?papel=expositores no endereço da QA entra como outra pessoa. Serve

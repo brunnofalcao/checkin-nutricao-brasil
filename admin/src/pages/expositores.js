@@ -19,6 +19,7 @@ import { abreLote } from './expo-lote.js';
 import { abreNovaEmpresa } from './expo-nova.js';
 import { telefoneBonito } from '../core/utils.js';
 import { abreCrachas } from './crachas.js';
+import { abreCortesias } from './expo-cortesias.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
 
@@ -34,6 +35,8 @@ async function carrega(eventId) {
     // retirou). Sem nomear a constraint, o PostgREST não sabe qual seguir.
     .select('id, codigo, token, empresa, cnpj, estande, cota, limite_credenciais, status, ' +
             'resp_nome, resp_whatsapp, cad_nome, preenchido_em, ' +
+            'cortesias_total, cortesias_codigo, cortesias_pausado, cortesias_prazo, ' +
+            'cortesias_uso(id), ' +
             'exhibitor_members(id, cargo, pode_retirar, retirado_em, retirado_por_nome, ' +
             'participants!exhibitor_members_participant_id_fkey(id, name, phone, email, code, checked))')
     .eq('event_id', eventId)
@@ -53,7 +56,8 @@ async function carrega(eventId) {
       nome: m.participants?.name, phone: m.participants?.phone, email: m.participants?.email,
       participant_id: m.participants?.id, code: m.participants?.code
     })).sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
-    return { ...x, time, retirados: time.filter((p) => p.retirado_em).length };
+    return { ...x, time, retirados: time.filter((p) => p.retirado_em).length,
+             cortesias_usadas: (x.cortesias_uso ?? []).length };
   });
 }
 
@@ -89,7 +93,10 @@ function contas() {
     pessoas: emp.reduce((s, x) => s + x.time.length, 0),
     vagas: emp.reduce((s, x) => s + (x.limite_credenciais || 0), 0),
     retirados: emp.reduce((s, x) => s + x.retirados, 0),
-    estourou: emp.filter((x) => x.time.length > x.limite_credenciais).length
+    estourou: emp.filter((x) => x.time.length > x.limite_credenciais).length,
+    ctTotal: emp.reduce((s, x) => s + (x.cortesias_total || 0), 0),
+    ctUsadas: emp.reduce((s, x) => s + (x.cortesias_usadas || 0), 0),
+    ctEmpresas: emp.filter((x) => (x.cortesias_total || 0) > 0).length
   };
 }
 
@@ -126,6 +133,8 @@ function pinta(view) {
       faixaItem('Faltam preencher', c.faltam, c.faltam ? 'alerta' : 'ok'),
       faixaItem('Credenciais usadas', `${c.pessoas} de ${c.vagas}`),
       faixaItem('Crachás retirados', c.retirados),
+      c.ctTotal ? faixaItem('Cortesias usadas', `${c.ctUsadas} de ${c.ctTotal}`,
+        c.ctUsadas >= c.ctTotal ? 'alerta' : '') : null,
       c.estourou ? faixaItem('Acima do limite', c.estourou, 'ruim') : null
     ),
 
@@ -211,6 +220,7 @@ function lista() {
         h('th', { style: { width: '110px' } }, 'Cota'),
         h('th', { style: { width: '80px' } }, 'Estande'),
         h('th', { style: { width: '140px' } }, 'Credenciais'),
+        h('th', { style: { width: '120px' } }, 'Cortesias'),
         h('th', { style: { width: '130px' } }, 'Situação'),
         h('th', { style: { width: '190px' } }, '')
       )),
@@ -259,6 +269,15 @@ function linha(x) {
             x.retirados === 1 ? '1 crachá retirado' : `${x.retirados} crachás retirados`)
         : null),
 
+    h('td', { dataset: { rot: 'Cortesias' } },
+      x.cortesias_total
+        ? h('div', {},
+            h('span', { class: 'mono' }, `${x.cortesias_usadas || 0} de ${x.cortesias_total}`),
+            x.cortesias_pausado
+              ? h('div', { class: 'row-sub ruim' }, 'pausado')
+              : h('div', { class: 'row-sub' }, x.cortesias_codigo || ''))
+        : h('span', { class: 'muted' }, '—')),
+
     h('td', { dataset: { rot: 'Situação' } },
       preenchida
         ? h('span', { class: 'status live' }, 'Preenchida')
@@ -272,6 +291,8 @@ function linha(x) {
       btn('Link', 'Copiar o link do formulário',
         () => copia(BASE_FORM + x.codigo, 'Link copiado. Mande para a empresa.')),
       btn('Credenciais', 'Alterar o número de credenciais', () => mudaLimite(x)),
+      btn(x.cortesias_total ? 'Cortesias' : '+ Cortesias',
+        'Cota, código e quem já usou', () => cortesias(x)),
       h('span', { class: 'exp-seta', 'aria-hidden': 'true' }, '›')));
 }
 
@@ -374,6 +395,15 @@ function imprimeCrachas() {
     return;
   }
   abreCrachas({ evento: ev, participantes: pessoas });
+}
+
+function cortesias(x) {
+  const ev = E.eventos.find((e) => e.id === E.eventId);
+  abreCortesias({
+    empresa: x,
+    evento: rotuloEvento(ev),
+    aoTerminar: () => { if (E.view) recarrega(E.view); }
+  });
 }
 
 function loteDeConvites(view) {

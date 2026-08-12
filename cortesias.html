@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cortesia · Nutrição Brasil 2026</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0618; --card:#1a0f2e; --card2:#241540; --linha:#3a2a52; --linha2:#4b3868;
+  --t1:#ffffff; --t2:#c9bcde; --t3:#8a7aa5;
+  --roxo:#a78bfa; --roxo-fill:#6b2d8b; --roxo-soft:#241540;
+  --ok:#5ab78e; --ok-soft:#14301f; --al:#ffc800; --al-soft:#33260a;
+  --rui:#ff6b6b; --rui-soft:#331515;
+  --r:14px; --r-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(1100px 600px at 50% -10%,#1d1033,transparent 60%);
+  background-repeat:no-repeat;
+  color:var(--t1);font-family:'DM Sans',system-ui,-apple-system,sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  padding:28px 18px 60px;
+}
+.wrap{max-width:520px;margin:0 auto}
+.marca{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;
+  letter-spacing:-.03em;text-align:center;margin-bottom:6px}
+.marca b{color:var(--roxo);font-weight:700}
+.sub-marca{text-align:center;color:var(--t3);font-size:13px;margin-bottom:26px}
+
+.cartao{background:var(--card);border:1px solid var(--linha);border-radius:var(--r);
+  padding:24px 22px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+h1{font-family:'Bricolage Grotesque',sans-serif;font-size:25px;font-weight:700;
+  letter-spacing:-.03em;line-height:1.18;margin-bottom:8px}
+.lead{color:var(--t2);font-size:14.5px;margin-bottom:20px}
+
+label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px;color:var(--t1)}
+.campo{margin-bottom:16px}
+.dica{font-size:12.5px;color:var(--t3);margin-top:5px;line-height:1.45}
+input,select{
+  width:100%;background:var(--bg);border:1px solid var(--linha2);border-radius:var(--r-sm);
+  padding:12px 13px;font-size:16px;color:var(--t1);font-family:inherit;
+  transition:border-color .12s,box-shadow .12s;appearance:none;
+}
+select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238a7aa5' stroke-width='2'><path d='M1 1l5 5 5-5'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:36px}
+input:focus,select:focus{outline:none;border-color:var(--roxo);box-shadow:0 0 0 3px rgba(167,139,250,.16)}
+input::placeholder{color:#5d4f77}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:420px){.dupla{grid-template-columns:1fr}}
+
+.btn{width:100%;border:0;border-radius:var(--r-sm);padding:15px;font-size:16px;font-weight:700;
+  font-family:inherit;cursor:pointer;background:var(--roxo-fill);color:#fff;transition:filter .12s}
+.btn:hover:not(:disabled){filter:brightness(1.15)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-fantasma{background:transparent;border:1px solid var(--linha2);color:var(--t2);
+  padding:12px;font-size:14px;font-weight:600;margin-top:10px}
+
+.faixa-empresa{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--roxo-soft);border:1px solid var(--linha2);border-radius:var(--r-sm);
+  padding:12px 15px;margin-bottom:20px;flex-wrap:wrap}
+.faixa-empresa .de{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.faixa-empresa .nome{font-weight:700;font-size:15px;color:var(--t1)}
+.restam{text-align:right;white-space:nowrap}
+.restam b{font-family:'Bricolage Grotesque',sans-serif;font-size:21px;color:var(--roxo)}
+.restam span{display:block;font-size:11.5px;color:var(--t3)}
+.restam.pouco b{color:var(--al)}
+
+.mods{display:flex;flex-direction:column;gap:9px}
+.mod{display:flex;align-items:center;gap:12px;border:1px solid var(--linha2);
+  border-radius:var(--r-sm);padding:13px 14px;cursor:pointer;background:var(--bg);
+  transition:border-color .12s,background .12s}
+.mod:hover{border-color:var(--roxo)}
+.mod.on{border-color:var(--roxo);background:var(--roxo-soft)}
+.mod input{width:19px;height:19px;flex:0 0 auto;accent-color:var(--roxo-fill);cursor:pointer}
+.mod-nome{font-weight:600;font-size:15px}
+.mod.bloq{opacity:.45;cursor:not-allowed}
+.mod.bloq:hover{border-color:var(--linha2)}
+
+.aviso{border-radius:var(--r-sm);padding:12px 14px;font-size:13.5px;line-height:1.5;margin:14px 0}
+.aviso.erro{background:var(--rui-soft);border:1px solid #5b2020;color:#ffb3b3}
+.aviso.alerta{background:var(--al-soft);border:1px solid #5b4a10;color:#ffe08a}
+.aviso.bom{background:var(--ok-soft);border:1px solid #1d5138;color:#a8e5c6}
+
+.centro{text-align:center}
+.selo{width:60px;height:60px;border-radius:50%;background:var(--ok-soft);border:1px solid #1d5138;
+  display:grid;place-items:center;margin:0 auto 16px;font-size:28px}
+.lista-mod{list-style:none;margin:16px 0;text-align:left}
+.lista-mod li{background:var(--bg);border:1px solid var(--linha2);border-radius:var(--r-sm);
+  padding:11px 14px;margin-bottom:7px;font-weight:600;font-size:14.5px}
+.lista-mod li::before{content:'✓ ';color:var(--ok)}
+.rodape{text-align:center;color:var(--t3);font-size:12.5px;margin-top:24px;line-height:1.6}
+.carregando{text-align:center;padding:30px;color:var(--t3);font-size:14px}
+.esconde{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="marca">nutrição<b>brasil</b></div>
+  <div class="sub-marca">Brasília · 27 a 29 de agosto de 2026</div>
+  <div class="cartao" id="app"><div class="carregando">Carregando…</div></div>
+  <div class="rodape">
+    Dúvidas sobre a sua cortesia? Fale com a empresa que enviou o código.
+  </div>
+</div>
+
+<script type="module">
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+
+const FN = SUPABASE_URL + '/functions/v1/cortesia-inscreve';
+const app = document.getElementById('app');
+
+const ESTADOS = ['Acre (AC)','Alagoas (AL)','Amapá (AP)','Amazonas (AM)','Bahia (BA)','Ceará (CE)',
+'Distrito Federal (DF)','Espírito Santo (ES)','Goiás (GO)','Maranhão (MA)','Mato Grosso (MT)',
+'Mato Grosso do Sul (MS)','Minas Gerais (MG)','Pará (PA)','Paraíba (PB)','Paraná (PR)',
+'Pernambuco (PE)','Piauí (PI)','Rio de Janeiro (RJ)','Rio Grande do Norte (RN)',
+'Rio Grande do Sul (RS)','Rondônia (RO)','Roraima (RR)','Santa Catarina (SC)','São Paulo (SP)',
+'Sergipe (SE)','Tocantins (TO)'];
+const FORMACOES = ['Nutrição','Medicina','Psicologia','Educação Física','Estudante','Outros'];
+
+// Motivo em código vira frase que a pessoa entende — e que diz o que fazer.
+const MOTIVO = {
+  codigo:   'Esse código não existe. Confira com a empresa que enviou — pode ter faltado uma letra.',
+  sem_cota: 'Essa empresa ainda não tem cortesias liberadas. Fale com ela.',
+  pausado:  'As cortesias dessa empresa estão pausadas no momento. Fale com ela.',
+  prazo:    'O prazo dessa cortesia terminou.',
+  cota:     'As cortesias dessa empresa acabaram.',
+  sem_modulo: 'Escolha pelo menos um módulo.',
+  vazio:    'Faltou preencher os dados.'
+};
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+async function chama(corpo) {
+  const r = await fetch(FN, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(corpo)
+  });
+  return r.json();
+}
+
+// ── estado ───────────────────────────────────────────────────────────
+let E = { codigo: '', dados: null, marcados: new Set() };
+
+// ── 1. pedir o código ────────────────────────────────────────────────
+function telaCodigo(erro) {
+  app.innerHTML = `
+    <h1>Sua cortesia no Nutrição Brasil</h1>
+    <p class="lead">Digite o código que a empresa te enviou. Ele libera a inscrição
+    sem custo nos módulos disponíveis.</p>
+    ${erro ? `<div class="aviso erro">${esc(erro)}</div>` : ''}
+    <div class="campo">
+      <label for="cod">Código da cortesia</label>
+      <input id="cod" type="text" autocomplete="off" autocapitalize="characters"
+             spellcheck="false" placeholder="ex: PRANA20" value="${esc(E.codigo)}">
+    </div>
+    <button class="btn" id="ir">Continuar</button>`;
+
+  const campo = document.getElementById('cod');
+  const ir = document.getElementById('ir');
+  campo.focus();
+  campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') ir.click(); });
+
+  ir.onclick = async () => {
+    const cod = campo.value.trim();
+    if (!cod) { campo.focus(); return; }
+    ir.disabled = true; ir.textContent = 'Conferindo…';
+    const r = await chama({ acao: 'abre', codigo: cod });
+    if (r?.erro) {
+      let msg = MOTIVO[r.erro] || 'Não consegui abrir esse código.';
+      if (r.erro === 'prazo' && r.prazo) msg = `O prazo dessa cortesia terminou em ${esc(r.prazo)}.`;
+      E.codigo = cod;
+      telaCodigo(msg);
+      return;
+    }
+    E.codigo = cod; E.dados = r; E.marcados = new Set();
+    telaFormulario();
+  };
+}
+
+// ── 2. ficha + módulos ───────────────────────────────────────────────
+function telaFormulario(erro) {
+  const d = E.dados;
+  const pouco = d.restantes <= 3;
+  app.innerHTML = `
+    <div class="faixa-empresa">
+      <div>
+        <div class="de">Cortesia oferecida por</div>
+        <div class="nome">${esc(d.empresa)}</div>
+      </div>
+      <div class="restam ${pouco ? 'pouco' : ''}">
+        <b>${d.restantes}</b><span>de ${d.total} restantes</span>
+      </div>
+    </div>
+
+    <h1>Complete sua inscrição</h1>
+    <p class="lead">Leva um minuto. No fim você recebe a confirmação no WhatsApp.</p>
+    ${erro ? `<div class="aviso erro">${esc(erro)}</div>` : ''}
+
+    <div class="dupla">
+      <div class="campo"><label for="pn">Primeiro nome</label>
+        <input id="pn" type="text" autocomplete="given-name"></div>
+      <div class="campo"><label for="un">Último nome</label>
+        <input id="un" type="text" autocomplete="family-name"></div>
+    </div>
+    <div class="campo"><label for="em">E-mail</label>
+      <input id="em" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com"></div>
+    <div class="campo"><label for="ce">Celular com DDD</label>
+      <input id="ce" type="tel" inputmode="tel" autocomplete="tel" placeholder="(61) 98138-2900">
+      <div class="dica">É por aqui que enviamos a confirmação e as instruções do credenciamento.</div></div>
+    <div class="campo"><label for="es">Estado</label>
+      <select id="es"><option value="">Selecione</option>
+        ${ESTADOS.map((e) => `<option>${esc(e)}</option>`).join('')}</select></div>
+    <div class="campo"><label for="fo">Sua formação</label>
+      <select id="fo"><option value="">Selecione</option>
+        ${FORMACOES.map((f) => `<option>${esc(f)}</option>`).join('')}</select></div>
+
+    <div class="campo">
+      <label>Quais módulos você vai assistir</label>
+      <div class="dica" style="margin:0 0 9px">Cada módulo escolhido usa uma cortesia da ${esc(d.empresa)}.</div>
+      <div class="mods">
+        ${(d.modulos || []).map((m, i) => `
+          <label class="mod" data-mod="${esc(m)}">
+            <input type="checkbox" id="m${i}" value="${esc(m)}">
+            <span class="mod-nome">${esc(m)}</span>
+          </label>`).join('')}
+      </div>
+      <div class="dica" id="conta"></div>
+    </div>
+
+    <button class="btn" id="enviar" disabled>Confirmar inscrição</button>
+    <button class="btn btn-fantasma" id="voltar">Usar outro código</button>`;
+
+  const conta = document.getElementById('conta');
+  const enviar = document.getElementById('enviar');
+
+  function atualiza() {
+    const n = E.marcados.size;
+    enviar.disabled = n === 0;
+    if (!n) { conta.textContent = 'Escolha pelo menos um módulo.'; conta.style.color = ''; return; }
+    if (n > d.restantes) {
+      conta.textContent = `Você escolheu ${n}, mas restam só ${d.restantes}. Desmarque ${n - d.restantes}.`;
+      conta.style.color = 'var(--al)';
+      enviar.disabled = true;
+      return;
+    }
+    conta.textContent = n === 1 ? 'Usa 1 cortesia.' : `Usa ${n} cortesias.`;
+    conta.style.color = '';
+  }
+
+  app.querySelectorAll('.mod input').forEach((cx) => {
+    cx.onchange = () => {
+      const cartao = cx.closest('.mod');
+      if (cx.checked) E.marcados.add(cx.value); else E.marcados.delete(cx.value);
+      cartao.classList.toggle('on', cx.checked);
+      atualiza();
+    };
+  });
+  atualiza();
+
+  // Máscara leve: só formata, nunca impede de digitar.
+  const cel = document.getElementById('ce');
+  cel.addEventListener('input', () => {
+    const d2 = cel.value.replace(/\D/g, '').slice(0, 11);
+    cel.value = d2.length > 6
+      ? `(${d2.slice(0,2)}) ${d2.slice(2, d2.length > 10 ? 7 : 6)}-${d2.slice(d2.length > 10 ? 7 : 6)}`
+      : d2.length > 2 ? `(${d2.slice(0,2)}) ${d2.slice(2)}` : d2;
+  });
+
+  document.getElementById('voltar').onclick = () => { E.dados = null; telaCodigo(); };
+
+  enviar.onclick = async () => {
+    const v = (id) => document.getElementById(id).value.trim();
+    const pessoa = {
+      primeiro_nome: v('pn'), ultimo_nome: v('un'), email: v('em').toLowerCase(),
+      celular: v('ce'), estado: v('es'), formacao: v('fo'),
+      modulos: [...E.marcados]
+    };
+    if (!pessoa.primeiro_nome) return telaFormularioErro('Escreva seu primeiro nome.', 'pn');
+    if (!pessoa.ultimo_nome) return telaFormularioErro('Escreva seu último nome.', 'un');
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(pessoa.email))
+      return telaFormularioErro('Confira o e-mail — parece incompleto.', 'em');
+    if (pessoa.celular.replace(/\D/g, '').length < 10)
+      return telaFormularioErro('Confira o celular — falta o DDD ou um dígito.', 'ce');
+
+    enviar.disabled = true; enviar.textContent = 'Confirmando…';
+    const r = await chama({ acao: 'registra', codigo: E.codigo, pessoas: [pessoa], origem: 'convidado' });
+
+    if (r?.erro) {
+      enviar.disabled = false; enviar.textContent = 'Confirmar inscrição';
+      let msg = MOTIVO[r.erro] || 'Não consegui confirmar agora. Tente de novo.';
+      if (r.erro === 'cota' && r.restantes > 0)
+        msg = `Restam só ${r.restantes} cortesia(s) e você pediu ${r.pedido}. Desmarque um módulo.`;
+      const atual = await chama({ acao: 'abre', codigo: E.codigo });
+      if (atual?.ok) E.dados = atual;
+      telaFormulario(msg);
+      return;
+    }
+    if (!r?.criados?.length) {
+      const jaTem = (r.recusados || []).some((x) => x.motivo === 'ja_inscrito');
+      telaFormulario(jaTem
+        ? 'Você já está inscrito nesse(s) módulo(s). Nenhuma cortesia foi usada.'
+        : 'Não consegui confirmar. Confira os dados e tente de novo.');
+      return;
+    }
+    telaPronto(r, pessoa);
+  };
+
+  function telaFormularioErro(msg, foco) {
+    const alvo = document.getElementById(foco);
+    let box = app.querySelector('.aviso.erro');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'aviso erro';
+      app.querySelector('h1').after(box);
+    }
+    box.textContent = msg;
+    alvo?.focus();
+    box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+
+// ── 3. pronto ────────────────────────────────────────────────────────
+function telaPronto(r, pessoa) {
+  const mods = (r.criados || []).map((c) => c.modulo);
+  const recusados = (r.recusados || []).filter((x) => x.motivo === 'ja_inscrito');
+  app.innerHTML = `
+    <div class="centro">
+      <div class="selo">✓</div>
+      <h1>Inscrição confirmada</h1>
+      <p class="lead">Você está garantido no Nutrição Brasil 2026, em Brasília,
+      de 27 a 29 de agosto.</p>
+    </div>
+    <ul class="lista-mod">${mods.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>
+    ${recusados.length ? `<div class="aviso alerta">Você já estava inscrito em
+      ${esc(recusados.map((x) => x.modulo).join(', '))} — nenhuma cortesia foi usada por isso.</div>` : ''}
+    <div class="aviso bom">
+      Enviamos a confirmação para o WhatsApp <b>${esc(pessoa.celular)}</b>.
+      Guarde essa conversa: as instruções do credenciamento vêm por lá.
+    </div>
+    <div class="dica" style="text-align:center;margin-top:16px">
+      Cortesia oferecida por <b style="color:var(--t2)">${esc(r.empresa)}</b>.
+    </div>`;
+}
+
+// ── entrada ──────────────────────────────────────────────────────────
+// Aceita /cortesias?c=PRANA20 para o patrocinador mandar o link já pronto,
+// sem a pessoa precisar digitar nada.
+(async function inicia() {
+  const q = new URLSearchParams(location.search);
+  const pre = (q.get('c') || q.get('codigo') || '').trim();
+  if (!pre) { telaCodigo(); return; }
+  E.codigo = pre;
+  const r = await chama({ acao: 'abre', codigo: pre });
+  if (r?.ok) { E.dados = r; telaFormulario(); }
+  else {
+    let msg = MOTIVO[r?.erro] || 'Não consegui abrir esse código.';
+    if (r?.erro === 'prazo' && r.prazo) msg = `O prazo dessa cortesia terminou em ${esc(r.prazo)}.`;
+    telaCodigo(msg);
+  }
+})();
+</script>
+</body>
+</html>
