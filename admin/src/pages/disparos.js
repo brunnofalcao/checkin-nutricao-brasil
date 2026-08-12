@@ -5,6 +5,7 @@ import { listEvents } from '../data/events.js';
 import { listAllParticipants } from '../data/participants.js';
 import { regiaoFromPhone, REGIOES } from '../core/ddd-regioes.js';
 import { fmtRelative } from '../core/utils.js';
+import { telaDeErro } from '../ui/estado.js';
 
 const { SUPABASE_URL } = window.__ENV;
 
@@ -32,7 +33,9 @@ export async function pageDisparos(view) {
     const { data } = await sb.from('wa_templates').select('*').eq('status', 'APPROVED').order('created_at', { ascending: false });
     templates = data || [];
   } catch (e) {
-    toast.danger('Erro ao carregar: ' + e.message);
+    // Antes: aviso de 3,5s e `return` com o spinner girando para sempre.
+    // Quem olhava concluía que o sistema travou.
+    telaDeErro(view, e, () => pageDisparos(view));
     return;
   }
 

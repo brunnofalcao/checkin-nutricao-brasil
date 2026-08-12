@@ -20,6 +20,7 @@ import { abreNovaEmpresa } from './expo-nova.js';
 import { telefoneBonito } from '../core/utils.js';
 import { abreCrachas } from './crachas.js';
 import { abreCortesias } from './expo-cortesias.js';
+import { telaDeErro } from '../ui/estado.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
 // O manual NÃO leva o código na URL — a página pede que a pessoa digite.
@@ -71,7 +72,15 @@ export async function pageExpositores(view) {
   const { data, error } = await supabase
     .from('events').select('id, name, event_type, slug, event_date, date_start')
     .eq('event_type', 'exhibitor').order('event_date');
-  if (error || !data?.length) {
+  // Falha de rede e lista vazia eram o mesmo if, com o texto da lista vazia.
+  // Esta é a ÚNICA página que o comercial enxerga: ler "nenhum evento
+  // cadastrado" quando o wifi oscilou faz a pessoa achar que o sistema
+  // apagou os expositores, e ligar em pânico no meio do credenciamento.
+  if (error) {
+    telaDeErro(view, error, () => pageExpositores(view), 'Não consegui carregar os expositores');
+    return;
+  }
+  if (!data?.length) {
     setContent(view, aviso('Nenhum evento de expositores cadastrado.'));
     return;
   }

@@ -122,8 +122,12 @@ export async function pageHome(view) {
     });
   }
 
+  // wa_templates, não whatsapp_templates. A tabela do nome antigo existe e
+  // está vazia, então a consulta nunca deu erro — só devolvia zero para
+  // sempre, e o card de "templates esperando a Meta" nunca aparecia. Erro que
+  // se esconde atrás de um resultado plausível é o mais caro de achar.
   const { data: tplPendentes } = await supabase
-    .from('whatsapp_templates')
+    .from('wa_templates')
     .select('id')
     .eq('status', 'PENDING')
     .then((r) => r, () => ({ data: [] }));

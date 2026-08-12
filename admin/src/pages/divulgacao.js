@@ -4,6 +4,7 @@ import { parseCSV as leCSV, pareceCabecalho } from '../core/csv.js';
 import { icons } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
 import { listEvents } from '../data/events.js';
+import { telaDeErro } from '../ui/estado.js';
 
 const { SUPABASE_URL } = window.__ENV;
 const BATCH_SIZE = 500;
@@ -40,7 +41,9 @@ export async function pageDivulgacao(view) {
     const { data } = await sb.from('wa_templates').select('*').eq('status', 'APPROVED').order('created_at', { ascending: false });
     templates = (data || []).filter(t => t.category === 'MARKETING' || true); // mostra todos aprovados
   } catch (e) {
-    toast.danger('Erro ao carregar: ' + e.message);
+    // Antes: aviso de 3,5s e `return` com o spinner girando para sempre.
+    // Quem olhava concluía que o sistema travou.
+    telaDeErro(view, e, () => pageDivulgacao(view));
     return;
   }
 

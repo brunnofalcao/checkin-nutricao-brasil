@@ -76,6 +76,16 @@ h1 span{color:var(--roxo)}
 .op .ds{font-size:11.5px;color:var(--t3);margin-top:-6px;line-height:1.4}
 .op .cta{font-size:12px;font-weight:700;color:var(--roxo);margin-top:auto}
 .op.destaque{border-color:#4b2f77;background:linear-gradient(180deg,#241442,#180d2b)}
+.artes-nota{grid-column:1/-1;border:1px dashed var(--line);border-radius:14px;padding:15px 17px;
+  display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,.015)}
+.artes-nota b{font-size:13.5px;font-weight:700;color:var(--t2)}
+.artes-nota span{font-size:12.5px;color:var(--t3);line-height:1.5}
+.artes-nota.ruim{border-style:solid;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.06)}
+.artes-nota.ruim b{color:#f6e3b4}
+.artes-btn{align-self:flex-start;margin-top:9px;background:transparent;border:1px solid var(--roxo);
+  color:var(--roxo);border-radius:9px;padding:8px 14px;font-family:inherit;font-size:12.5px;
+  font-weight:700;cursor:pointer}
+.artes-btn:hover{background:rgba(167,139,250,.12)}
 
 .rodape{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);color:var(--t3);font-size:12.5px}
 .rodape b{color:var(--t2);font-weight:600}
@@ -322,10 +332,15 @@ function desenha(ctx, fmt, nome, m, k){
 
 /* ── assets + alfa ───────────────────────────────────────────────────── */
 const imgs = {}, over = {};
-function carrega(url){
+// Sem prazo, uma imagem que trava no 3G do centro de convenções deixa a
+// promessa pendurada para sempre — e a página ficava no "carregando" sem fim.
+function carrega(url, ms){
   return new Promise((ok, er) => {
     const i = new Image(); i.crossOrigin = 'anonymous';
-    i.onload = () => ok(i); i.onerror = () => er(new Error(url)); i.src = url;
+    const t = setTimeout(() => { i.src = ''; er(new Error('demorou demais: ' + url)); }, ms || 20000);
+    i.onload  = () => { clearTimeout(t); ok(i); };
+    i.onerror = () => { clearTimeout(t); er(new Error(url)); };
+    i.src = url;
   });
 }
 function off(w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
@@ -394,7 +409,8 @@ function baixaPdfOficial(chave){
 /* ═════════════════════════════════════════════════════════════════════
    ESTADO DA PÁGINA
    ═════════════════════════════════════════════════════════════════════ */
-const S = { token:null, dados:null, mod:0, modalFmt:null, foto:null, zoom:1, dx:0, dy:0 };
+const S = { token:null, dados:null, mod:0, modalFmt:null, foto:null, zoom:1, dx:0, dy:0,
+            artes:'carregando' };  // carregando · ok · falhou
 const $ = id => document.getElementById(id);
 
 function pegaToken(){
@@ -430,21 +446,51 @@ function pintaFicha(){
 function dado(r, v){ return '<div class="dado"><div class="r">' + r + '</div><div class="v">' + esc(v) + '</div></div>'; }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// O PDF oficial é feito no servidor e só precisa do token. As artes de rede
+// social precisam de 7 imagens pesadas do CDN. Amarrar as duas coisas fazia
+// o certificado — o motivo da visita — esperar por enfeite; e se uma imagem
+// falhasse, a pessoa lia "esse código não corresponde a nenhuma inscrição"
+// com o link certo na mão. Agora o PDF aparece na hora e as artes entram
+// depois, sozinhas.
 function pintaGrade(){
   const g = $('grade'); g.innerHTML = '';
   const nome = S.dados.nome, m = modAtual();
-  OPCOES.forEach(o => {
+  const lista = S.artes === 'ok' ? OPCOES : OPCOES.filter(o => o.id === 'pdf');
+
+  lista.forEach(o => {
     const b = document.createElement('button');
     b.className = 'op' + (o.id === 'pdf' ? ' destaque' : '');
     b.innerHTML = '<div class="thumb"><span class="tag">' + o.tag + '</span></div>' +
                   '<div class="tt">' + o.tt + '</div><div class="ds">' + o.ds + '</div>' +
                   '<div class="cta">' + (o.troca ? 'Escolher foto →' : 'Baixar →') + '</div>';
     g.appendChild(b);
-    const mini = compoe(o.fmt, nome, m, { k: o.fmt === 'a4' ? 0.16 : 0.24, trocaFundo:o.troca, foto:null });
-    const im = new Image(); im.src = mini.toDataURL('image/jpeg', .8);
-    b.querySelector('.thumb').prepend(im);
+    if (S.artes === 'ok'){
+      const mini = compoe(o.fmt, nome, m, { k: o.fmt === 'a4' ? 0.16 : 0.24, trocaFundo:o.troca, foto:null });
+      const im = new Image(); im.src = mini.toDataURL('image/jpeg', .8);
+      b.querySelector('.thumb').prepend(im);
+    }
     b.addEventListener('click', () => acionar(o));
   });
+
+  if (S.artes === 'ok') return;
+
+  const nota = document.createElement('div');
+  nota.className = 'artes-nota' + (S.artes === 'falhou' ? ' ruim' : '');
+  nota.id = 'artesNota';
+  if (S.artes === 'carregando'){
+    nota.innerHTML = '<b>Preparando as versões para o Instagram…</b>' +
+      '<span>O certificado oficial acima já pode ser baixado — não precisa esperar.</span>';
+  } else {
+    nota.innerHTML = '<b>As artes para redes sociais não carregaram</b>' +
+      '<span>Foi a conexão com o servidor de imagens, não o seu link. ' +
+      'O certificado oficial acima continua funcionando normalmente.</span>';
+    const bt = document.createElement('button');
+    bt.className = 'artes-btn';
+    bt.textContent = 'Tentar carregar de novo';
+    bt.addEventListener('click', () => { S.artes = 'carregando'; pintaGrade(); buscaArtes(); });
+    nota.appendChild(bt);
+  }
+  g.appendChild(nota);
 }
 
 function acionar(o){
@@ -556,6 +602,42 @@ function abrePorCodigo(){
     (location.pathname.endsWith('.html') ? location.pathname.split('/').pop() : '') + '?t=' + m[0];
 }
 
+/* ── artes de rede social (opcionais) ────────────────────────────────── */
+// Roda depois que a página já está na tela. Se falhar, some com as opções de
+// Instagram e explica; nunca derruba o certificado.
+async function buscaArtes(){
+  try{
+    // A fonte é acabamento do desenho. Se o Google Fonts estiver lento,
+    // desenha com a fonte do sistema em vez de segurar tudo.
+    await Promise.race([
+      (async () => {
+        await document.fonts.ready;
+        await Promise.all([
+          document.fonts.load('400 40px Poppins'),
+          document.fonts.load('600 60px Poppins'),
+          document.fonts.load('700 40px Poppins')
+        ]);
+      })(),
+      new Promise(r => setTimeout(r, 6000))
+    ]);
+
+    const [a4, fL, fP, fB, sL, sP, sB] = await Promise.all([
+      carrega(CDN + ART.a4.limpo),
+      carrega(CDN + ART.feed.limpo),  carrega(CDN + ART.feed.preto),  carrega(CDN + ART.feed.branco),
+      carrega(CDN + ART.story.limpo), carrega(CDN + ART.story.preto), carrega(CDN + ART.story.branco)
+    ]);
+    imgs.a4 = a4; imgs.feed = fL; imgs.story = sL;
+    // getImageData exige CORS liberado no CDN. Se um dia não estiver, o erro
+    // cai aqui dentro e a página segue de pé.
+    over.feed = montaOverlay(fP, fB); over.story = montaOverlay(sP, sB);
+    S.artes = 'ok';
+  } catch(e){
+    console.error('artes do certificado:', e);
+    S.artes = 'falhou';
+  }
+  if (S.dados) pintaGrade();
+}
+
 /* ── boot ────────────────────────────────────────────────────────────── */
 document.getElementById('irTk').addEventListener('click', abrePorCodigo);
 document.getElementById('tk').addEventListener('keydown', e => { if (e.key === 'Enter') abrePorCodigo(); });
@@ -575,30 +657,23 @@ document.getElementById('tk').addEventListener('keydown', e => { if (e.key === '
     if (!r.ok || !dados || !dados.nome || !dados.modulos || !dados.modulos.length) throw new Error('sem dados');
     dados.modulos.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
     S.dados = dados;
-
-    await document.fonts.ready;
-    await Promise.all([
-      document.fonts.load('400 40px Poppins'),
-      document.fonts.load('600 60px Poppins'),
-      document.fonts.load('700 40px Poppins')
-    ]);
-    const [a4, fL, fP, fB, sL, sP, sB] = await Promise.all([
-      carrega(CDN + ART.a4.limpo),
-      carrega(CDN + ART.feed.limpo),  carrega(CDN + ART.feed.preto),  carrega(CDN + ART.feed.branco),
-      carrega(CDN + ART.story.limpo), carrega(CDN + ART.story.preto), carrega(CDN + ART.story.branco)
-    ]);
-    imgs.a4 = a4; imgs.feed = fL; imgs.story = sL;
-    over.feed = montaOverlay(fP, fB); over.story = montaOverlay(sP, sB);
-
-    $('marca').src = MARCA;
-    $('kick').textContent = dados.evento;
-    $('primeiro').textContent = String(dados.nome).split(' ')[0];
-    pintaAbas(); pintaFicha(); pintaGrade();
-    $('carregando').classList.add('hide');
-    $('pagina').classList.remove('hide');
   } catch(e){
+    // Só chega aqui se o token não valeu ou o banco não respondeu. Aí sim é
+    // caso de pedir o código de novo.
     mostraEntrada(true);
+    return;
   }
+
+  // A partir daqui a inscrição existe. Nada que falhe adiante pode virar
+  // "link não encontrado".
+  $('marca').src = MARCA;
+  $('kick').textContent = S.dados.evento;
+  $('primeiro').textContent = String(S.dados.nome).split(' ')[0];
+  pintaAbas(); pintaFicha(); pintaGrade();
+  $('carregando').classList.add('hide');
+  $('pagina').classList.remove('hide');
+
+  buscaArtes();
 })();
 </script>
 </body>

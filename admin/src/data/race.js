@@ -6,10 +6,14 @@ import { supabase } from './supabase.js';
 
 // Retorna um mapa { participant_id -> race_profile } de um evento de corrida.
 export async function listRaceProfiles(eventId) {
+  // Sem limite explícito valia o teto padrão do PostgREST (1000). Com 1.500
+  // corredores, os que sobrassem apareceriam como "sem perfil" E sumiriam da
+  // conta de camiseta — que é justamente o que alimenta o alerta de ruptura.
   const { data, error } = await supabase
     .from('race_profiles')
     .select('*, participants!inner(event_id)')
-    .eq('participants.event_id', eventId);
+    .eq('participants.event_id', eventId)
+    .limit(5000);
   if (error) throw error;
   const map = {};
   (data ?? []).forEach((rp) => {

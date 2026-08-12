@@ -44,8 +44,18 @@ function parseHash() {
   return { path, query };
 }
 
+// Cada navegação ganha um número. Se a página lenta terminar depois que
+// outra já entrou, ela desiste em vez de pintar por cima.
+//
+// Sem isso: no wifi ruim, clica em Pessoas (1.400 linhas, 4s), se cansa e
+// clica em Eventos. Eventos aparece. Três segundos depois a tela vira
+// Pessoas sozinha, com a URL e o menu marcando Eventos — e o dispose da
+// página anterior fica apontando para o lugar errado.
+let geracao = 0;
+
 async function dispatch() {
   if (!mount) return;
+  const minhaVez = ++geracao;
   const { path, query } = parseHash();
 
   // Encontra rota.
@@ -66,22 +76,24 @@ async function dispatch() {
       }
 
       while (mount.firstChild) mount.removeChild(mount.firstChild);
-      try {
-        const result = await r.render(mount, { params, query });
-        if (typeof result === 'function') currentDispose = result;
-      } catch (e) {
-        console.error('Route render error:', e);
-        mostraAviso(mount, 'Erro ao carregar a página', String(e && e.message || e), true);
-      }
 
-      // Abas do workspace atual.
+      // Menu e abas ANTES do await: são baratos e é o que a pessoa olha
+      // enquanto a página carrega.
       import('../ui/chrome.js').then((m) => m.atualizaSubnav(path)).catch(() => {});
-
-      // Marca nav-item ativo.
       document.querySelectorAll('.nav-item[data-path]').forEach((n) => {
         const np = n.dataset.path;
         n.classList.toggle('active', path === np || path.startsWith(np + '/'));
       });
+
+      try {
+        const result = await r.render(mount, { params, query });
+        if (minhaVez !== geracao) return;          // chegou tarde: descarta
+        if (typeof result === 'function') currentDispose = result;
+      } catch (e) {
+        if (minhaVez !== geracao) return;
+        console.error('Route render error:', e);
+        mostraAviso(mount, 'Erro ao carregar a página', String(e && e.message || e), true);
+      }
 
       mount.scrollTop = 0;
       return;

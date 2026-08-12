@@ -18,6 +18,8 @@ import { pageKb } from './pages/kb.js';
 import { pageAtendimento } from './pages/atendimento.js';
 import { h, setContent } from './core/dom.js';
 import { toast } from './ui/toast.js';
+import { telaDeErro, telaSemPermissao } from './ui/estado.js';
+import { iniciaAvisoDeConexao } from './ui/conexao.js';
 const root = document.getElementById('root');
 async function bootstrap() {
   const session = await getSession();
@@ -32,10 +34,16 @@ async function bootstrap() {
   }
 
   const view = await renderShell(root, profile);
+  iniciaAvisoDeConexao();
 
   // Só registra o que o papel alcança. Esconder o menu e deixar a rota
   // registrada não é permissão — bastaria digitar o endereço.
-  const registra = (path, render) => { if (podeVer(profile, path)) route(path, render); };
+  // Rota que o papel não alcança fica registrada, mas com a tela honesta:
+  // quem digita /pessoas por engano lê "você não tem acesso" em vez de
+  // "página não encontrada", que faz a pessoa achar que a página sumiu.
+  const registra = (path, render) => {
+    route(path, podeVer(profile, path) ? render : (view) => telaSemPermissao(view, profile));
+  };
   registra('/', pageHome);
   registra('/eventos', pageEvents);
   registra('/eventos/:id', pageEventDetail);
@@ -107,10 +115,22 @@ function renderAccessDenied(profile) {
   );
 }
 // Re-renderiza se a sessão mudar (logout em outra aba etc).
-onAuthChange((event) => {
-  if (event === 'SIGNED_OUT') location.reload();
+onAuthChange(async (event) => {
+  // Recarregar direto no SIGNED_OUT é perigoso: com autoRefreshToken ligado,
+  // uma renovação que falha em rede instável emite SIGNED_OUT e a página
+  // recarregava sozinha no meio de uma operação. Confirma antes de assumir
+  // que a pessoa saiu de verdade.
+  if (event !== 'SIGNED_OUT') return;
+  try {
+    const s = await getSession();
+    if (s) return;            // era só o token piscando; segue trabalhando
+  } catch { /* sem rede: melhor não recarregar do que perder o que está na tela */ }
+  location.reload();
 });
 bootstrap().catch((err) => {
-  console.error('Bootstrap error:', err);
-  toast.danger('Erro ao iniciar: ' + err.message);
+  // Antes: só um aviso de 3,5s. Como bootstrap() faz duas chamadas de rede
+  // ANTES de escrever qualquer coisa em #root, uma falha deixava a página
+  // permanentemente em branco — e F5 no mesmo wifi repetia. Tela branca não
+  // dá para diferenciar de "o sistema morreu".
+  telaDeErro(root, err, () => location.reload(), 'Não consegui abrir o painel');
 });

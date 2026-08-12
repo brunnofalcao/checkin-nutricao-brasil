@@ -28,12 +28,19 @@ export function toast(msg, opts = {}) {
     }, acao.label));
   }
 
+  // Clicar no toast fecha: quem já leu não precisa esperar.
+  t.style.cursor = 'pointer';
+  t.addEventListener('click', (e) => { if (!e.target.closest('.toast-acao')) fecha(); });
+
   stack().appendChild(t);
   requestAnimationFrame(() => t.classList.add('show'));
   setTimeout(fecha, ms);
 }
 
 toast.success = (m, o) => toast(m, { ...o, kind: 'success' });
-toast.danger = (m, o) => toast(m, { ...o, kind: 'danger' });
+// Erro herdava os 3,5s do padrão. Mensagem que exige ler, entender e
+// decidir sumia antes de ser lida — e em vários fluxos o toast é a ÚNICA
+// indicação de que a gravação não aconteceu. Dez segundos, e clicar fecha.
+toast.danger = (m, o) => toast(m, { ms: 10000, ...o, kind: 'danger' });
 toast.info = (m, o) => toast(m, { ...o, kind: 'info' });
 toast.warn = (m, o) => toast(m, { ...o, kind: 'warn', ms: 5000 });

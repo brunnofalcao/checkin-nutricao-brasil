@@ -1774,7 +1774,32 @@ function onListClick(e) {
     return;
   }
   const swipedRow = e.target.closest(".row.swiped");
-  if (swipedRow) swipedRow.classList.remove("swiped");
+  if (swipedRow) { swipedRow.classList.remove("swiped"); return; }
+
+  // TOQUE NA LINHA ABRE A AÇÃO.
+  //
+  // Até aqui o credenciamento só existia por gesto de arrastar, e arrastar
+  // só existe em tela de toque: initSwipe escuta touchstart/move/end e nada
+  // mais. Num notebook ou num tablet com mouse — que é o que sobra quando um
+  // aparelho descarrega no meio do dia — não havia caminho nenhum para
+  // credenciar ninguém. A operadora clicaria no nome a manhã inteira sem
+  // nada acontecer.
+  //
+  // Abre a ação em vez de credenciar direto de propósito: toque acidental
+  // durante a rolagem revela um botão, não credencia alguém que não chegou.
+  // Quem já conhece o gesto continua arrastando; nada muda para essa pessoa.
+  const linha = e.target.closest(".row");
+  if (linha) {
+    if (!isEditable(state.currentEvent)) {
+      toast(motivoBloqueio(state.currentEvent), "error");
+      haptic("error");
+      return;
+    }
+    document.querySelectorAll(".row.swiped").forEach((r) => {
+      if (r !== linha) r.classList.remove("swiped");
+    });
+    linha.classList.add("swiped");
+  }
 }
 
 // =============================================================

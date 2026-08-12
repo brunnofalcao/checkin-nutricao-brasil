@@ -229,6 +229,13 @@ section{padding-top:24px;margin-top:52px;border-top:1px solid var(--linha);scrol
 .painel-top .rot{font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--t3)}
 .painel-top .nome{font-size:clamp(19px,4vw,26px);font-weight:800;letter-spacing:-.6px;line-height:1.2;margin-top:4px}
 .painel-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.painel-sync{margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07);
+  font-size:11.5px;line-height:1.45;display:none;align-items:center;gap:7px}
+.painel-sync.on{display:flex}
+.painel-sync .pt{width:7px;height:7px;border-radius:50%;flex:none;background:#34d399}
+.painel-sync.velho .pt{background:#fbbf24}
+.painel-sync span{opacity:.62}
+.painel-sync.velho span{opacity:.9;color:#f6e3b4}
 .painel-grid > div{padding:16px 22px;border-right:1px solid var(--linha)}
 .painel-grid > div:last-child{border-right:0}
 .painel-grid .r{display:block;font-size:10.5px;font-weight:700;letter-spacing:1.4px;
@@ -650,6 +657,7 @@ html[data-tema="claro"] #onb{background:rgba(40,25,66,.46)}
             <div><span class="r">Cota</span><span class="v" id="painelCota"></span></div>
             <div><span class="r">Situação</span><span class="v" id="painelStatus"></span></div>
           </div>
+          <div class="painel-sync" id="painelSync"></div>
         </div>
 
         <div class="medidores">
@@ -1406,6 +1414,11 @@ function mostrarAviso(html){ aviso.innerHTML = html; aviso.classList.add('on'); 
 function limparAviso(){ aviso.classList.remove('on'); input.classList.remove('erro'); }
 
 function guardar(d){ try{ localStorage.setItem(GUARDA, JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
+function esquecer(){ try{ localStorage.removeItem(GUARDA); }catch(e){} }
+function quandoGuardou(){
+  try{ var o = JSON.parse(localStorage.getItem(GUARDA) || 'null'); return (o && o.t) || null; }
+  catch(e){ return null; }
+}
 function lembrar(){
   try{
     var o = JSON.parse(localStorage.getItem(GUARDA) || 'null');
@@ -1442,7 +1455,7 @@ function tentar(codigo, silencioso){
     if(r.erro){
       mostrarAviso('<b>Código não encontrado.</b> Confira se digitou exatamente como recebeu, com os 7 caracteres. Se continuar, chame a Yasmin no WhatsApp <a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.'); return;
     }
-    guardar(r); abrir(r);
+    guardar(r); abrir(r); marcaSync(Date.now(), true);
   }).catch(function(){
     botao.disabled = false; botao.textContent = 'Abrir o manual';
     mostrarAviso('<b>Falha de conexão.</b> Confira a internet e tente de novo. Se persistir, chame a Yasmin no WhatsApp <a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.');
@@ -1559,7 +1572,16 @@ function fraseLimite(c){
   return 'A sua empresa tem <strong>'+lim+'</strong> '+(lim===1?'credencial liberada':'credenciais liberadas')+', e <strong>'+fei+'</strong> já '+(fei===1?'está preenchida':'estão preenchidas')+'. O formulário trava sozinho ao atingir o limite. Se precisar de mais, fale com a Yasmin antes do prazo, porque resolver isso no balcão custa fila e tempo da sua equipe.';
 }
 
-function abrir(d){
+// Os medidores de credencial e cortesia são contadores vivos: mudam quando a
+// equipe cadastra alguém, quando um convidado usa uma cortesia, quando a
+// Yasmin mexe no limite. O manual guardava a resposta por 30 dias e abria
+// direto do cache, sem nunca conferir — então o expositor podia estar lendo
+// saldo de um mês atrás e planejando em cima disso.
+//
+// Agora o cache serve para abrir rápido (e para funcionar no wi-fi ruim do
+// pavilhão), mas toda abertura confere com o servidor e repinta. Por isso
+// pintar está separado de abrir: dá para repintar sem reiniciar a tela.
+function pintaDados(d){
   dados = d;
   var cod = (d.codigo||'').toUpperCase();
   var cred = d.credenciais || {}, cort = d.cortesias || {};
@@ -1583,6 +1605,12 @@ function abrir(d){
   $$('[data-cta-cadastro], #ctaCadastro').forEach(function(a){ a.href = linkCadastro; });
 
   document.title = 'Manual do Expositor · ' + (d.empresa || 'Nutrição Brasil 2026');
+}
+
+function abrir(d){
+  var cod = (d.codigo||'').toUpperCase();
+  pintaDados(d);
+
   $('#portaria').style.display = 'none';
   $('#app').classList.add('on');
   document.documentElement.classList.add('entrou');
@@ -1593,6 +1621,61 @@ function abrir(d){
   animarRoscas();
   window.scrollTo(0,0);
   setTimeout(abrirOnb, 420);
+}
+
+/* ── conferência dos números ──────────────────────────────────────────
+   Roda depois de abrir. Se o servidor responder, repinta e marca a hora.
+   Se não responder, deixa o que está na tela e avisa que é de antes — o
+   expositor precisa saber que aquele saldo pode não ser o de agora. */
+function marcaSync(quando, aoVivo){
+  var el = $('#painelSync'); if(!el) return;
+  el.classList.add('on');
+  el.classList.toggle('velho', !aoVivo);
+  var h = new Date(quando);
+  var hh = ('0'+h.getHours()).slice(-2) + ':' + ('0'+h.getMinutes()).slice(-2);
+  var hoje = h.toDateString() === new Date().toDateString();
+  var data = hoje ? ('hoje às ' + hh)
+                  : (('0'+h.getDate()).slice(-2) + '/' + ('0'+(h.getMonth()+1)).slice(-2) + ' às ' + hh);
+  el.innerHTML = '<span class="pt"></span><span>' + (aoVivo
+    ? 'Números conferidos com o sistema ' + data + '.'
+    : 'Sem conexão agora — estes números são de ' + data + '. Recarregue a página quando a internet voltar.')
+    + '</span>';
+}
+
+function revalidar(cod){
+  if(!cod) return;
+  chamar(cod).then(function(r){
+    if(!r || typeof r !== 'object') return;
+    if(r.erro === 'bloqueado' || r.bloqueado === true){
+      esquecer();
+      fechar('<b>Cadastro da empresa bloqueado.</b> Fale com a Yasmin no WhatsApp '
+        + '<a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a> para regularizar.');
+      return;
+    }
+    if(r.erro){
+      esquecer();
+      fechar('<b>Este código não vale mais.</b> Chame a Yasmin no WhatsApp '
+        + '<a href="'+WA_YASMIN+'" target="_blank" rel="noopener">61 99450-2691</a>.');
+      return;
+    }
+    guardar(r);
+    pintaDados(r);
+    animarRoscas();
+    marcaSync(Date.now(), true);
+  }).catch(function(){
+    marcaSync(quandoGuardou() || Date.now(), false);
+  });
+}
+
+// Código revogado ou empresa bloqueada com o manual já aberto: fecha e
+// explica. Deixar aberto seria mostrar dado de uma empresa que perdeu acesso.
+function fechar(html){
+  $('#app').classList.remove('on');
+  document.documentElement.classList.remove('entrou');
+  $('#portaria').style.display = '';
+  mostrarAviso(html);
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+  window.scrollTo(0,0);
 }
 
 function blocoCortesiaSecao(c){
@@ -2092,8 +2175,24 @@ var url = new URLSearchParams(location.search);
 var doLink = (url.get('e') || url.get('codigo') || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
 var memoria = lembrar();
 
-if(doLink){ input.value = doLink; tentar(doLink, true); }
-else if(memoria && memoria.codigo){ abrir(memoria); }
+if(doLink){
+  // Veio pelo link. Se já tem cache dessa mesma empresa, abre na hora com o
+  // que sabe e confere por trás; quem chega pelo WhatsApp da Yasmin não fica
+  // olhando "Verificando..." antes de ver o manual.
+  input.value = doLink;
+  if(memoria && (memoria.codigo||'').toUpperCase() === doLink){
+    abrir(memoria);
+    marcaSync(quandoGuardou() || Date.now(), false);
+    revalidar(doLink);
+  } else {
+    tentar(doLink, true);
+  }
+}
+else if(memoria && memoria.codigo){
+  abrir(memoria);
+  marcaSync(quandoGuardou() || Date.now(), false);
+  revalidar((memoria.codigo||'').toUpperCase());
+}
 else { setTimeout(function(){ input.focus(); }, 120); }
 
 })();

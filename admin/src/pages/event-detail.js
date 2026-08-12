@@ -45,6 +45,14 @@ export async function pageEventDetail(view, { params }) {
 
   try {
     allParticipants = await listAllParticipants(eventId);
+    // O teto de 2.000 é silencioso por natureza: a lista volta cheia e
+    // plausível. Se ele for atingido, TODO contador desta tela passa a
+    // mentir — e é por eles que se decide quantos crachás imprimir.
+    if (allParticipants.__truncado) {
+      const t = allParticipants.__truncado;
+      toast.warn(`Mostrando ${t.mostrando} de ${t.total} inscritos: os números desta tela estão incompletos.`,
+        { ms: 15000 });
+    }
   } catch (e) {
     setContent(view, h('div', { class: 'empty' },
       h('div', { class: 'empty-icon' }, icons.alert()),
@@ -58,8 +66,17 @@ export async function pageEventDetail(view, { params }) {
   // Lista oficial de módulos (a mesma do certificado). Sem ela a tela ainda
   // funciona: os lotes viram grupos pelo nome cru.
   let modulos = [];
+  let modulosFalharam = false;
   if (!isRace) {
-    try { modulos = await listModulos(eventId); } catch { modulos = []; }
+    // Falha aqui virava "este evento ainda não tem módulos cadastrados",
+    // que é mentira e leva alguém a cadastrar módulo duplicado.
+    try {
+      modulos = await listModulos(eventId);
+    } catch (e) {
+      modulos = [];
+      modulosFalharam = true;
+      toast.danger('Os módulos não carregaram: ' + (e.message || e));
+    }
   }
 
   if (isRace) {
@@ -72,8 +89,10 @@ export async function pageEventDetail(view, { params }) {
     try {
       raceStock = await listRaceStock(eventId);
     } catch (e) {
-      // Sem estoque cadastrado a tela segue igual — só não calcula ruptura.
+      // Sem estoque a tela segue, mas o alerta de ruptura de camiseta some
+      // sem avisar — e é justamente ele que evita a fila descobrir antes.
       raceStock = {};
+      toast.danger('O estoque não carregou: o alerta de ruptura está desligado nesta tela.');
     }
   }
 
@@ -480,7 +499,10 @@ export async function pageEventDetail(view, { params }) {
               ? 'Buscar por nome, camiseta (P, M...), distância (5K/10K) ou telefone...'
               : 'Buscar por nome, email, telefone ou código...',
             value: query,
-            oninput: (e) => { query = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }
+            // debounce já estava importado neste arquivo e nunca era usado.
+            // Sem ele, cada tecla varria até 2.000 participantes e reconstruía
+            // 100 linhas de DOM.
+            oninput: debounce((e) => { query = e.target.value; visibleCount = PAGE_SIZE; updateBody(); }, 140)
           })
         ),
         h('div', { style: { display: 'flex', gap: '4px', marginLeft: 'auto', flexWrap: 'wrap' } },

@@ -1,6 +1,7 @@
 import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
+import { telaDeErro } from '../ui/estado.js';
 
 const { SUPABASE_URL } = window.__ENV;
 
@@ -39,7 +40,9 @@ export async function pageTemplates(view) {
   try {
     templates = await loadTemplates();
   } catch (e) {
-    toast.danger('Erro ao carregar: ' + e.message);
+    // Antes: aviso de 3,5s e `return` com o spinner girando para sempre.
+    // Quem olhava concluía que o sistema travou.
+    telaDeErro(view, e, () => pageTemplates(view));
     return;
   }
 

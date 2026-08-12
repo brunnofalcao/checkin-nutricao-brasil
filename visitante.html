@@ -52,6 +52,7 @@ input.ruim{border-color:#f87171}
 .hide{display:none!important}
 .estado{text-align:center;padding:70px 20px;color:var(--t2)}
 .estado h2{font-size:22px;color:var(--t1);margin:0 0 10px}
+#semtoken-acao{max-width:280px;margin:24px auto 0}
 .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--roxo);
   border-radius:50%;margin:0 auto 18px;animation:g .8s linear infinite}
 @keyframes g{to{transform:rotate(360deg)}}
@@ -73,6 +74,14 @@ input.ruim{border-color:#f87171}
 .proximo b{display:block;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;
   color:var(--t3);margin-bottom:8px}
 .proximo ol{margin:0;padding-left:18px;color:var(--t2);font-size:14px;line-height:1.75}
+.nota{background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.32);border-radius:12px;
+  padding:13px 15px;margin-top:20px;text-align:left;font-size:13.5px;color:#f6e3b4;line-height:1.55}
+.cta{display:block;text-align:left;text-decoration:none;margin-top:18px;padding:16px 18px;
+  border-radius:14px;border:1px solid rgba(167,139,250,.45);
+  background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(167,139,250,.10))}
+.cta b{display:block;font-size:14.5px;color:#fff;margin-bottom:5px;letter-spacing:0;text-transform:none}
+.cta span{display:block;font-size:13px;color:var(--t2);line-height:1.5}
+.cta i{display:block;font-style:normal;font-size:13px;font-weight:700;color:var(--roxo);margin-top:10px}
 </style>
 </head>
 <body>
@@ -84,8 +93,9 @@ input.ruim{border-color:#f87171}
   </div>
 
   <div id="semtoken" class="estado hide">
-    <h2>Link incompleto</h2>
-    <p>Esta página abre pelo QR Code da entrada. Peça ajuda a alguém da equipe no credenciamento.</p>
+    <h2 id="semtoken-ttl">Link incompleto</h2>
+    <p id="semtoken-sub">Esta página abre pelo QR Code da entrada. Peça ajuda a alguém da equipe no credenciamento.</p>
+    <button id="semtoken-acao" class="btn pri hide" type="button">Tentar de novo</button>
   </div>
 
   <div id="form" class="hide">
@@ -94,7 +104,7 @@ input.ruim{border-color:#f87171}
     <p class="lead">Preencha uma vez e retire seu crachá no balcão. Leva menos de um minuto.</p>
     <div class="onde" id="onde"></div>
 
-    <div class="bloco">
+    <form class="bloco" id="cadastro" novalidate>
       <div class="campo">
         <label for="nome">Nome completo</label>
         <input id="nome" type="text" autocomplete="name" enterkeyhint="next"
@@ -125,13 +135,13 @@ input.ruim{border-color:#f87171}
                placeholder="Clínica, empresa, universidade…">
       </div>
 
-      <button id="enviar" class="btn pri">Entrar no evento</button>
+      <button id="enviar" class="btn pri" type="submit">Entrar no evento</button>
       <div class="erro-msg" id="erro"></div>
       <div class="aviso">
         Ao entrar, você concorda em receber pelo WhatsApp informações sobre este evento
         e sobre o Nutrição Brasil. Dá para sair a qualquer momento respondendo à mensagem.
       </div>
-    </div>
+    </form>
   </div>
 
   <div id="pronto" class="hide">
@@ -140,16 +150,25 @@ input.ruim{border-color:#f87171}
       <h2 id="ok-ttl">Tudo certo!</h2>
       <p id="ok-sub">Mostre este código no credenciamento para pegar seu crachá.</p>
       <div class="codigo" id="ok-cod">—</div>
-      <div class="codigo-rot">seu código de entrada</div>
+      <div class="codigo-rot" id="ok-cod-rot">seu código de entrada</div>
+
+      <div class="nota hide" id="ok-nota"></div>
 
       <div class="proximo">
         <b>O que fazer agora</b>
-        <ol>
+        <ol id="ok-passos">
           <li>Vá até o balcão de credenciamento.</li>
           <li>Mostre esta tela ou diga seu nome.</li>
           <li>Pegue o crachá e aproveite a exposição.</li>
         </ol>
       </div>
+
+      <a class="cta hide" id="ok-cta" href="https://www.nutricaobrasil.com.br/programacao"
+         target="_blank" rel="noopener">
+        <b id="ok-cta-ttl">Você é da área da saúde</b>
+        <span id="ok-cta-sub">Veja a programação do congresso — são 3 dias de conteúdo além da exposição.</span>
+        <i>Ver a programação →</i>
+      </a>
     </div>
   </div>
 
@@ -169,20 +188,33 @@ const mostra = (qual) => ['carregando','semtoken','form','pronto']
 // O token vem do QR: /visitante?t=xxxx
 const token = new URLSearchParams(location.search).get('t') || '';
 
-const PROFISSOES = ['Nutricionista', 'Estudante', 'Médico(a)', 'Ed. Física',
-                    'Farmacêutico(a)', 'Indústria', 'Imprensa', 'Outra'];
+// O RPC guarda 'profissional-saude' ou 'publico-geral' como tag. Quem decide
+// é este mapa — não o texto digitado. Estudante fica de fora de propósito:
+// estudante de qualquer curso marca "Estudante", e chamar todos de
+// profissional de saúde sujaria a base de quem pode receber oferta do congresso.
+const PROFISSOES = [
+  { nome: 'Nutricionista',    saude: true  },
+  { nome: 'Estudante',        saude: false },
+  { nome: 'Médico(a)',        saude: true  },
+  { nome: 'Ed. Física',       saude: true  },
+  { nome: 'Farmacêutico(a)',  saude: true  },
+  { nome: 'Indústria',        saude: false },
+  { nome: 'Imprensa',         saude: false },
+  { nome: 'Outra',            saude: false }
+];
 let profissao = '';
+const ehSaude = () => PROFISSOES.some((p) => p.nome === profissao && p.saude);
 
 function desenhaChips() {
   const box = $('chips');
   box.replaceChildren();
-  PROFISSOES.forEach((p) => {
+  PROFISSOES.forEach(({ nome }) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'chip' + (profissao === p ? ' on' : '');
-    b.textContent = p;
+    b.className = 'chip' + (profissao === nome ? ' on' : '');
+    b.textContent = nome;
     b.onclick = () => {
-      profissao = profissao === p ? '' : p;
+      profissao = profissao === nome ? '' : nome;
       // "Outra" abre o campo livre; as demais escondem.
       $('prof').classList.toggle('hide', profissao !== 'Outra');
       if (profissao === 'Outra') setTimeout(() => $('prof').focus(), 60);
@@ -216,10 +248,36 @@ function dataExtensa(ini, fim) {
   return `${a.getUTCDate()} de ${mes}`;
 }
 
+// Rede caída e link inválido eram a mesma tela. A pessoa está no saguão,
+// com o QR certo na frente, lendo "este link não vale mais" — então relê
+// o mesmo QR e cai no mesmo lugar. Erro de transporte tem que dizer que
+// é de transporte, e oferecer tentar de novo.
+function telaSemToken(titulo, sub, comAcao) {
+  $('semtoken-ttl').textContent = titulo;
+  $('semtoken-sub').textContent = sub;
+  $('semtoken-acao').classList.toggle('hide', !comAcao);
+  mostra('semtoken');
+}
+
+const LINK_RUIM = ['Link incompleto',
+  'Esta página abre pelo QR Code da entrada. Peça ajuda a alguém da equipe no credenciamento.'];
+
 async function inicia() {
-  if (!token || token.length < 10) { mostra('semtoken'); return; }
+  if (!token || token.length < 10) { telaSemToken(LINK_RUIM[0], LINK_RUIM[1], false); return; }
+
+  mostra('carregando');
   const { data, error } = await sb.rpc('visitante_abre', { p_token: token });
-  if (error || !data) { mostra('semtoken'); return; }
+
+  if (error && !data) {
+    const rede = /Failed to fetch|NetworkError|timeout|502|503|504/i
+      .test(String(error.message || error));
+    if (rede) {
+      telaSemToken('A internet oscilou',
+        'O link está certo. Foi a conexão que falhou no caminho.', true);
+      return;
+    }
+  }
+  if (error || !data) { telaSemToken(LINK_RUIM[0], LINK_RUIM[1], false); return; }
 
   $('ttl').textContent = data.evento || 'Nutrição Brasil';
   $('onde').textContent = [dataExtensa(data.inicio, data.fim), data.local, data.cidade]
@@ -229,11 +287,85 @@ async function inicia() {
   $('nome').focus();
 }
 
+$('semtoken-acao').addEventListener('click', () => inicia());
+
 $('tel').addEventListener('input', (e) => { e.target.value = mascaraTel(e.target.value); });
 ['nome','tel','mail','onde-trab'].forEach((id) =>
   $(id).addEventListener('input', () => $(id).classList.remove('ruim')));
 
-$('enviar').addEventListener('click', async () => {
+// Muita gente que já pagou o congresso se cadastra de novo como visitante
+// achando que são duas coisas. Vira crachá duplicado, fila dobrada e
+// contagem errada da expo. O banco cruza e-mail e telefone com o congresso;
+// aqui a gente só precisa contar isso direito para a pessoa.
+function passos(itens) {
+  const ol = $('ok-passos');
+  ol.replaceChildren();
+  itens.forEach((t) => {
+    const li = document.createElement('li');
+    li.textContent = t;
+    ol.appendChild(li);
+  });
+}
+
+function confirma(d) {
+  $('ok-cod').textContent = d.codigo || '—';
+
+  if (d.ja_no_congresso) {
+    $('ok-ttl').textContent = `Você já está inscrito, ${d.nome}!`;
+    $('ok-sub').textContent =
+      'Sua inscrição no congresso já dá direito à exposição. Não precisa se cadastrar como visitante.';
+    $('ok-cod-rot').textContent = 'seu código de inscrição';
+    passos(['Vá ao credenciamento do congresso.',
+            'Mostre este código ou diga seu nome.',
+            'Com o crachá do congresso você entra na exposição.']);
+  } else {
+    $('ok-ttl').textContent = d.novo
+      ? `Tudo certo, ${d.nome}!`
+      : `Você já estava aqui, ${d.nome}!`;
+    $('ok-sub').textContent = d.novo
+      ? 'Mostre este código no credenciamento para pegar seu crachá.'
+      : 'Atualizamos seus dados. É o mesmo código de antes.';
+    $('ok-cod-rot').textContent = 'seu código de entrada';
+    passos(['Vá até o balcão de credenciamento.',
+            'Mostre esta tela ou diga seu nome.',
+            'Pegue o crachá e aproveite a exposição.']);
+  }
+
+  // Bateu o telefone mas não o e-mail: é provável, não é certo. Não dá para
+  // negar a entrada com base num palpite — então a gente avisa e deixa o
+  // balcão decidir com a pessoa na frente.
+  const nota = $('ok-nota');
+  const extras = [];
+  if (!d.ja_no_congresso && d.congresso === 'telefone') {
+    extras.push('Encontramos uma inscrição no congresso com este mesmo WhatsApp. ' +
+      'Se for você, avise no balcão — a inscrição do congresso já vale para a exposição ' +
+      'e você não precisa de dois crachás.');
+  }
+  if (d.corrida)    extras.push('Você também está inscrito na Corrida de Rua.');
+  if (d.expositor)  extras.push('Você também está no time de um expositor.');
+  nota.textContent = extras.join(' ');
+  nota.classList.toggle('hide', extras.length === 0);
+
+  // Convite para o congresso: só para quem é da área e ainda não está lá.
+  // Para quem já comprou, insistir seria ruído.
+  const cta = $('ok-cta');
+  const mostrarCta = ehSaude() && !d.ja_no_congresso && !d.congresso;
+  if (mostrarCta) {
+    $('ok-cta-ttl').textContent = profissao === 'Nutricionista'
+      ? 'Você é nutricionista'
+      : 'Você é da área da saúde';
+    $('ok-cta-sub').textContent =
+      'A exposição é só uma parte. Veja a programação do congresso e decida se ' +
+      'faz sentido ficar os três dias.';
+  }
+  cta.classList.toggle('hide', !mostrarCta);
+}
+
+// Formulário de verdade: no celular, a tecla "Concluir" do teclado envia.
+// Antes o botão só ouvia clique, e quem apertava Enter ficava achando que
+// o formulário tinha travado.
+$('cadastro').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
   const btn = $('enviar');
   const erro = $('erro');
   erro.textContent = '';
@@ -268,7 +400,11 @@ $('enviar').addEventListener('click', async () => {
         whatsapp: tel,
         email: mail,
         profissao: profissao === 'Outra' ? $('prof').value.trim() : profissao,
-        onde: $('onde-trab').value.trim()
+        onde: $('onde-trab').value.trim(),
+        profissional_saude: ehSaude(),
+        // Separa quem entrou pelo QR da porta de quem se cadastrou pelo site.
+        // Sem isso os dois viram um monte só e não dá para medir a expo.
+        origem: 'qr-porta'
       }
     });
     if (error) throw error;
@@ -282,13 +418,7 @@ $('enviar').addEventListener('click', async () => {
       throw new Error(msgs[data.erro] || 'Não deu para concluir.');
     }
 
-    $('ok-cod').textContent = data.codigo || '—';
-    $('ok-ttl').textContent = data.novo
-      ? `Tudo certo, ${data.nome}!`
-      : `Você já estava aqui, ${data.nome}!`;
-    $('ok-sub').textContent = data.novo
-      ? 'Mostre este código no credenciamento para pegar seu crachá.'
-      : 'Atualizamos seus dados. É o mesmo código de antes.';
+    confirma(data);
     mostra('pronto');
     window.scrollTo(0, 0);
   } catch (e) {

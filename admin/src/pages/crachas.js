@@ -357,7 +357,10 @@ export function abreCrachas({ evento, participantes = [] } = {}) {
           win.document.write('<p style="font:14px system-ui;padding:24px">Montando a folha…</p>');
 
           try {
-            if (!extras) extras = await carregaExtras(evento, itens);
+            // O cache era por impressão inteira: imprimir "só quem não
+            // retirou" e depois "todos" reaproveitava o mapa antigo, e os
+            // novos saíam SEM empresa e SEM estande, em silêncio.
+            extras = await carregaExtras(evento, itens, extras);
             itens.forEach((p) => Object.assign(p, extras.get(p.id) || {}));
             win.document.open();
             win.document.write(
@@ -383,28 +386,46 @@ export function abreCrachas({ evento, participantes = [] } = {}) {
 
 // Empresa/estande (expositor) e peito/distância/camiseta (corrida) vivem em
 // outras tabelas. Só busca se o evento for desse tipo.
-async function carregaExtras(evento, itens) {
-  const mapa = new Map();
-  const ids = itens.map((p) => p.id);
+async function carregaExtras(evento, itens, cache) {
+  const mapa = cache instanceof Map ? cache : new Map();
+  // Busca só quem ainda não está no mapa.
+  const ids = itens.map((p) => p.id).filter((id) => !mapa.has(id));
   if (!ids.length) return mapa;
 
+  // Fatia: .in() com 1.500 UUIDs monta uma URL de ~55 KB e o servidor
+  // recusa. O erro caía no `const { data }` sem error e a folha saía
+  // incompleta com aviso de sucesso.
+  const LOTE = 150;
+  const fatias = [];
+  for (let i = 0; i < ids.length; i += LOTE) fatias.push(ids.slice(i, i + LOTE));
+
   if (evento?.event_type === 'exhibitor') {
-    const { data } = await supabase
-      .from('exhibitor_members')
-      .select('participant_id, exhibitors(empresa, estande)')
-      .in('participant_id', ids);
-    (data ?? []).forEach((m) =>
+    const linhas = [];
+    for (const fatia of fatias) {
+      const { data, error } = await supabase
+        .from('exhibitor_members')
+        .select('participant_id, exhibitors(empresa, estande)')
+        .in('participant_id', fatia);
+      if (error) throw error;          // melhor não imprimir do que imprimir errado
+      linhas.push(...(data ?? []));
+    }
+    (linhas).forEach((m) =>
       mapa.set(m.participant_id, {
         __empresa: m.exhibitors?.empresa || '',
         __estande: m.exhibitors?.estande || ''
       })
     );
   } else if (evento?.event_type === 'race') {
-    const { data } = await supabase
-      .from('race_profiles')
-      .select('participant_id, bib_number, distance, shirt_size')
-      .in('participant_id', ids);
-    (data ?? []).forEach((r) =>
+    const linhas = [];
+    for (const fatia of fatias) {
+      const { data, error } = await supabase
+        .from('race_profiles')
+        .select('participant_id, bib_number, distance, shirt_size')
+        .in('participant_id', fatia);
+      if (error) throw error;
+      linhas.push(...(data ?? []));
+    }
+    (linhas).forEach((r) =>
       mapa.set(r.participant_id, {
         __peito: r.bib_number || '',
         __dist: r.distance || '',

@@ -1,0 +1,170 @@
+NUTRIÇÃO BRASIL 2026 — auditoria de 12/08/2026
+24 arquivos (22 alterados, 2 novos)
+
+────────────────────────────────────────────────────────────────
+COMO SUBIR — o jeito de uma arrastada só
+────────────────────────────────────────────────────────────────
+
+1. Descompacte este ZIP.
+
+2. Abra:
+   https://github.com/brunnofalcao/checkin-nutricao-brasil/upload/main
+
+3. Abra a pasta "nb-atualizacao-12ago" que saiu do ZIP e selecione
+   TUDO QUE ESTÁ DENTRO dela:
+
+        app.js
+        visitante.html
+        manual-expositor.html
+        expositor-cadastro-time.html
+        admin        (pasta)
+        c            (pasta)
+
+   Arraste esses 6 itens para a página do GitHub.
+
+   ⚠  NÃO arraste a pasta "nb-atualizacao-12ago" inteira.
+      Se arrastar, o GitHub cria uma pasta com esse nome dentro do
+      repositório e nada entra no lugar certo. É o conteúdo que sobe,
+      não a embalagem.
+
+   Pode apagar o LEIA-ANTES.txt antes de arrastar — ele não faz parte
+   do sistema.
+
+4. Desça a página e clique em "Commit changes".
+
+O GitHub junta as pastas com as que já existem. Nada é apagado.
+
+────────────────────────────────────────────────────────────────
+SE O ARRASTAR DE PASTA NÃO PEGAR
+────────────────────────────────────────────────────────────────
+
+Alguns navegadores não aceitam arrastar pasta. Nesse caso use a página
+COMO-SUBIR.html que veio junto na conversa: são 8 links, um por pasta,
+e você arrasta os arquivos soltos de cada grupo.
+
+────────────────────────────────────────────────────────────────
+ORDEM DE PRIORIDADE
+────────────────────────────────────────────────────────────────
+
+Se só der para subir uma parte hoje, suba admin/src/ui primeiro.
+
+    admin/src/ui/estado.js     ← NOVO
+    admin/src/ui/conexao.js    ← NOVO
+
+Quase todas as telas do painel importam esses dois. Se os outros 22
+subirem sem eles, o painel abre em branco.
+
+────────────────────────────────────────────────────────────────
+DEPOIS DE SUBIR
+────────────────────────────────────────────────────────────────
+
+A Vercel publica sozinha em 1 a 2 minutos. Aí confira:
+
+  1. O painel abre e a home carrega.
+     (é o teste mais rápido de que os 2 arquivos novos chegaram)
+
+  2. No COMPUTADOR, com mouse, abra o app de credenciamento e clique
+     numa linha da lista. Antes de hoje não acontecia nada — era o
+     bug mais grave da auditoria.
+
+  3. Abra /manual-expositor?e=NB26XXX com um código real. Embaixo do
+     painel da empresa deve aparecer:
+     "Números conferidos com o sistema hoje às HH:MM."
+
+────────────────────────────────────────────────────────────────
+O QUE MUDOU EM CADA ARQUIVO
+────────────────────────────────────────────────────────────────
+
+RAIZ
+
+  app.js
+    O check-in só registrava eventos de toque. Em qualquer computador
+    com mouse, clicar numa linha não fazia NADA — ninguém conseguia
+    credenciar. Corrigido.
+
+  visitante.html
+    Rede caída e link inválido mostravam a mesma tela. Agora erro de
+    conexão diz que é de conexão e oferece tentar de novo.
+    Virou <form> de verdade: no celular a tecla "Concluir" envia.
+    Cruzamento com o congresso ligado na tela: quem já é congressista
+    lê que a inscrição dele já dá direito à exposição.
+    Passa a mandar profissional_saude e origem=qr-porta.
+
+  manual-expositor.html
+    Guardava os medidores por 30 dias e abria do cache sem conferir.
+    Saldo de cortesia e credencial são contadores vivos — dava para
+    planejar em cima de número de um mês atrás. Agora abre rápido pelo
+    cache e confere com o servidor por trás, mostrando a hora.
+    Empresa bloqueada ou código revogado fecham o manual.
+
+  expositor-cadastro-time.html
+    O rascunho só era gravado quando a sessão expirava. Aba recarregada
+    ou internet caindo perdia tudo. Agora grava sozinho.
+    O botão de remover pessoa tinha 23px e apagava sem perguntar.
+    Agora tem 44px e o apagar tem Desfazer.
+
+c/
+
+  index.html
+    Um único try embrulhava os dados E 7 imagens pesadas do Cloudinary.
+    Uma imagem falhando fazia quem tinha o link certo ler "esse código
+    não corresponde a nenhuma inscrição". O PDF só precisa do token —
+    o motivo da visita estava preso ao enfeite. Agora o certificado
+    aparece na hora e as artes de rede social entram depois.
+
+admin/src/ui/
+
+  estado.js    NOVO — telas de erro, vazio e sem permissão num lugar só.
+               Quatro telas mostravam spinner eterno; três diziam
+               "nenhum evento cadastrado" quando era a rede que caiu.
+  conexao.js   NOVO — barra que avisa uma vez que a conexão caiu, em vez
+               de cada tela avisar sozinha e a operadora concluir que o
+               sistema morreu. Volta sozinha e recarrega a tela aberta.
+  modal.js     Um modal por vez, Esc fecha, Tab não escapa, foco volta.
+  toast.js     Erro dura 10s (era 3,5s) e dá para fechar no clique.
+
+admin/src/
+
+  main.js                  Falha no boot desenha tela de erro em vez de
+                           deixar a página em branco. SIGNED_OUT não
+                           recarrega mais às cegas. Rota fora do papel
+                           diz "você não tem acesso" em vez de 404.
+  core/router.js           Contador de geração: página lenta que termina
+                           atrasada não pinta mais por cima da nova.
+  data/participants.js     Teto de 2.000 com aviso quando trunca.
+  data/race.js             Erro de rede deixou de virar lista vazia.
+
+admin/src/pages/  (10 arquivos)
+
+  home.js                  Card morto: consultava a tabela antiga
+                           whatsapp_templates em vez de wa_templates.
+                           Nunca dava erro, só devolvia zero pra sempre.
+  crachas.js               Mandava 1.500 UUIDs numa URL de ~55 KB. Agora
+                           em lotes de 150, com cache acumulativo.
+  expositores.js           Falha de rede deixou de virar "nenhum evento
+                           cadastrado" — é a única página que o comercial
+                           enxerga.
+  event-detail.js          Busca com debounce e aviso de lista truncada.
+  os demais                Spinner eterno e estado vazio mentiroso.
+
+admin/assets/css/
+
+  components.css           Estilo da barra de conexão.
+
+────────────────────────────────────────────────────────────────
+CONTINUA ESPERANDO DECISÃO SUA
+────────────────────────────────────────────────────────────────
+
+  · expo_trava_ativa segue false. Com a trava desligada, um código de
+    7 caracteres devolve os dados completos da equipe. Ligar agora
+    obriga 17 das 18 empresas a passar por um fluxo novo a 15 dias do
+    evento. Recomendação: ligar depois do evento.
+
+  · Páginas de congressista e de corredor não foram feitas.
+
+  · A pasta morta /src/ e o /assets/css/pages.css da raiz deveriam ser
+    apagados — mas upload não apaga arquivo, tem que ser pela interface
+    do GitHub.
+
+  · OS DOIS EVENTOS DE BRASÍLIA AINDA ESTÃO "embreve".
+    Enquanto não virarem "ativo", operador nenhum enxerga participante.

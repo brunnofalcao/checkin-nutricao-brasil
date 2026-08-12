@@ -46,9 +46,21 @@ input.ruim{border-color:#f87171}
 .pessoa{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:#140b23;position:relative}
 .pessoa .num{position:absolute;top:-9px;left:14px;background:#2a1442;border:1px solid var(--line);
   color:var(--t3);font-size:10.5px;font-weight:700;letter-spacing:1px;padding:2px 9px;border-radius:999px}
-.pessoa .sai{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--t3);
-  font-size:19px;line-height:1;cursor:pointer;padding:2px 6px}
-.pessoa .sai:hover{color:#f87171}
+/* Era 23px no canto de cima do card. No celular, um polegar rolando a tela
+   apagava a pessoa que acabou de ser digitada, sem perguntar e sem volta.
+   Agora é alvo de 44px — o mínimo para o dedo — e o apagar tem desfazer. */
+.pessoa .sai{position:absolute;top:4px;right:4px;background:none;border:0;color:var(--t3);
+  font-size:20px;line-height:1;cursor:pointer;width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center}
+.pessoa .sai:hover{color:#f87171;background:rgba(248,113,113,.09)}
+.desfaz{position:fixed;left:50%;transform:translateX(-50%) translateY(140%);bottom:18px;z-index:60;
+  background:#241442;border:1px solid #4b2f77;border-radius:13px;padding:12px 14px;
+  display:flex;align-items:center;gap:14px;max-width:calc(100vw - 32px);
+  box-shadow:0 14px 40px rgba(0,0,0,.5);transition:transform .22s ease}
+.desfaz.on{transform:translateX(-50%) translateY(0)}
+.desfaz span{font-size:13.5px;color:var(--t2);line-height:1.35}
+.desfaz button{background:none;border:0;color:var(--roxo);font-family:inherit;font-size:13.5px;
+  font-weight:700;cursor:pointer;padding:8px 4px;white-space:nowrap}
 .pessoa.travada{opacity:.72}
 .selo-ret{display:inline-block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);
   color:#a7f3d0;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
@@ -342,12 +354,44 @@ function linhaPessoa(p, i){
       (travada ? ' disabled' : '') + '> Pode retirar os crachás da equipe</label>' +
     (travada ? '<div class="selo-ret">Crachá já retirado</div>' : '');
   const x = el.querySelector('.sai');
-  if (x) x.addEventListener('click', () => { el.remove(); renumera(); });
+  if (x) x.addEventListener('click', () => remove(el));
   const w = el.querySelector('.p-whats');
   w.addEventListener('blur', () => { w.value = foneBonito(w.value); });
   return el;
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// Card vazio some na hora — ninguém sente falta. Card preenchido some com
+// aviso e com volta, porque ali tem trabalho digitado. Nada de confirm(),
+// que trava a página e ninguém lê.
+let tmDesfaz = null;
+function remove(el){
+  const nome  = (el.querySelector('.p-nome')  || {}).value || '';
+  const temPa = ['.p-nome','.p-cargo','.p-email','.p-whats']
+    .some(c => ((el.querySelector(c) || {}).value || '').trim());
+  const posicao = [...$('equipe').children].indexOf(el);
+  el.remove(); renumera(); salvaRascunho();
+  if (!temPa) return;
+
+  const barra = $('desfaz');
+  barra.querySelector('span').textContent =
+    (nome.trim() ? nome.trim().split(/\s+/)[0] : 'Pessoa') + ' foi removida da lista.';
+  barra.classList.add('on');
+  clearTimeout(tmDesfaz);
+  tmDesfaz = setTimeout(() => barra.classList.remove('on'), 7000);
+  barra.querySelector('button').onclick = () => {
+    const filhos = [...$('equipe').children];
+    const alvo = filhos[posicao] || null;
+    $('equipe').insertBefore(el, alvo);
+    // Reanexa os ouvintes: o nó voltou, mas o botão dele já não escutava.
+    const bt = el.querySelector('.sai');
+    if (bt) { const novo = bt.cloneNode(true); bt.replaceWith(novo);
+              novo.addEventListener('click', () => remove(el)); }
+    renumera(); salvaRascunho();
+    barra.classList.remove('on');
+    clearTimeout(tmDesfaz);
+  };
+}
 function renumera(){
   [...$('equipe').children].forEach((el,i) => el.querySelector('.num').textContent = i + 1);
   const n = $('equipe').children.length, c = $('contador');
@@ -391,12 +435,54 @@ function pintaForm(d){
   const eq = (d.equipe && d.equipe.length) ? d.equipe : [{}];
   $('equipe').replaceChildren(...eq.map((p,i) => linhaPessoa(p,i)));
   renumera();
+  // Prioriza o que a pessoa digitou e ainda não salvou, sobre o que o
+  // servidor devolveu — quem está no meio do preenchimento não quer ver o
+  // formulário voltar ao estado de antes.
+  if (!S.rascunho) S.rascunho = pegaRascunho(S.chave);
   if (S.rascunho) { aplicaRascunho(); S.rascunho = null; }
   mostra('form');
 }
 
-// Se a sessão cair no meio do preenchimento, a pessoa refaz o código —
-// mas não redigita a equipe inteira. O que ela escreveu volta.
+// O rascunho só era gravado quando o servidor devolvia "sessão expirou".
+// Todo o resto perdia tudo: aba recarregada, celular que mata a aba em
+// segundo plano, internet que cai na hora de salvar. Uma lista de 5 pessoas
+// com nome, cargo, e-mail e telefone é muita digitação para desaparecer.
+//
+// Fica no sessionStorage de propósito, junto da chave de sessão: some quando
+// a aba fecha. Guardar nome, e-mail e telefone da equipe no localStorage de
+// um computador de estande compartilhado seria trocar um problema por outro.
+const CHAVE_RASCUNHO = 'nb-expo-rascunho';
+let tmRascunho = null;
+
+function salvaRascunho(){
+  clearTimeout(tmRascunho);
+  tmRascunho = setTimeout(() => {
+    if (!$('form') || $('form').classList.contains('hide')) return;
+    guardaRascunho();
+    try { sessionStorage.setItem(CHAVE_RASCUNHO,
+      JSON.stringify({ chave:S.chave, r:S.rascunho })); } catch(e){}
+  }, 400);
+}
+function limpaRascunho(){
+  S.rascunho = null;
+  clearTimeout(tmRascunho);
+  try { sessionStorage.removeItem(CHAVE_RASCUNHO); } catch(e){}
+}
+function pegaRascunho(chave){
+  try {
+    const o = JSON.parse(sessionStorage.getItem(CHAVE_RASCUNHO) || 'null');
+    if (!o || !o.r) return null;
+    // Rascunho de outra empresa não entra no formulário desta.
+    if (o.chave && chave && o.chave !== chave) return null;
+    return o.r;
+  } catch(e){ return null; }
+}
+
+// Qualquer digitação no formulário guarda. Uma escuta só, na captura, em vez
+// de amarrar ouvinte campo a campo — os campos de equipe nascem e morrem.
+document.addEventListener('input',  e => { if (e.target.closest('#form')) salvaRascunho(); }, true);
+document.addEventListener('change', e => { if (e.target.closest('#form')) salvaRascunho(); }, true);
+
 function guardaRascunho(){
   S.rascunho = {
     empresa:$('empresa').value, cnpj:$('cnpj').value, estande:$('estande').value, obs:$('obs').value,
@@ -707,6 +793,10 @@ $('form').addEventListener('submit', async ev => {
       })[r?.erro] || 'Não consegui salvar. Tente de novo.';
       b.disabled = false; b.textContent = 'Salvar cadastro'; return;
     }
+    // Salvou: o rascunho cumpriu o papel e sai de cena. Deixar ali faria o
+    // formulário reabrir com dados velhos por cima do que o banco confirmou.
+    limpaRascunho();
+
     const url = location.origin + location.pathname + '?t=' + r.token;
     $('prontoTxt').textContent = dados.empresa + ' · ' + equipe.length +
       (equipe.length > 1 ? ' pessoas cadastradas.' : ' pessoa cadastrada.') +
@@ -714,7 +804,11 @@ $('form').addEventListener('submit', async ev => {
     $('linkEdit').textContent = url;
     mostra('pronto');
   } catch(e){
-    $('erro').textContent = 'Não consegui salvar. Confira sua conexão e tente de novo.';
+    // A internet caiu no envio. O rascunho já está gravado pelo salvamento
+    // automático, então recarregar a página não perde nada — e vale dizer isso.
+    salvaRascunho();
+    $('erro').textContent = 'Não consegui salvar. Confira sua conexão e tente de novo — ' +
+      'o que você preencheu está guardado nesta aba.';
     b.disabled = false; b.textContent = 'Salvar cadastro';
   }
 });
@@ -752,5 +846,9 @@ $('voltarEditar').addEventListener('click', () => {
   $('cod').focus();
 })();
 </script>
+<div class="desfaz" id="desfaz" role="status" aria-live="polite">
+  <span></span><button type="button">Desfazer</button>
+</div>
+
 </body>
 </html>

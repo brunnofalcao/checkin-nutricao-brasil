@@ -41,8 +41,12 @@ export async function pageConfiguracoes(view) {
 
   const [eu, perfis, eventos, fontes] = await Promise.all([
     getProfile(),
+    // O .catch(() => []) transformava falha de rede e recusa de permissão
+    // em "nenhum acesso cadastrado" — a tela mais perigosa para se olhar e
+    // acreditar, porque é onde se confere quem tem acesso ao sistema.
     supabase.from('profiles').select('id, email, display_name, role, created_at')
-      .order('created_at').then((r) => r.data ?? []).catch(() => []),
+      .order('created_at')
+      .then((r) => { if (r.error) throw r.error; return r.data ?? []; }),
     listEvents(),
     carregaFontes()
   ]);

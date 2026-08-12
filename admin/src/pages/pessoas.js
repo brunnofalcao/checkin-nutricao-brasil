@@ -138,7 +138,17 @@ export async function pagePessoas(view) {
           { class: 'page-actions' },
           h(
             'button',
-            { class: 'btn btn-ghost', onclick: () => recarrega().then(() => toast.info('Base atualizada.')) },
+            { class: 'btn btn-ghost', onclick: (e) => {
+              // Sem o catch, uma falha de rede virava unhandled rejection no
+              // console e NENHUM aviso na tela: a pessoa lia os números antigos
+              // achando que eram os de agora.
+              const b = e.currentTarget; const rot = b.textContent;
+              b.disabled = true; b.textContent = 'Atualizando…';
+              recarrega()
+                .then(() => toast.info('Base atualizada.'))
+                .catch((err) => toast.danger('Não consegui atualizar: ' + (err.message || err)))
+                .finally(() => { b.disabled = false; b.textContent = rot; });
+            } },
             'Atualizar'
           ),
           h(
