@@ -387,6 +387,100 @@ footer p{color:var(--t3);font-size:13px;margin:0 0 7px}
 footer a{color:var(--t2)}
 
 /* ================= TOAST ================= */
+/* ================= ASSISTENTE ================= */
+#botao-chat{
+  position:fixed;right:20px;bottom:20px;z-index:110;
+  display:flex;align-items:center;gap:10px;
+  background:var(--verde);color:#07130d;border:0;border-radius:999px;
+  padding:14px 20px;font-family:var(--font);font-size:14.5px;font-weight:700;
+  cursor:pointer;box-shadow:var(--sombra);transition:filter .16s ease,transform .16s ease;
+}
+#botao-chat:hover{filter:brightness(1.07);transform:translateY(-1px)}
+#botao-chat svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+#botao-chat{display:none}
+html.entrou #botao-chat{display:flex}
+html.entrou #botao-chat.escondido{display:none}
+@media(max-width:600px){#botao-chat{right:14px;bottom:14px;padding:13px 17px;font-size:13.5px}}
+
+#chat{
+  position:fixed;right:20px;bottom:20px;z-index:115;width:392px;max-width:calc(100vw - 40px);
+  height:min(620px, calc(100dvh - 40px));
+  background:var(--sup);border:1px solid var(--linha);border-radius:18px;
+  box-shadow:var(--sombra);display:none;flex-direction:column;overflow:hidden;
+}
+#chat.on{display:flex}
+@media(max-width:600px){
+  #chat{right:0;bottom:0;width:100vw;max-width:100vw;height:100dvh;border-radius:0;border:0}
+}
+.chat-topo{
+  display:flex;align-items:center;gap:11px;padding:15px 16px;
+  border-bottom:1px solid var(--linha);background:var(--sup2);flex:0 0 auto;
+}
+.chat-av{
+  flex:0 0 auto;width:36px;height:36px;border-radius:11px;background:var(--verde);
+  display:flex;align-items:center;justify-content:center;color:#07130d;font-weight:800;font-size:14px;
+}
+.chat-tit{flex:1 1 auto;min-width:0}
+.chat-tit b{display:block;font-size:14.5px;font-weight:800;letter-spacing:-.2px}
+.chat-tit span{display:block;font-size:11.5px;color:var(--t3);margin-top:1px}
+.chat-x{
+  flex:0 0 auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--linha);
+  background:transparent;color:var(--t3);cursor:pointer;font-size:18px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.chat-x:hover{border-color:var(--alerta);color:var(--alerta-txt)}
+
+.chat-msgs{flex:1 1 auto;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;font-size:14.5px;line-height:1.55;border-radius:14px;padding:11px 14px;white-space:pre-wrap;word-wrap:break-word}
+.msg.eu{align-self:flex-end;background:var(--cta);color:#fff;border-bottom-right-radius:5px}
+.msg.ela{align-self:flex-start;background:var(--sup2);color:var(--t2);border-bottom-left-radius:5px}
+.msg.ela.recusa{background:rgba(255,200,0,.09);border:1px solid rgba(255,200,0,.26)}
+.msg .fonte{
+  display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:11px;font-weight:700;
+  letter-spacing:.4px;text-transform:uppercase;color:var(--info-txt);
+  background:rgba(128,192,255,.1);border-radius:999px;padding:4px 10px;cursor:pointer;
+  border:1px solid rgba(128,192,255,.24);font-family:var(--font);
+}
+.msg .fonte:hover{background:rgba(128,192,255,.2)}
+.msg .zap{
+  display:inline-flex;margin-top:10px;background:var(--verde);color:#07130d;
+  border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;text-decoration:none;
+}
+.msg .zap:hover{filter:brightness(1.07);text-decoration:none}
+.chat-vazio{color:var(--t3);font-size:13.5px;line-height:1.6;padding:4px 2px 0}
+.chat-vazio b{display:block;color:var(--t2);font-size:15px;margin-bottom:6px}
+.pensando{align-self:flex-start;display:flex;gap:4px;padding:13px 15px;background:var(--sup2);border-radius:14px}
+.pensando i{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:pisca 1.3s infinite}
+.pensando i:nth-child(2){animation-delay:.18s}
+.pensando i:nth-child(3){animation-delay:.36s}
+@keyframes pisca{0%,60%,100%{opacity:.28}30%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.pensando i{animation:none;opacity:.6}}
+
+.chat-sug{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 12px;flex:0 0 auto}
+.chat-sug button{
+  border:1px solid var(--linha);background:transparent;color:var(--t2);border-radius:999px;
+  padding:7px 12px;font-size:12px;font-family:var(--font);cursor:pointer;text-align:left;
+}
+.chat-sug button:hover{border-color:var(--verde);color:var(--t1)}
+.chat-sug.off{display:none}
+
+.chat-pe{display:flex;gap:9px;padding:12px 16px 16px;border-top:1px solid var(--linha);flex:0 0 auto;align-items:flex-end}
+.chat-pe textarea{
+  flex:1 1 auto;min-width:0;resize:none;background:var(--sup2);border:1px solid var(--linha);
+  border-radius:12px;color:var(--t1);font-family:var(--font);font-size:14.5px;line-height:1.45;
+  padding:11px 13px;max-height:108px;
+}
+.chat-pe textarea::placeholder{color:var(--t3)}
+.chat-pe textarea:focus{border-color:var(--verde);outline:none}
+.chat-env{
+  flex:0 0 auto;width:42px;height:42px;border-radius:12px;border:0;background:var(--verde);
+  color:#07130d;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.chat-env svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chat-env[disabled]{opacity:.4;cursor:default}
+.chat-nota{padding:0 16px 12px;font-size:11px;color:var(--t3);line-height:1.5;flex:0 0 auto}
+
 /* ================= ONBOARDING ================= */
 #onb{
   position:fixed;inset:0;z-index:130;display:none;
@@ -447,7 +541,7 @@ html[data-tema="claro"] #onb{background:rgba(40,25,66,.46)}
 @media print{
   html{--bg:#fff}
   body{background:#fff;color:#111;font-size:11pt}
-  .topo,.lateral,.veu,#toast,#onb,.btn,.faixa-cortesia .acoes,.prazo .acoes{display:none!important}
+  .topo,.lateral,.veu,#toast,#onb,#chat,#botao-chat,.btn,.faixa-cortesia .acoes,.prazo .acoes{display:none!important}
   #app{display:block!important}
   .corpo{display:block}
   .conteudo{max-width:none;padding:0}
@@ -1187,6 +1281,45 @@ html[data-tema="claro"] #onb{background:rgba(40,25,66,.46)}
   </div>
 </div>
 
+<button id="botao-chat" type="button" aria-label="Abrir o assistente do manual">
+  <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 9 9 0 01-3.9-.9L3 20.5l1.6-4.6A8.3 8.3 0 013.6 11.5a8.4 8.4 0 018.4-8.4 8.4 8.4 0 019 8.4z"/></svg>
+  Tirar uma dúvida
+</button>
+
+<div id="chat" role="dialog" aria-modal="false" aria-labelledby="chatTitulo">
+  <div class="chat-topo">
+    <div class="chat-av" aria-hidden="true">NB</div>
+    <div class="chat-tit">
+      <b id="chatTitulo">Assistente do Manual</b>
+      <span>Responde apenas pelo Manual do Expositor</span>
+    </div>
+    <button class="chat-x" id="chatFechar" type="button" aria-label="Fechar o assistente">&times;</button>
+  </div>
+
+  <div class="chat-msgs" id="chatMsgs" aria-live="polite">
+    <div class="chat-vazio" id="chatVazio">
+      <b>Pergunte o que quiser sobre o seu estande.</b>
+      Eu leio o Manual do Expositor inteiro e respondo com a seção de origem. O que não estiver escrito no manual, eu não invento: encaminho para a Yasmin.
+    </div>
+  </div>
+
+  <div class="chat-sug" id="chatSug">
+    <button type="button">Quantas tomadas vêm no estande?</button>
+    <button type="button">Posso servir comida no estande?</button>
+    <button type="button">Até que horas posso desmontar?</button>
+    <button type="button">Preciso de extintor?</button>
+    <button type="button">Posso usar minha própria montadora?</button>
+  </div>
+
+  <div class="chat-pe">
+    <textarea id="chatTexto" rows="1" placeholder="Escreva a sua pergunta" aria-label="Sua pergunta" maxlength="500"></textarea>
+    <button class="chat-env" id="chatEnviar" type="button" aria-label="Enviar pergunta">
+      <svg viewBox="0 0 24 24"><path d="M4.5 12h15M13 5.5l6.5 6.5L13 18.5"/></svg>
+    </button>
+  </div>
+  <p class="chat-nota">Assistente virtual. Em caso de divergência, vale o texto do manual e a orientação do CAEX.</p>
+</div>
+
 <div id="onb" role="dialog" aria-modal="true" aria-labelledby="onbTitulo" aria-hidden="true">
   <div class="onb-cx">
     <div class="onb-topo">
@@ -1452,6 +1585,7 @@ function abrir(d){
   document.title = 'Manual do Expositor · ' + (d.empresa || 'Nutrição Brasil 2026');
   $('#portaria').style.display = 'none';
   $('#app').classList.add('on');
+  document.documentElement.classList.add('entrou');
 
   try{ history.replaceState(null, '', location.pathname + '?e=' + encodeURIComponent(cod)); }catch(e){}
 
@@ -1795,6 +1929,145 @@ document.addEventListener('keydown', function(e){
     else if(!e.shiftKey && document.activeElement === ult){ e.preventDefault(); pri.focus(); }
   }
 }, true);
+
+/* ======================= ASSISTENTE ======================= */
+var chat = { hist: [], ocupado: false, sessao: 'w' + Math.random().toString(36).slice(2, 10) };
+
+function chatAbrir(){
+  $('#chat').classList.add('on');
+  $('#botao-chat').classList.add('escondido');
+  setTimeout(function(){ $('#chatTexto').focus(); }, 80);
+  chatRola();
+}
+function chatFechar(){
+  $('#chat').classList.remove('on');
+  $('#botao-chat').classList.remove('escondido');
+}
+function chatRola(){
+  var m = $('#chatMsgs');
+  m.scrollTop = m.scrollHeight;
+}
+
+function chatBolha(quem, texto, extra){
+  var d = document.createElement('div');
+  d.className = 'msg ' + quem + (extra && extra.recusa ? ' recusa' : '');
+  d.textContent = texto;
+
+  if(extra && extra.secao){
+    var alvo = 's' + String(parseInt(extra.secao, 10));
+    if(document.getElementById(alvo)){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'fonte';
+      b.textContent = 'Manual, seção ' + extra.secao.split(',')[0];
+      b.addEventListener('click', function(){
+        document.getElementById(alvo).scrollIntoView({ behavior:'smooth', block:'start' });
+        if(window.innerWidth <= 600) chatFechar();
+      });
+      d.appendChild(document.createElement('br'));
+      d.appendChild(b);
+    }
+  }
+  if(extra && extra.whatsapp){
+    var a = document.createElement('a');
+    a.className = 'zap';
+    a.href = WA_YASMIN;
+    a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'Falar com a Yasmin';
+    d.appendChild(document.createElement('br'));
+    d.appendChild(a);
+  }
+
+  $('#chatMsgs').appendChild(d);
+  chatRola();
+  return d;
+}
+
+function chatPensando(on){
+  var atual = $('#chatMsgs .pensando');
+  if(on && !atual){
+    var d = document.createElement('div');
+    d.className = 'pensando';
+    d.innerHTML = '<i></i><i></i><i></i>';
+    $('#chatMsgs').appendChild(d);
+    chatRola();
+  } else if(!on && atual){
+    atual.remove();
+  }
+}
+
+function chatEnviar(texto){
+  texto = (texto || '').trim();
+  if(!texto || chat.ocupado) return;
+  if(!dados || !dados.codigo){
+    chatBolha('ela', 'Preciso do código da empresa para responder. Recarregue a página e entre de novo.');
+    return;
+  }
+
+  var vazio = $('#chatVazio'); if(vazio) vazio.remove();
+  $('#chatSug').classList.add('off');
+
+  chatBolha('eu', texto);
+  $('#chatTexto').value = '';
+  $('#chatTexto').style.height = 'auto';
+
+  chat.ocupado = true;
+  $('#chatEnviar').disabled = true;
+  chatPensando(true);
+
+  fetch(SB + '/functions/v1/manual-chat', {
+    method: 'POST',
+    headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      codigo: dados.codigo,
+      pergunta: texto,
+      sessao: chat.sessao,
+      historico: chat.hist.slice(-8)
+    })
+  }).then(function(r){
+    return r.json().then(function(j){ return { st: r.status, j: j }; });
+  }).then(function(res){
+    chatPensando(false);
+    chat.ocupado = false;
+    $('#chatEnviar').disabled = false;
+
+    var j = res.j || {};
+    if(j.ok && j.resposta){
+      chatBolha('ela', j.resposta, {
+        secao: j.secao,
+        recusa: j.recusou,
+        whatsapp: j.recusou ? true : false
+      });
+      chat.hist.push({ role:'user', content: texto });
+      chat.hist.push({ role:'assistant', content: j.resposta });
+      return;
+    }
+    chatBolha('ela', j.recado || 'Não consegui responder agora. Tente de novo em alguns segundos.', {
+      recusa: true,
+      whatsapp: true
+    });
+  }).catch(function(){
+    chatPensando(false);
+    chat.ocupado = false;
+    $('#chatEnviar').disabled = false;
+    chatBolha('ela', 'Falha de conexão. Confira a internet e tente de novo.', { recusa:true, whatsapp:true });
+  });
+}
+
+$('#botao-chat').addEventListener('click', chatAbrir);
+$('#chatFechar').addEventListener('click', chatFechar);
+$('#chatEnviar').addEventListener('click', function(){ chatEnviar($('#chatTexto').value); });
+$('#chatSug').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if(!b) return;
+  chatEnviar(b.textContent);
+});
+$('#chatTexto').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); chatEnviar(this.value); }
+});
+$('#chatTexto').addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(108, this.scrollHeight) + 'px';
+});
 
 /* ======================= AÇÕES ======================= */
 $('#btnTema').addEventListener('click', function(){
