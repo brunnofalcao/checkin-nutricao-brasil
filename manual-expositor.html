@@ -772,7 +772,7 @@ html[data-tema="claro"] #onb{background:rgba(40,25,66,.46)}
               <tbody>
                 <tr><td><b>Credenciamento de Expositor</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
                 <tr><td><b>Credenciamento de Serviço ao Expositor</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
-                <tr><td><b>Credenciais adicionais</b> (R$ 50,00 cada)</td><td>Opcional</td><td class="num"><b>22/08/2026</b></td></tr>
+                <tr><td><b>Credenciais adicionais</b> (R$ 20,00 cada)</td><td>Opcional</td><td class="num"><b>22/08/2026</b></td></tr>
                 <tr><td><b>Extintor de incêndio</b></td><td>Obrigatório</td><td class="num"><b>22/08/2026</b></td></tr>
               </tbody>
             </table>
@@ -1195,7 +1195,7 @@ html[data-tema="claro"] #onb{background:rgba(40,25,66,.46)}
           <p class="secsub">Passe item a item com a sua equipe antes de sair para Brasília. Use o botão de imprimir no topo para levar em papel.</p>
           <ul class="check">
             <li><span class="caixa"></span><div><b>Equipe cadastrada até 22/08</b><span class="q">Nome completo, cargo no crachá, e-mail e WhatsApp de cada pessoa, e quem está autorizado a retirar os crachás</span></div></li>
-            <li><span class="caixa"></span><div><b>Credenciais dentro da cota</b><span class="q">Confira o medidor no topo deste manual. Acima do limite, solicite credencial adicional a R$ 50,00 cada</span></div></li>
+            <li><span class="caixa"></span><div><b>Credenciais dentro da cota</b><span class="q">Confira o medidor no topo deste manual. Acima do limite, solicite credencial adicional a R$ 20,00 cada</span></div></li>
             <li><span class="caixa"></span><div><b>Cortesias distribuídas</b><span class="q">Cota que sobra não vira desconto nem crédito. Mande o link antes do prazo</span></div></li>
             <li><span class="caixa"></span><div><b>Extintor definido</b><span class="q">PQS ou CO2 de 6 kg, 1 a cada 25 m². Próprio ou contratado pelo formulário</span></div></li>
             <li><span class="caixa"></span><div><b>Projeto do estande aprovado</b><span class="q">Somente montagem especial: elevação, perspectiva, memorial com cotas, kVA, descritivo e ART ou RRT quitada</span></div></li>
@@ -1218,7 +1218,7 @@ html[data-tema="claro"] #onb{background:rgba(40,25,66,.46)}
           <h2><span class="num">19</span>Perguntas frequentes</h2>
           <p class="secsub">As dúvidas que mais chegam ao CAEX. Se a sua não estiver aqui, fale com a Yasmin.</p>
           <div class="faq">
-            <details><summary>Quantas credenciais a minha empresa tem direito?</summary><div class="resp"><p>O número está no medidor no topo deste manual, puxado do sistema. Ele nasce da área contratada do estande, conforme a tabela da seção 6. Acima desse número, cada credencial adicional custa R$ 50,00.</p></div></details>
+            <details><summary>Quantas credenciais a minha empresa tem direito?</summary><div class="resp"><p>O número está no medidor no topo deste manual, puxado do sistema. Ele nasce da área contratada do estande, conforme a tabela da seção 6. Acima desse número, cada credencial adicional custa R$ 20,00.</p></div></details>
             <details><summary>Consigo incluir gente depois do dia 22/08?</summary><div class="resp"><p>Depois do prazo a lista trava e a inclusão passa a depender de aprovação da organização. Não é impossível, mas deixa de ser automático: vira pedido no CAEX no dia, com fila na frente. Cadastre antes.</p></div></details>
             <details><summary>Todo mundo precisa ir ao CAEX buscar o próprio crachá?</summary><div class="resp"><p>Não. Uma pessoa só pode retirar todos os crachás da empresa, desde que esteja marcada no cadastro como autorizada a retirar. Mas cada crachá tem que ser entregue ao dono, porque ninguém entra sem o seu.</p></div></details>
             <details><summary>Esqueci o crachá no hotel. Consigo entrar?</summary><div class="resp"><p>Não sem credencial. Vá ao CAEX, informe o ocorrido e peça a segunda via. Ela sai da cota da empresa. Se a cota já estiver esgotada, entra como credencial adicional, mediante pagamento.</p></div></details>
@@ -1568,14 +1568,14 @@ function animarRoscas(){
 function fraseLimite(c){
   var lim = c.limite||0, fei = c.preenchidas||0;
   if(lim <= 0) return 'O número de credenciais da sua empresa ainda não foi definido no sistema. Confirme com a Yasmin antes de cadastrar a equipe.';
-  if(fei > lim) return 'A sua empresa tem <strong>'+lim+'</strong> '+(lim===1?'credencial liberada':'credenciais liberadas')+', e a lista já está com <strong>'+fei+' '+(fei===1?'pessoa':'pessoas')+'</strong>. O excedente precisa ser regularizado como credencial adicional, a R$ 50,00 cada, antes do prazo.';
+  if(fei > lim) return 'A sua empresa tem <strong>'+lim+'</strong> '+(lim===1?'credencial liberada':'credenciais liberadas')+', e a lista já está com <strong>'+fei+' '+(fei===1?'pessoa':'pessoas')+'</strong>. O excedente precisa ser regularizado como credencial adicional, a R$ 20,00 cada, antes do prazo.';
   return 'A sua empresa tem <strong>'+lim+'</strong> '+(lim===1?'credencial liberada':'credenciais liberadas')+', e <strong>'+fei+'</strong> já '+(fei===1?'está preenchida':'estão preenchidas')+'. O formulário trava sozinho ao atingir o limite. Se precisar de mais, fale com a Yasmin antes do prazo, porque resolver isso no balcão custa fila e tempo da sua equipe.';
 }
 
 // Os medidores de credencial e cortesia são contadores vivos: mudam quando a
 // equipe cadastra alguém, quando um convidado usa uma cortesia, quando a
 // Yasmin mexe no limite. O manual guardava a resposta por 30 dias e abria
-// direto do cache, sem nunca conferir — então o expositor podia estar lendo
+// direto do cache, sem nunca conferir, então o expositor podia estar lendo
 // saldo de um mês atrás e planejando em cima disso.
 //
 // Agora o cache serve para abrir rápido (e para funcionar no wi-fi ruim do
@@ -1625,7 +1625,7 @@ function abrir(d){
 
 /* ── conferência dos números ──────────────────────────────────────────
    Roda depois de abrir. Se o servidor responder, repinta e marca a hora.
-   Se não responder, deixa o que está na tela e avisa que é de antes — o
+   Se não responder, deixa o que está na tela e avisa que é de antes: o
    expositor precisa saber que aquele saldo pode não ser o de agora. */
 function marcaSync(quando, aoVivo){
   var el = $('#painelSync'); if(!el) return;
@@ -1638,7 +1638,7 @@ function marcaSync(quando, aoVivo){
                   : (('0'+h.getDate()).slice(-2) + '/' + ('0'+(h.getMonth()+1)).slice(-2) + ' às ' + hh);
   el.innerHTML = '<span class="pt"></span><span>' + (aoVivo
     ? 'Números conferidos com o sistema ' + data + '.'
-    : 'Sem conexão agora — estes números são de ' + data + '. Recarregue a página quando a internet voltar.')
+    : 'Sem conexão agora, estes números são de ' + data + '. Recarregue a página quando a internet voltar.')
     + '</span>';
 }
 
