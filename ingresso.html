@@ -70,23 +70,43 @@ h1{
 .cartao-pe div{min-width:0}
 .cartao-pe b{display:block; font-size:13.5px; font-weight:650; letter-spacing:-.01em}
 
-/* ---------- botões ---------- */
-.acao{
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  width:100%; min-height:56px; padding:0 18px;
-  border-radius:15px; border:none; cursor:pointer;
-  font-size:16px; font-weight:650; letter-spacing:-.015em;
-  text-decoration:none; margin-bottom:10px;
+/* ---------- botões ----------
+   Apple e Google proíbem, por escrito, botão recriado à mão: tem que ser
+   a arte oficial deles, sem mexer em fonte, cor, raio ou espaçamento.
+   Por isso o botão é uma imagem dentro de um link, e o CSS só cuida da
+   moldura em volta.
+
+   A arte do Google é uma pílula escura, e a regra manda usar em fundo
+   claro. Como esta página tem tema escuro, o badge vai sempre sobre uma
+   placa branca — que atende a regra nos dois temas sem tocar na arte. */
+.placa{
+  display:flex; align-items:center; justify-content:center;
+  width:100%; padding:12px;                 /* folga > 8dp exigidos */
+  background:#fff; border-radius:16px;
+  border:1px solid rgba(0,0,0,.08);
+  margin-bottom:10px; text-decoration:none;
   transition:transform .13s ease;
 }
-.acao:active{transform:scale(.975)}
-.acao.apple{background:#000; color:#fff}
-.acao.google{background:#1a73e8; color:#fff}
-.acao.quieta{
-  background:var(--caixa); color:var(--tinta);
-  border:1px solid var(--linha); min-height:50px; font-size:14.5px; font-weight:600;
+.placa:active{transform:scale(.975)}
+.placa img{display:block; height:52px; width:auto}   /* mínimo é 48dp */
+
+/* Reserva de quando a arte oficial não carrega. Sem logotipo de marca
+   nenhuma de propósito: badge imitado é justamente o que as duas
+   proíbem, então aqui é só texto. */
+.placa.reserva{
+  background:#111; color:#fff; border-color:#111;
+  min-height:56px; font-size:15.5px; font-weight:650; letter-spacing:-.015em;
 }
-.acao svg{width:21px; height:21px; flex:none}
+
+/* O segundo aparelho vira link discreto: mostrar dois badges grandes
+   lado a lado faz o participante parar para escolher, e 9 em 10 já
+   sabem qual é o telefone que têm na mão. */
+.outra{
+  display:block; text-align:center;
+  font-size:13.5px; font-weight:600; color:var(--fraco);
+  text-decoration:none; padding:13px 10px; margin-bottom:2px;
+}
+.outra u{text-decoration-thickness:1px; text-underline-offset:3px}
 
 .ou{
   text-align:center; font-size:12px; color:var(--fraco);
@@ -223,15 +243,26 @@ h1{
             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   var android = /Android/.test(ua);
 
-  var ICO_APPLE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.54c-.02-2.4 1.96-3.55 2.05-3.61-1.12-1.64-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.61.02-3.1.94-3.93 2.38-1.68 2.91-.43 7.22 1.2 9.58.8 1.16 1.75 2.46 3 2.41 1.21-.05 1.66-.78 3.12-.78 1.46 0 1.87.78 3.14.75 1.3-.02 2.12-1.18 2.91-2.34.92-1.34 1.3-2.64 1.32-2.71-.03-.01-2.53-.97-2.55-3.85zM14.9 5.36c.66-.8 1.11-1.92.99-3.03-.95.04-2.11.64-2.8 1.44-.61.71-1.15 1.84-1.01 2.93 1.06.08 2.15-.54 2.82-1.34z"/></svg>';
-  var ICO_GOOGLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M2 10.5h20"/><path d="M6.5 15h3"/></svg>';
+  // Artes OFICIAIS. Trocar aqui é a única coisa necessária quando chegar
+  // o badge da Apple — o arquivo dela fica atrás do portal de download,
+  // que exige conta de desenvolvedor.
+  var BADGE = {
+    google: 'https://res.cloudinary.com/dlzrfhwin/image/upload/v1787001220/nb2026/botao_google_wallet_pt.svg',
+    apple:  'https://res.cloudinary.com/dlzrfhwin/image/upload/v1787001220/nb2026/botao_apple_wallet_pt.svg',
+  };
 
-  var btnApple = '<a class="acao apple" href="' + esc(base) + '">' + ICO_APPLE +
-                 'Adicionar à Apple Wallet</a>';
-  var btnGoogle = '<a class="acao google" href="' + esc(base) + '&f=google">' + ICO_GOOGLE +
-                  'Salvar no Google Wallet</a>';
-  var qtApple = '<a class="acao quieta" href="' + esc(base) + '">Tenho iPhone — Apple Wallet</a>';
-  var qtGoogle = '<a class="acao quieta" href="' + esc(base) + '&f=google">Tenho Android — Google Wallet</a>';
+  function placa(loja, href, alt) {
+    return '<a class="placa" href="' + esc(href) + '">' +
+           '<img src="' + esc(BADGE[loja]) + '" alt="' + esc(alt) + '"></a>';
+  }
+  function outra(href, texto) {
+    return '<a class="outra" href="' + esc(href) + '"><u>' + esc(texto) + '</u></a>';
+  }
+
+  var pApple  = placa('apple',  base, 'Adicionar à Apple Wallet');
+  var pGoogle = placa('google', base + '&f=google', 'Adicionar ao Google Wallet');
+  var oApple  = outra(base, 'Tenho iPhone — adicionar à Apple Wallet');
+  var oGoogle = outra(base + '&f=google', 'Tenho Android — adicionar ao Google Wallet');
 
   // ---- busca os dados para montar a prévia ----
   fetch(base + '&f=json')
@@ -266,13 +297,24 @@ h1{
         : 'Guarde no celular e apresente na entrada. Funciona sem internet.';
 
       // ordem pelo aparelho; o outro fica disponível mas discreto
-      $('botoes').innerHTML = iOS      ? btnApple + qtGoogle
-                            : android  ? btnGoogle + qtApple
-                            : '<div class="ou">Abra no celular para guardar na carteira</div>' + btnApple + btnGoogle;
+      $('botoes').innerHTML = iOS      ? pApple + oGoogle
+                            : android  ? pGoogle + oApple
+                            : '<div class="ou">Abra no celular para guardar na carteira</div>' + pApple + pGoogle;
 
       $('nota').textContent = iOS || android
         ? 'Depois de adicionar, ele fica na carteira do celular mesmo sem sinal.'
         : 'Você também pode fazer o check-in só com o código acima.';
+
+      // Se um badge oficial não carregar — arquivo ainda não hospedado,
+      // CDN fora do ar — a placa vira um botão de texto. O participante
+      // nunca fica olhando para uma imagem quebrada sem saber onde tocar.
+      Array.prototype.forEach.call($('botoes').querySelectorAll('.placa img'), function (img) {
+        img.addEventListener('error', function () {
+          var a = img.parentNode;
+          a.className = 'placa reserva';
+          a.textContent = img.getAttribute('alt') || 'Adicionar à carteira';
+        });
+      });
 
       $('carregando').classList.add('esconde');
       $('pronto').classList.remove('esconde');
