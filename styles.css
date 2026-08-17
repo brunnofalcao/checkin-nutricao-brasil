@@ -1516,3 +1516,154 @@ input, textarea { user-select: text; -webkit-user-select: text; font-family: inh
 
 /* a lista precisa de espaço para a barra não cobrir a última pessoa */
 body:has(.rede-bar:not([hidden])) #list { padding-bottom: 68px; }
+
+/* =============================================================
+   LEITOR DE CÓDIGO
+   Sobreposição de tela cheia com a câmera. Vive fora do fluxo do
+   app: entra por cima de qualquer tela, sai sem redesenhar nada.
+   ============================================================= */
+
+/* Botão na barra de busca. Fica cheio, não fantasma, porque numa fila
+   ele é a ação principal — quem busca por nome é a exceção agora. */
+.search-scan {
+  position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+  width: 38px; height: 38px;
+  border: none; border-radius: 10px;
+  background: var(--gradient-purple);
+  color: #fff;
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(124, 93, 245, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+.search-scan:active { transform: translateY(-50%) scale(0.94); }
+.search-scan svg { width: 19px; height: 19px; }
+/* Abre espaço para os dois botões: o texto digitado não passa por baixo. */
+.search-input { padding-right: 92px; }
+.search-clear { right: 47px; }
+
+.leitor {
+  position: fixed; inset: 0; z-index: 9000;
+  background: #000;
+  opacity: 0; transition: opacity 0.18s ease;
+  overscroll-behavior: contain;
+}
+.leitor.on { opacity: 1; }
+
+.leitor-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Escurece tudo menos a janela do meio. É o que faz a pessoa apontar
+   para o lugar certo sem instrução escrita. */
+.leitor-escuro {
+  position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  -webkit-mask: radial-gradient(circle at center, transparent 0 128px, #000 129px);
+          mask: radial-gradient(circle at center, transparent 0 128px, #000 129px);
+  pointer-events: none;
+}
+
+.leitor-mira {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 232px; height: 232px;
+  pointer-events: none;
+}
+.leitor-mira span {
+  position: absolute; width: 34px; height: 34px;
+  border: 3px solid var(--violet);
+  border-radius: 4px;
+}
+.leitor-mira span:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 14px; }
+.leitor-mira span:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 14px; }
+.leitor-mira span:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 14px; }
+.leitor-mira span:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 14px; }
+
+.leitor-topo {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 12px;
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.65), transparent);
+}
+.leitor-x, .leitor-luz {
+  width: 42px; height: 42px; flex: none;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  color: #fff; display: grid; place-items: center; cursor: pointer;
+}
+.leitor-x svg, .leitor-luz svg { width: 20px; height: 20px; }
+.leitor-luz.on { background: var(--gold); border-color: var(--gold); color: #241a00; }
+.leitor-conta {
+  flex: 1; text-align: center;
+  color: rgba(255,255,255,0.82); font-size: 13px; font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+}
+.leitor-conta b { color: #fff; font-size: 16px; }
+
+.leitor-dica {
+  position: absolute; left: 0; right: 0; top: calc(50% + 150px);
+  text-align: center; color: rgba(255,255,255,0.78);
+  font-size: 14px; font-weight: 500; padding: 0 30px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.9);
+}
+
+/* Resultado da leitura. Alto contraste e nome grande: é lido de relance,
+   com a pessoa em pé na frente do balcão. */
+.leitor-aviso {
+  position: absolute; left: 14px; right: 14px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 17px; border-radius: 16px;
+  background: rgba(10, 6, 22, 0.93);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  opacity: 0; transform: translateY(14px) scale(0.97);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  pointer-events: none;
+}
+.leitor-aviso.on { opacity: 1; transform: none; }
+.leitor-aviso.ok   { border-color: rgba(52, 211, 153, 0.55); }
+.leitor-aviso.rep  { border-color: rgba(255, 209, 92, 0.55); }
+.leitor-aviso.erro { border-color: rgba(248, 113, 113, 0.55); }
+.la-ico {
+  width: 40px; height: 40px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; font-size: 21px; font-weight: 800;
+}
+.leitor-aviso.ok   .la-ico { background: rgba(52, 211, 153, 0.18); color: var(--success); }
+.leitor-aviso.rep  .la-ico { background: rgba(255, 209, 92, 0.18); color: var(--gold); }
+.leitor-aviso.erro .la-ico { background: rgba(248, 113, 113, 0.18); color: var(--danger); }
+.la-t { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.25; }
+.la-s { font-size: 13px; color: rgba(255,255,255,0.66); margin-top: 2px; line-height: 1.35; }
+
+.leitor-manual {
+  position: absolute; left: 0; right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  display: flex; justify-content: center;
+}
+.leitor-digitar {
+  border: 1px solid rgba(255,255,255,0.24);
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(8px);
+  color: #fff; font-family: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 11px 20px; border-radius: 12px; cursor: pointer;
+}
+
+/* Câmera negada ou indisponível: explica e devolve para a busca em vez
+   de deixar uma tela preta na frente da fila. */
+.leitor-falha {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(360px, calc(100% - 44px));
+  background: rgba(10, 6, 22, 0.95);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 16px; padding: 22px;
+  text-align: center;
+}
+.lf-t { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.lf-s { font-size: 13.5px; color: rgba(255,255,255,0.7); line-height: 1.6; }

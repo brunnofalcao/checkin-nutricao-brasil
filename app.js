@@ -17,6 +17,7 @@ import {
   enfileira, pendentes, temPendentes, sincroniza, estaOnline,
   travados, limpaTravado, reenfileira
 } from "./fila-offline.js";
+import { abreLeitor, temCamera } from "./leitor.js";
 const state = {
   user: null,
   profile: null,
@@ -391,8 +392,19 @@ async function toggleCheckIn(participantId) {
     return;
   }
 
-  const novoChecked = !p.checked;
+  await marcaPresenca(p, !p.checked);
+}
+
+// O miolo do check-in, separado do toque na linha. O leitor de código
+// precisa marcar presença SEM alternar: ler o mesmo crachá duas vezes na
+// fila não pode desfazer o check-in de quem já entrou.
+// `silencioso` é o modo do leitor: não redesenha a lista nem dispara toast.
+// Com 2 mil linhas na tela, redesenhar a cada código lido engasga a câmera —
+// e o aviso do leitor já diz o que aconteceu, melhor do que o toast diria.
+// A lista é redesenhada uma vez só, quando o leitor fecha.
+async function marcaPresenca(p, novoChecked, { silencioso = false } = {}) {
   const agora = new Date().toISOString();
+  const participantId = p.id;
 
   // 1. aparelho primeiro — isto não pode falhar por causa de rede
   await enfileira({
@@ -410,20 +422,22 @@ async function toggleCheckIn(participantId) {
     _pendente: true
   });
   await atualizaContadorFila();
-  renderCheckinList();
+  if (!silencioso) renderCheckinList();
   haptic(novoChecked ? "success" : "light");
 
   const isRace = isRaceEvent(state.currentEvent);
   const nome = (p.name || "").split(" ")[0];
-  if (!estaOnline()) {
-    toast(`${nome} — salvo no aparelho, envia quando a rede voltar`, "success");
-  } else {
-    toast(
-      novoChecked
-        ? `✓ ${nome} — ${isRace ? "kit entregue" : "check-in feito"}`
-        : `Desfeito: ${nome}`,
-      "success"
-    );
+  if (!silencioso) {
+    if (!estaOnline()) {
+      toast(`${nome} — salvo no aparelho, envia quando a rede voltar`, "success");
+    } else {
+      toast(
+        novoChecked
+          ? `✓ ${nome} — ${isRace ? "kit entregue" : "check-in feito"}`
+          : `Desfeito: ${nome}`,
+        "success"
+      );
+    }
   }
 
   // 3. tenta subir agora; se não der, a fila cuida depois
@@ -468,6 +482,102 @@ async function sincronizaFila({ silencioso = true } = {}) {
     state.sincronizando = false;
     renderStatusRede();
   }
+}
+
+// =============================================================
+// LEITURA DE CÓDIGO
+//
+// O leitor devolve texto cru. Pode ser o código sozinho (NB26ABCD), a URL
+// do ingresso no Wallet ou um endereço com o código no parâmetro. Tudo
+// vira a mesma coisa antes de procurar na lista — senão um QR que carrega
+// link não acha ninguém e o balcão conclui que o sistema não funciona.
+// =============================================================
+function normalizaCodigo(bruto) {
+  let s = String(bruto || "").trim();
+  const emParametro = s.match(/[?&](?:e|code|codigo)=([^&\s]+)/i);
+  if (emParametro) s = emParametro[1];
+  else if (/^https?:\/\//i.test(s)) s = s.split(/[/?#]/).filter(Boolean).pop() || s;
+  return s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+let credenciadosNoLeitor = 0;
+
+// Chamada a cada código lido. O retorno é o que aparece na tela do leitor.
+async function credenciaPorCodigo(bruto) {
+  const e = state.currentEvent;
+
+  if (!isEditable(e)) {
+    haptic("error");
+    return { tipo: "erro", titulo: "Credenciamento fechado", sub: motivoBloqueio(e) };
+  }
+
+  const cod = normalizaCodigo(bruto);
+  if (!cod) {
+    haptic("error");
+    return { tipo: "erro", titulo: "Código ilegível", sub: "Tente de novo aproximando um pouco mais." };
+  }
+
+  const p = state.participants.find(x => normalizaCodigo(x.code) === cod);
+  if (!p) {
+    haptic("error");
+    return {
+      tipo: "erro",
+      titulo: "Não está nesta lista",
+      sub: `${cod} — confira se é o evento certo, ou busque pelo nome.`
+    };
+  }
+
+  const nome = (p.name || "").split(" ")[0];
+
+  // Já passou: avisa e NÃO desfaz. Ler o mesmo crachá de novo é o erro mais
+  // comum da fila, e desfazer um check-in por causa dele é o pior resultado
+  // possível — a pessoa já entrou e o relatório passa a mentir.
+  if (p.checked) {
+    haptic("warning");
+    return {
+      tipo: "repetido",
+      titulo: `${nome} já passou`,
+      sub: p.checked_at ? `Credenciado às ${fmtTime(p.checked_at)}` : "Já estava credenciado",
+      conta: credenciadosNoLeitor
+    };
+  }
+
+  await marcaPresenca(p, true, { silencioso: true });
+  credenciadosNoLeitor++;
+  return {
+    tipo: "ok",
+    titulo: nome,
+    // Offline o check-in vale, mas ainda não subiu. Dizer só "feito" faz o
+    // balcão achar que está tudo no banco — e é justo quando não está.
+    sub: !estaOnline()
+      ? "salvo no aparelho — sobe quando a rede voltar"
+      : (isRaceEvent(e) ? "kit liberado" : "check-in feito"),
+    conta: credenciadosNoLeitor
+  };
+}
+
+function abreLeitorDeCodigo() {
+  if (!isEditable(state.currentEvent)) {
+    toast(motivoBloqueio(state.currentEvent), "error");
+    haptic("error");
+    return;
+  }
+  credenciadosNoLeitor = 0;
+  abreLeitor({
+    aoLer: credenciaPorCodigo,
+    aoFechar: () => {
+      renderCheckinList();
+      if (credenciadosNoLeitor > 0) {
+        toast(`${credenciadosNoLeitor} credenciado${credenciadosNoLeitor > 1 ? "s" : ""} pelo leitor`, "success");
+      }
+    },
+    // Câmera falhou ou o código está apagado: devolve a pessoa para a busca
+    // em vez de deixar o balcão parado.
+    aoDigitar: () => {
+      const si = $("searchInput");
+      if (si) { si.focus(); si.select(); }
+    }
+  });
 }
 
 // =============================================================
@@ -1115,6 +1225,10 @@ function renderCheckinScreen() {
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input type="text" class="search-input" id="searchInput" placeholder="${isExpo ? 'Buscar empresa, estande ou pessoa…' : 'Buscar por nome ou código…'}" autocomplete="off" autocapitalize="off" autocorrect="off" value="${esc(state.search)}">
             <button class="search-clear ${state.search ? 'show' : ''}" id="searchClear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></button>
+            ${temCamera() ? `
+            <button class="search-scan" id="btnLeitor" type="button" title="Ler código" aria-label="Ler código com a câmera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+            </button>` : ''}
           </div>
           ${isExpo ? `
           <div class="expo-modos" role="tablist" aria-label="Modo de credenciamento">
@@ -1214,6 +1328,7 @@ function renderCheckinScreen() {
     renderCheckinList();
     si.focus();
   });
+  if ($("btnLeitor")) $("btnLeitor").addEventListener("click", abreLeitorDeCodigo);
   $("filters").addEventListener("click", (ev) => {
     const f = ev.target.closest(".filter");
     if (!f) return;

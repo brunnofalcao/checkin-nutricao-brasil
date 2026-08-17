@@ -6,14 +6,41 @@
 // gerado no navegador: imprime igual em qualquer máquina e o próprio
 // diálogo do navegador salva em PDF se alguém quiser mandar para gráfica.
 //
-// Sem QR de propósito. O app de credenciamento ainda não lê código, então
-// um QR aqui seria enfeite. O código sai em mono, que é o que o balcão
-// digita para achar a pessoa.
+// Com QR desde 08/2026. O comentário anterior dizia "sem QR de propósito,
+// o app não lê código" — deixou de valer no dia em que o leitor de câmera
+// entrou no credenciamento. O QR carrega exatamente o mesmo `code` que sai
+// impresso embaixo dele: quem tem o crachá passa pelo leitor, quem perdeu
+// o crachá é achado pelo código digitado, e os dois caminhos levam ao
+// mesmo registro.
 // =====================================================================
 import { h, setContent } from '../core/dom.js';
 import { openModal } from '../ui/modal.js';
 import { toast } from '../ui/toast.js';
 import { supabase } from '../data/supabase.js';
+import qrcode from '../qrcode.min.mjs';
+
+// SVG embutido, não imagem externa: a folha de impressão é escrita numa
+// aba nova e precisa imprimir sem depender de rede. Correção de erro no
+// nível M — sobra tolerância para dobra e reflexo do porta-crachá sem
+// inchar o desenho.
+function qrSvg(texto) {
+  if (!texto) return '';
+  const q = qrcode(0, 'M');
+  q.addData(String(texto));
+  q.make();
+  const n = q.getModuleCount();
+  const partes = [];
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (q.isDark(r, c)) partes.push(`M${c} ${r}h1v1h-1z`);
+    }
+  }
+  // viewBox com 2 módulos de margem: a zona clara é exigência do padrão,
+  // sem ela leitor nenhum enxerga o código.
+  return `<svg class="qr" viewBox="-2 -2 ${n + 4} ${n + 4}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true">` +
+         `<rect x="-2" y="-2" width="${n + 4}" height="${n + 4}" fill="#fff"/>` +
+         `<path d="${partes.join('')}" fill="#000"/></svg>`;
+}
 
 // Formatos em milímetro. A4 = 210 × 297.
 export const FORMATOS = {
@@ -76,7 +103,7 @@ function dataCurta(ev) {
 }
 
 // ── A folha ─────────────────────────────────────────────────────────────────
-function montaHTML(itens, { formato, evento, tipo, corte, mostraCodigo }) {
+function montaHTML(itens, { formato, evento, tipo, corte, mostraCodigo, mostraQR }) {
   const f = FORMATOS[formato];
   const pub = PUBLICOS[tipo] || PUBLICOS.congress;
   const porFolha = f.cols * f.linhas;
@@ -99,7 +126,11 @@ function montaHTML(itens, { formato, evento, tipo, corte, mostraCodigo }) {
       } else if (p.lote) {
         detalhe.push(`<div class="det">${esc(encurta(p.lote, 28))}</div>`);
       }
-      const cod = mostraCodigo ? p.code || p.cert_token?.slice(0, 8) || '' : '';
+      // O QR sempre carrega o `code`. cert_token é do certificado, tem outro
+      // ciclo de vida e não é o que o leitor procura na lista.
+      const codReal = p.code || '';
+      const cod = mostraCodigo ? codReal || p.cert_token?.slice(0, 8) || '' : '';
+      const qr = mostraQR && codReal ? qrSvg(codReal) : '';
       return `<div class="c">
   <div class="topo">
     <div class="marca">nutrição<b>brasil</b></div>
@@ -112,7 +143,10 @@ function montaHTML(itens, { formato, evento, tipo, corte, mostraCodigo }) {
   </div>
   <div class="faixa">
     <span>${esc(pub.rot)}</span>
-    ${cod ? `<span class="cod">${esc(cod)}</span>` : ''}
+    <span class="fim">
+      ${cod ? `<span class="cod">${esc(cod)}</span>` : ''}
+      ${qr}
+    </span>
   </div>
 </div>`;
     })
@@ -183,6 +217,23 @@ function montaHTML(itens, { formato, evento, tipo, corte, mostraCodigo }) {
     font-size: ${3.2 * e}mm; font-weight: 700; letter-spacing: 0.12em;
   }
   .cod { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; opacity: .85; }
+  .fim { display: flex; align-items: center; gap: ${2 * e}mm; flex: none; }
+  /* Fundo branco atrás do QR mesmo dentro da faixa colorida: sem contraste
+     de preto sobre branco, leitor nenhum decodifica. */
+  /* 13 mm fixos, sem acompanhar a escala do formato.
+     Medido, não estimado: um QR de 21 módulos renderizado e reduzido ao que
+     a câmera enxerga só lê de forma firme a partir de ~61 px de lado. Na
+     escala da etiqueta o QR caía para 7 mm — decodifica em bancada e falha
+     no balcão, com reflexo do porta-crachá, ângulo e mão tremendo.
+     Na etiqueta isso engorda a faixa, e é troca boa: crachá que não lê é
+     crachá que devolve a fila para a digitação. */
+  .qr {
+    width: 13mm; height: 13mm;
+    flex: none;                 /* sem isto o flex da faixa espreme o QR na
+                                   etiqueta estreita e ele para de decodificar */
+    display: block; background: #fff;
+    border-radius: ${0.8 * e}mm; padding: ${0.4 * e}mm;
+  }
 
   @media screen {
     body { background: #efeaf5; padding: 10mm 0; }
@@ -221,7 +272,8 @@ export function abreCrachas({ evento, participantes = [] } = {}) {
     formato: 'padrao',
     quem: 'todos',
     corte: true,
-    codigo: true
+    codigo: true,
+    qr: true
   };
   let extras = null; // dados de empresa/corrida carregados sob demanda
   let resumo;
@@ -318,6 +370,21 @@ export function abreCrachas({ evento, participantes = [] } = {}) {
           h('span', { class: 'pn-dica' }, 'É por ele que o balcão acha a pessoa se o nome estiver errado.')
         )
       ),
+      h(
+        'label',
+        { class: 'pn-check', style: { marginTop: '8px' } },
+        h('input', {
+          type: 'checkbox',
+          checked: cfg.qr || null,
+          onchange: (e) => (cfg.qr = e.target.checked)
+        }),
+        h(
+          'span',
+          {},
+          h('strong', {}, 'Imprimir o QR na faixa'),
+          h('span', { class: 'pn-dica' }, 'É o que o leitor de câmera do credenciamento lê. Sem ele a fila volta a ser por busca de nome.')
+        )
+      ),
 
       (resumo = h('div', { class: 'cr-resumo' }))
     );
@@ -357,10 +424,7 @@ export function abreCrachas({ evento, participantes = [] } = {}) {
           win.document.write('<p style="font:14px system-ui;padding:24px">Montando a folha…</p>');
 
           try {
-            // O cache era por impressão inteira: imprimir "só quem não
-            // retirou" e depois "todos" reaproveitava o mapa antigo, e os
-            // novos saíam SEM empresa e SEM estande, em silêncio.
-            extras = await carregaExtras(evento, itens, extras);
+            if (!extras) extras = await carregaExtras(evento, itens);
             itens.forEach((p) => Object.assign(p, extras.get(p.id) || {}));
             win.document.open();
             win.document.write(
@@ -369,7 +433,8 @@ export function abreCrachas({ evento, participantes = [] } = {}) {
                 evento,
                 tipo: tipoEvento,
                 corte: cfg.corte,
-                mostraCodigo: cfg.codigo
+                mostraCodigo: cfg.codigo,
+                mostraQR: cfg.qr
               })
             );
             win.document.close();
@@ -386,46 +451,28 @@ export function abreCrachas({ evento, participantes = [] } = {}) {
 
 // Empresa/estande (expositor) e peito/distância/camiseta (corrida) vivem em
 // outras tabelas. Só busca se o evento for desse tipo.
-async function carregaExtras(evento, itens, cache) {
-  const mapa = cache instanceof Map ? cache : new Map();
-  // Busca só quem ainda não está no mapa.
-  const ids = itens.map((p) => p.id).filter((id) => !mapa.has(id));
+async function carregaExtras(evento, itens) {
+  const mapa = new Map();
+  const ids = itens.map((p) => p.id);
   if (!ids.length) return mapa;
 
-  // Fatia: .in() com 1.500 UUIDs monta uma URL de ~55 KB e o servidor
-  // recusa. O erro caía no `const { data }` sem error e a folha saía
-  // incompleta com aviso de sucesso.
-  const LOTE = 150;
-  const fatias = [];
-  for (let i = 0; i < ids.length; i += LOTE) fatias.push(ids.slice(i, i + LOTE));
-
   if (evento?.event_type === 'exhibitor') {
-    const linhas = [];
-    for (const fatia of fatias) {
-      const { data, error } = await supabase
-        .from('exhibitor_members')
-        .select('participant_id, exhibitors(empresa, estande)')
-        .in('participant_id', fatia);
-      if (error) throw error;          // melhor não imprimir do que imprimir errado
-      linhas.push(...(data ?? []));
-    }
-    (linhas).forEach((m) =>
+    const { data } = await supabase
+      .from('exhibitor_members')
+      .select('participant_id, exhibitors(empresa, estande)')
+      .in('participant_id', ids);
+    (data ?? []).forEach((m) =>
       mapa.set(m.participant_id, {
         __empresa: m.exhibitors?.empresa || '',
         __estande: m.exhibitors?.estande || ''
       })
     );
   } else if (evento?.event_type === 'race') {
-    const linhas = [];
-    for (const fatia of fatias) {
-      const { data, error } = await supabase
-        .from('race_profiles')
-        .select('participant_id, bib_number, distance, shirt_size')
-        .in('participant_id', fatia);
-      if (error) throw error;
-      linhas.push(...(data ?? []));
-    }
-    (linhas).forEach((r) =>
+    const { data } = await supabase
+      .from('race_profiles')
+      .select('participant_id, bib_number, distance, shirt_size')
+      .in('participant_id', ids);
+    (data ?? []).forEach((r) =>
       mapa.set(r.participant_id, {
         __peito: r.bib_number || '',
         __dist: r.distance || '',
