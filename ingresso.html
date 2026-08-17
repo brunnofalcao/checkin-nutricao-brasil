@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seu ingresso · Nutrição Brasil</title>
+<meta name="description" content="Adicione seu ingresso do Nutrição Brasil à carteira do celular.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0D0618">
+<link rel="preconnect" href="https://res.cloudinary.com">
+<style>
+/* =============================================================
+   INGRESSO · a página que o link do WhatsApp e do e-mail abre.
+
+   Ela não é parte do app de credenciamento e não usa o styles.css
+   dele de propósito: quem abre isto é o participante, uma vez, no
+   celular, e nada aqui pode quebrar porque alguém mexeu no painel.
+
+   O link chega como ?i=CODIGO-TOKEN — um pedaço só, sem "&", porque
+   botão de URL dinâmica do WhatsApp cola a variável no fim de uma
+   URL base e um "&" no meio vira bagunça.
+   ============================================================= */
+:root{
+  --tinta:#0D0618; --papel:#F7F5FA; --caixa:#FFFFFF;
+  --linha:#E4DCED; --fraco:#6F6383; --roxo:#5A2475;
+  --fundo-cartao:#6f4d89; --texto-cartao:#FFFFFF;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --tinta:#FFFFFF; --papel:#080014; --caixa:#15102B;
+         --linha:#2A2547; --fraco:#9A94B8; --roxo:#A78BFA; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papel); color:var(--tinta);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:28px 20px calc(32px + env(safe-area-inset-bottom));
+  display:flex; justify-content:center;
+}
+.folha{width:100%; max-width:400px}
+
+.topo{text-align:center; margin-bottom:26px}
+.topo img{height:26px; opacity:.9}
+
+h1{
+  font-size:25px; line-height:1.2; font-weight:800;
+  letter-spacing:-.03em; margin:0 0 8px; text-align:center;
+}
+.sub{
+  font-size:14.5px; line-height:1.5; color:var(--fraco);
+  margin:0 0 24px; text-align:center;
+}
+
+/* ---------- o cartão ---------- */
+.cartao{
+  background:var(--fundo-cartao); color:var(--texto-cartao);
+  border-radius:20px; padding:20px;
+  box-shadow:0 14px 40px rgba(0,0,0,.22);
+  margin-bottom:24px; position:relative; overflow:hidden;
+}
+.cartao-topo{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:22px}
+.cartao-logo{height:26px; width:auto; max-width:150px; object-fit:contain}
+.cartao-selo{text-align:right; flex:none}
+.cartao-selo b{display:block; font-size:13px; font-weight:800; letter-spacing:-.01em; line-height:1.2}
+.cartao-selo small{display:block; font-size:9px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; opacity:.72; margin-bottom:2px}
+.cartao-rot{font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; opacity:.72; margin-bottom:3px}
+.cartao-nome{font-size:19px; font-weight:700; letter-spacing:-.02em; line-height:1.22; margin-bottom:18px; word-break:break-word}
+.cartao-pe{display:flex; gap:26px}
+.cartao-pe div{min-width:0}
+.cartao-pe b{display:block; font-size:13.5px; font-weight:650; letter-spacing:-.01em}
+
+/* ---------- botões ---------- */
+.acao{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  width:100%; min-height:56px; padding:0 18px;
+  border-radius:15px; border:none; cursor:pointer;
+  font-size:16px; font-weight:650; letter-spacing:-.015em;
+  text-decoration:none; margin-bottom:10px;
+  transition:transform .13s ease;
+}
+.acao:active{transform:scale(.975)}
+.acao.apple{background:#000; color:#fff}
+.acao.google{background:#1a73e8; color:#fff}
+.acao.quieta{
+  background:var(--caixa); color:var(--tinta);
+  border:1px solid var(--linha); min-height:50px; font-size:14.5px; font-weight:600;
+}
+.acao svg{width:21px; height:21px; flex:none}
+
+.ou{
+  text-align:center; font-size:12px; color:var(--fraco);
+  margin:16px 0 12px; letter-spacing:.01em;
+}
+
+/* ---------- código manual ---------- */
+.codigo-caixa{
+  background:var(--caixa); border:1px solid var(--linha);
+  border-radius:15px; padding:16px 18px; text-align:center; margin-top:20px;
+}
+.codigo-rot{font-size:10.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--fraco); margin-bottom:6px}
+.codigo{font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:27px; font-weight:700; letter-spacing:.09em}
+.codigo-pe{font-size:12.5px; color:var(--fraco); margin-top:7px; line-height:1.45}
+
+.nota{
+  font-size:12.5px; line-height:1.55; color:var(--fraco);
+  text-align:center; margin-top:20px;
+}
+
+/* ---------- estados ---------- */
+.aviso{
+  background:var(--caixa); border:1px solid var(--linha);
+  border-radius:16px; padding:22px 20px; text-align:center;
+}
+.aviso b{display:block; font-size:17px; margin-bottom:8px; letter-spacing:-.02em}
+.aviso p{margin:0; font-size:14px; line-height:1.55; color:var(--fraco)}
+.aviso a{color:var(--roxo); font-weight:600}
+.esconde{display:none !important}
+
+.carregando{text-align:center; padding:50px 0; color:var(--fraco); font-size:14px}
+.giro{
+  width:26px; height:26px; margin:0 auto 14px;
+  border:2.5px solid var(--linha); border-top-color:var(--roxo);
+  border-radius:50%; animation:gira .7s linear infinite;
+}
+@keyframes gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .giro{animation-duration:2s} .acao:active{transform:none} }
+</style>
+</head>
+<body>
+<div class="folha">
+
+  <div class="topo">
+    <!-- O arquivo de origem é branco. No tema claro ele precisa da versão
+         recolorida, senão some no fundo; no escuro vai como está. -->
+    <picture>
+      <source media="(prefers-color-scheme: dark)"
+              srcset="https://res.cloudinary.com/dlzrfhwin/image/upload/c_fit,w_480,h_150/v1775583229/nb_logotipo_hor_05_wqsydv.png">
+      <img id="marca" alt="Nutrição Brasil"
+           src="https://res.cloudinary.com/dlzrfhwin/image/upload/c_fit,w_480,h_150/e_colorize,co_rgb:1A0F2E/v1775583229/nb_logotipo_hor_05_wqsydv.png">
+    </picture>
+  </div>
+
+  <div id="carregando" class="carregando">
+    <div class="giro"></div>
+    Preparando seu ingresso…
+  </div>
+
+  <div id="erro" class="aviso esconde">
+    <b id="erro-t">Não consegui abrir este ingresso</b>
+    <p id="erro-s"></p>
+  </div>
+
+  <div id="pronto" class="esconde">
+    <h1 id="titulo">Seu ingresso está pronto</h1>
+    <p class="sub" id="subtitulo">Guarde no celular e apresente na entrada.</p>
+
+    <div class="cartao" id="cartao">
+      <div class="cartao-topo">
+        <img class="cartao-logo" id="cartao-logo" alt="">
+        <div class="cartao-selo">
+          <small id="c-cab">INGRESSO</small>
+          <b id="c-tipo">CONGRESSISTA</b>
+        </div>
+      </div>
+      <div class="cartao-rot">Participante</div>
+      <div class="cartao-nome" id="c-nome">—</div>
+      <div class="cartao-pe">
+        <div><div class="cartao-rot">Datas</div><b id="c-datas">—</b></div>
+        <div><div class="cartao-rot">Local</div><b id="c-local">—</b></div>
+      </div>
+    </div>
+
+    <div id="botoes"></div>
+
+    <div class="codigo-caixa">
+      <div class="codigo-rot">Se preferir, seu código</div>
+      <div class="codigo" id="c-codigo">—</div>
+      <div class="codigo-pe">Serve no credenciamento do mesmo jeito.</div>
+    </div>
+
+    <p class="nota" id="nota"></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var FUNCAO = 'https://tjrarpnqoemdhxjjbtgk.supabase.co/functions/v1/wallet-passe';
+  var CL = 'https://res.cloudinary.com/dlzrfhwin/image/upload';
+  var LOGO = 'v1775583229/nb_logotipo_hor_05_wqsydv.png';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  };
+
+  function falha(titulo, texto) {
+    $('carregando').classList.add('esconde');
+    $('erro').classList.remove('esconde');
+    $('erro-t').textContent = titulo;
+    $('erro-s').innerHTML = texto;
+  }
+
+  // ---- o link vem como ?i=CODIGO-TOKEN; o token é a última parte ----
+  var i = new URLSearchParams(location.search).get('i') || '';
+  var corte = i.lastIndexOf('-');
+  var codigo = corte > 0 ? i.slice(0, corte) : '';
+  var token  = corte > 0 ? i.slice(corte + 1) : '';
+
+  if (!codigo || !token) {
+    falha('Link incompleto',
+      'O endereço veio cortado. Isso acontece quando a mensagem é copiada pela metade. ' +
+      'Abra o link direto da mensagem original, ou fale com a gente pelo WhatsApp do evento.');
+    return;
+  }
+
+  var base = FUNCAO + '?e=' + encodeURIComponent(codigo) + '&t=' + encodeURIComponent(token);
+
+  // ---- que aparelho é ----
+  var ua = navigator.userAgent || '';
+  var iOS = /iPad|iPhone|iPod/.test(ua) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var android = /Android/.test(ua);
+
+  var ICO_APPLE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.54c-.02-2.4 1.96-3.55 2.05-3.61-1.12-1.64-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.61.02-3.1.94-3.93 2.38-1.68 2.91-.43 7.22 1.2 9.58.8 1.16 1.75 2.46 3 2.41 1.21-.05 1.66-.78 3.12-.78 1.46 0 1.87.78 3.14.75 1.3-.02 2.12-1.18 2.91-2.34.92-1.34 1.3-2.64 1.32-2.71-.03-.01-2.53-.97-2.55-3.85zM14.9 5.36c.66-.8 1.11-1.92.99-3.03-.95.04-2.11.64-2.8 1.44-.61.71-1.15 1.84-1.01 2.93 1.06.08 2.15-.54 2.82-1.34z"/></svg>';
+  var ICO_GOOGLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M2 10.5h20"/><path d="M6.5 15h3"/></svg>';
+
+  var btnApple = '<a class="acao apple" href="' + esc(base) + '">' + ICO_APPLE +
+                 'Adicionar à Apple Wallet</a>';
+  var btnGoogle = '<a class="acao google" href="' + esc(base) + '&f=google">' + ICO_GOOGLE +
+                  'Salvar no Google Wallet</a>';
+  var qtApple = '<a class="acao quieta" href="' + esc(base) + '">Tenho iPhone — Apple Wallet</a>';
+  var qtGoogle = '<a class="acao quieta" href="' + esc(base) + '&f=google">Tenho Android — Google Wallet</a>';
+
+  // ---- busca os dados para montar a prévia ----
+  fetch(base + '&f=json')
+    .then(function (r) {
+      if (r.status === 403) throw new Error('403');
+      if (r.status === 404) throw new Error('404');
+      if (!r.ok) throw new Error('http' + r.status);
+      return r.json();
+    })
+    .then(function (d) {
+      if (d.erro) throw new Error('dados');
+
+      document.documentElement.style.setProperty('--fundo-cartao', d.fundo);
+      var claro = !!d.texto_escuro;                 // fundo claro pede tinta escura
+      document.documentElement.style.setProperty('--texto-cartao', claro ? '#0D0618' : '#FFFFFF');
+      $('cartao-logo').src = CL + '/c_fit,w_320,h_100' +
+        (claro ? '/e_colorize,co_rgb:1A0F2E' : '') + '/' + LOGO;
+
+      var CAB = { congressista:'INGRESSO', nbrun:'CORRIDA', visitante:'ACESSO',
+                  expositor:'CREDENCIAL', patrocinio:'COTA', apoio:'COTA' };
+      $('c-cab').textContent = CAB[d.tipo] || 'INGRESSO';
+      $('c-tipo').textContent = d.rotulo || '';
+      $('c-nome').textContent = d.nome || '';
+      $('c-datas').textContent = d.datas || '';
+      $('c-local').textContent = d.cidade || '';
+      $('c-codigo').textContent = d.codigo || codigo;
+
+      var pnome = String(d.nome || '').trim().split(/\s+/)[0];
+      $('titulo').textContent = pnome ? (pnome + ', seu ingresso está pronto') : 'Seu ingresso está pronto';
+      $('subtitulo').textContent = d.tipo === 'nbrun'
+        ? 'Guarde no celular e apresente na retirada do kit.'
+        : 'Guarde no celular e apresente na entrada. Funciona sem internet.';
+
+      // ordem pelo aparelho; o outro fica disponível mas discreto
+      $('botoes').innerHTML = iOS      ? btnApple + qtGoogle
+                            : android  ? btnGoogle + qtApple
+                            : '<div class="ou">Abra no celular para guardar na carteira</div>' + btnApple + btnGoogle;
+
+      $('nota').textContent = iOS || android
+        ? 'Depois de adicionar, ele fica na carteira do celular mesmo sem sinal.'
+        : 'Você também pode fazer o check-in só com o código acima.';
+
+      $('carregando').classList.add('esconde');
+      $('pronto').classList.remove('esconde');
+    })
+    .catch(function (e) {
+      var m = String(e && e.message);
+      if (m === '403') {
+        falha('Este link não confere',
+          'Ele pode ter sido copiado pela metade ou alterado. Abra direto da mensagem que você recebeu.');
+      } else if (m === '404') {
+        falha('Não achei esta inscrição',
+          'O código <b>' + esc(codigo) + '</b> não está na nossa lista. ' +
+          'Se você acabou de se inscrever, espere alguns minutos e tente de novo.');
+      } else {
+        falha('Não consegui carregar agora',
+          'Pode ser a conexão. Tente de novo em instantes — seu ingresso continua valendo, ' +
+          'e no credenciamento o código <b>' + esc(codigo) + '</b> resolve.');
+      }
+    });
+})();
+</script>
+</body>
+</html>

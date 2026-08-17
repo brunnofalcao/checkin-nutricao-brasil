@@ -1667,3 +1667,136 @@ body:has(.rede-bar:not([hidden])) #list { padding-bottom: 68px; }
 }
 .lf-t { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
 .lf-s { font-size: 13.5px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+
+/* ============== BOTÃO DE LER CÓDIGO (rodapé) ==============
+   No balcão, ler o código é a única coisa que a operadora faz o dia
+   inteiro. Estava como um ícone de 36 px dentro do campo de busca,
+   disputando espaço com o "x" de limpar; agora ocupa a faixa do polegar.
+   Importar lista saiu daqui: é uma ação de uma vez por evento e estava
+   no lugar mais valioso da tela. */
+.btn-ler {
+  flex: 1; min-height: 68px;
+  background: var(--gradient-purple);
+  color: #fff; border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 20px;
+  text-align: left;
+  box-shadow: 0 10px 30px rgba(124, 93, 245, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.btn-ler:active {
+  transform: scale(0.975);
+  box-shadow: 0 4px 14px rgba(124, 93, 245, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.btn-ler-ico {
+  width: 42px; height: 42px; flex: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  display: grid; place-items: center;
+}
+.btn-ler-ico svg { width: 23px; height: 23px; }
+.btn-ler-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.btn-ler-txt b {
+  font-size: 17px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+}
+.btn-ler-txt small {
+  font-size: 12px; font-weight: 500; opacity: 0.78; letter-spacing: -0.005em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ============== MENU "MAIS AÇÕES" ==============
+   Era uma pilha de botões iguais, e "Limpar TODA a lista" ficava a um
+   dedo de "Resetar check-ins". Agora vai em grupos, cada item diz o que
+   faz, e as duas ações sem volta moram num cartão vermelho separado. */
+.menu-grupo { margin-bottom: 22px; }
+.menu-grupo:last-child { margin-bottom: 4px; }
+.menu-grupo-rot {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 4px 9px;
+}
+.menu-item {
+  width: 100%;
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 14px;
+  margin-bottom: 7px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  transition: transform 0.13s ease, border-color 0.13s ease;
+}
+.menu-item:last-child { margin-bottom: 0; }
+.menu-item:active { transform: scale(0.985); border-color: var(--violet); }
+.menu-item-ico {
+  width: 38px; height: 38px; flex: none;
+  border-radius: 11px;
+  background: var(--surface-2);
+  color: var(--violet);
+  display: grid; place-items: center;
+}
+.menu-item-ico svg { width: 18px; height: 18px; }
+.menu-item-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.menu-item-txt b {
+  font-size: 14.5px; font-weight: 600; letter-spacing: -0.012em; line-height: 1.25;
+}
+.menu-item-txt small {
+  font-size: 12px; font-weight: 400; color: var(--ink-mute);
+  line-height: 1.35;
+}
+.menu-item-seta { flex: none; color: var(--ink-mute); opacity: 0.5; display: grid; place-items: center; }
+.menu-item-seta svg { width: 15px; height: 15px; }
+
+/* zona de risco */
+.menu-grupo.perigo {
+  background: rgba(255, 107, 107, 0.055);
+  border: 1px solid rgba(255, 107, 107, 0.22);
+  border-radius: 16px;
+  padding: 13px 12px 12px;
+}
+.menu-grupo.perigo .menu-grupo-rot { color: #ff6b6b; margin-left: 2px; }
+.menu-perigo-aviso {
+  font-size: 12px; line-height: 1.45;
+  color: var(--ink-soft);
+  margin: 0 2px 11px;
+}
+.menu-item.perigo { border-color: rgba(255, 107, 107, 0.28); }
+.menu-item.perigo:active { border-color: #ff6b6b; }
+.menu-item.perigo .menu-item-ico { background: rgba(255, 107, 107, 0.14); color: #ff6b6b; }
+.menu-item.perigo .menu-item-txt b { color: #ff6b6b; }
+
+/* ---- correções de contraste, medidas e não estimadas ----
+   Três coisas reprovaram em 4.5:1 na medição com alpha composto:
+   · #ff6b6b no tema claro dá 2.78:1 sobre branco. Vermelho de tema
+     escuro não serve para texto em fundo claro.
+   · o subtítulo em --ink-mute dá 4.22:1 no escuro. Faltava pouco,
+     mas faltava.
+   · branco sobre a primeira parada do gradiente (#A78BFA) dá 2.72:1.
+     O botão de ler é o mais tocado do app; começa na parada seguinte. */
+:root {
+  --perigo-txt: #ff6b6b;
+  --menu-sub: #9A94B8;                                    /* 6.40:1 */
+  --grad-ler: linear-gradient(135deg, #6B4BE0 0%, #5B3FD9 55%, #4E35BE 100%);
+}
+[data-tema='claro'] {
+  --perigo-txt: #a51f1f;                                  /* medido sobre o cartão, não sobre branco */
+  --menu-sub: var(--ink-mute);                            /* 5.54:1 */
+  --grad-ler: var(--gradient-purple);                     /* 8.85:1 */
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema='escuro']) {
+    --perigo-txt: #a51f1f;
+    --menu-sub: var(--ink-mute);
+    --grad-ler: var(--gradient-purple);
+  }
+}
+.btn-ler { background: var(--grad-ler); }
+.menu-item-txt small { color: var(--menu-sub); }
+.menu-grupo.perigo .menu-grupo-rot { color: var(--perigo-txt); }
+.menu-item.perigo .menu-item-txt b { color: var(--perigo-txt); }
+.menu-item.perigo .menu-item-ico { color: var(--perigo-txt); }

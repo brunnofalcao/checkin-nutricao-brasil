@@ -1225,10 +1225,6 @@ function renderCheckinScreen() {
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input type="text" class="search-input" id="searchInput" placeholder="${isExpo ? 'Buscar empresa, estande ou pessoa…' : 'Buscar por nome ou código…'}" autocomplete="off" autocapitalize="off" autocorrect="off" value="${esc(state.search)}">
             <button class="search-clear ${state.search ? 'show' : ''}" id="searchClear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></button>
-            ${temCamera() ? `
-            <button class="search-scan" id="btnLeitor" type="button" title="Ler código" aria-label="Ler código com a câmera">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
-            </button>` : ''}
           </div>
           ${isExpo ? `
           <div class="expo-modos" role="tablist" aria-label="Modo de credenciamento">
@@ -1279,11 +1275,15 @@ function renderCheckinScreen() {
       <div class="list" id="list"></div>
       <div class="bottom-bar">
         <div class="bottom-bar-inner">
-          ${isAdmin()
-            ? `<button class="btn-primary" id="btnImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg><span>Importar lista</span></button>`
-            : `<button class="btn-primary" id="btnDashboard2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Dashboard</span></button>`
+          ${temCamera()
+            ? `<button class="btn-ler" id="btnLeitor" type="button" aria-label="Ler o código com a câmera">
+                 <span class="btn-ler-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg></span>
+                 <span class="btn-ler-txt"><b>Ler código</b><small>crachá impresso ou celular</small></span>
+               </button>`
+            : isAdmin()
+              ? `<button class="btn-primary" id="btnImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg><span>Importar lista</span></button>`
+              : `<button class="btn-primary" id="btnDashboard2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Dashboard</span></button>`
           }
-          <button class="btn-secondary" id="btnExport" title="Exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
         </div>
       </div>
     </div>
@@ -1313,7 +1313,7 @@ function renderCheckinScreen() {
   if ($("btnDashboard2")) $("btnDashboard2").addEventListener("click", openDashboard);
   if ($("btnImport")) $("btnImport").addEventListener("click", openImport);
   if ($("btnSettings")) $("btnSettings").addEventListener("click", openSettings);
-  $("btnExport").addEventListener("click", exportCSV);
+  if ($("btnExport")) $("btnExport").addEventListener("click", exportCSV);
 
   const si = $("searchInput");
   si.addEventListener("input", (ev) => {
@@ -2252,7 +2252,9 @@ function openSettings() {
       <div class="modal-handle"></div>
       <div class="modal-header"><div class="modal-title">Mais ações</div><button class="modal-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
       <div class="modal-body">
-        <div style="display:flex; flex-direction:column; gap:8px;">
+
+        <div class="menu-grupo">
+          <div class="menu-grupo-rot">Aparência</div>
           <div class="tema-app" role="radiogroup" aria-label="Tema">
             <span class="tema-app-rot">Tema</span>
             <div class="tema-app-opts">
@@ -2262,11 +2264,27 @@ function openSettings() {
               }).join('')}
             </div>
           </div>
-          <button class="btn-modal ghost" id="btnAddOne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Adicionar manualmente</button>
-          <button class="btn-modal ghost" id="btnEditEvent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar dados do evento</button>
-          <button class="btn-modal ghost" id="btnResetCheckins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Resetar check-ins</button>
-          <button class="btn-modal ghost" id="btnClearAll" style="color:#ff6b6b;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>Limpar TODA a lista</button>
         </div>
+
+        <div class="menu-grupo">
+          <div class="menu-grupo-rot">Lista de inscritos</div>
+          <button class="menu-item" id="btnImport"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg></span><span class="menu-item-txt"><b>Importar lista</b><small>Sobe uma planilha e cria os inscritos</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
+          <button class="menu-item" id="btnExport"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span class="menu-item-txt"><b>Exportar lista</b><small>Baixa tudo, com quem já fez check-in</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
+          <button class="menu-item" id="btnAddOne"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span><span class="menu-item-txt"><b>Adicionar manualmente</b><small>Para quem chegou sem estar na lista</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
+        </div>
+
+        <div class="menu-grupo">
+          <div class="menu-grupo-rot">Evento</div>
+          <button class="menu-item" id="btnEditEvent"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span><span class="menu-item-txt"><b>Editar dados do evento</b><small>Nome, data, local e horário</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
+        </div>
+
+        <div class="menu-grupo perigo">
+          <div class="menu-grupo-rot">Zona de risco</div>
+          <div class="menu-perigo-aviso">Estas duas não têm desfazer. Confira o evento no topo antes de tocar.</div>
+          <button class="menu-item perigo" id="btnResetCheckins"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></span><span class="menu-item-txt"><b>Resetar check-ins</b><small>Zera as presenças e mantém os inscritos</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
+          <button class="menu-item perigo" id="btnClearAll"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></span><span class="menu-item-txt"><b>Limpar TODA a lista</b><small>Apaga inscritos, histórico e check-ins</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
+        </div>
+
       </div>
     </div>
   `);
@@ -2287,6 +2305,8 @@ function openSettings() {
     });
   });
   $("btnAddOne").addEventListener("click", () => { closeModal(); setTimeout(() => openAddOne(), 250); });
+  $("btnImport").addEventListener("click", () => { closeModal(); setTimeout(() => openImport(), 250); });
+  $("btnExport").addEventListener("click", () => { closeModal(); setTimeout(() => exportCSV(), 250); });
   $("btnEditEvent").addEventListener("click", () => { closeModal(); setTimeout(() => openEventEditor(state.currentEvent), 250); });
   $("btnResetCheckins").addEventListener("click", async () => {
     if (!confirm("Resetar TODOS os check-ins deste evento? A lista de inscritos será mantida.")) return;
