@@ -1800,3 +1800,65 @@ body:has(.rede-bar:not([hidden])) #list { padding-bottom: 68px; }
 .menu-grupo.perigo .menu-grupo-rot { color: var(--perigo-txt); }
 .menu-item.perigo .menu-item-txt b { color: var(--perigo-txt); }
 .menu-item.perigo .menu-item-ico { color: var(--perigo-txt); }
+
+/* ============================================================
+   BUSCA CRUZADA — credencial que está em outra lista do mesmo evento
+
+   São quatro listas no mesmo prédio nos mesmos dias: congresso,
+   visitantes, expositores e corrida. Quem chega sem QR e é de outra
+   categoria antes ficava parado no balcão enquanto o operador fechava a
+   busca e trocava de aba. Agora aparece aqui, com a categoria à vista, e
+   é credenciado no lugar — o registro vai para o evento da pessoa.
+   ============================================================ */
+.lista-cruzada-aviso {
+  padding: 14px 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line-soft);
+}
+.row.cruzada {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--bg);
+}
+.row.cruzada .row-main { flex: 1; min-width: 0; }
+.row.cruzada .row-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row.cruzada .row-code {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  margin-top: 2px;
+}
+.row.cruzada.is-checked .row-name { color: var(--ink-mute); }
+.row.cruzada .row-ok {
+  font-size: 18px;
+  color: #34d399;
+  flex: none;
+  padding: 0 6px;
+}
+/* Alvo de toque generoso: é usado com fila na frente e uma mão só. */
+.btn-credenciar {
+  flex: none;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--violet-deep);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter .15s;
+}
+.btn-credenciar:active { filter: brightness(.85); }
