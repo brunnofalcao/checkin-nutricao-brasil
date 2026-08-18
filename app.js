@@ -24,6 +24,7 @@ const state = {
   events: [],
   currentEvent: null,
   participants: [],
+  familia: [],          // todas as credenciais do evento-pai: o balcão lê qualquer uma
   raceProfiles: {},     // participant_id -> race_profile (só em eventos de corrida)
   raceStock: {},        // tamanho -> qtd cadastrada no estoque (só em eventos de corrida)
   kitTab: "operacao",   // aba ativa do painel do kit
@@ -317,6 +318,52 @@ async function loadParticipants(eventId) {
   state.participants = data || [];
 }
 
+// Índice da família: TODAS as credenciais dos eventos irmãos (congresso,
+// visitantes, expositores, corrida), não só a lista aberta.
+//
+// É o que permite o balcão abrir o leitor uma vez e não fechar mais. Sem
+// isso, um crachá de visitante lido na aba do congresso responde "não está
+// nesta lista" — com a pessoa na frente, na fila, segurando um crachá
+// legítimo.
+//
+// Projeção enxuta de propósito: 1.535 pessoas em ~180 KB. Fica na memória
+// junto com a lista, porque o credenciamento tem que funcionar com a rede
+// do centro de convenções caindo.
+async function loadFamilia(eventId) {
+  state.familia = [];
+  const ev = state.events.find(x => x.id === eventId) || state.currentEvent;
+  const raiz = ev?.parent_event_id || eventId;
+
+  const irmaos = state.events
+    .filter(x => x.id === raiz || x.parent_event_id === raiz)
+    .map(x => x.id);
+  if (!irmaos.length) irmaos.push(eventId);
+
+  const { data, error } = await sb
+    .from("participants")
+    .select("id, name, code, lote, checked, checked_at, event_id, source")
+    .in("event_id", irmaos);
+  if (error) { console.warn("família:", error.message); return; }
+
+  const porEvento = {};
+  state.events.forEach(x => { porEvento[x.id] = x; });
+
+  state.familia = (data || []).map(p => {
+    const e = porEvento[p.event_id] || {};
+    return { ...p, _evento: e.name || "", _tipo: e.event_type || "", _categoria: categoriaDaCredencial(e.event_type, p.source) };
+  });
+}
+
+// O rótulo que o operador lê na tela. É o que diz o que entregar: crachá do
+// congresso, pulseira de visitante, kit da corrida, credencial de expositor.
+function categoriaDaCredencial(tipo, source) {
+  if (tipo === "congress")  return source === "cortesia" ? "Cortesia" : "Congressista";
+  if (tipo === "visitor")   return "Visitante";
+  if (tipo === "race")      return "Corredor";
+  if (tipo === "exhibitor") return "Expositor";
+  return "Credencial";
+}
+
 // Perfis da corrida (distância, camiseta, nutricionista) — só em evento race.
 // Query separada da lista de participantes: zero impacto no fluxo do congresso.
 async function loadRaceProfiles(eventId) {
@@ -409,7 +456,9 @@ async function marcaPresenca(p, novoChecked, { silencioso = false } = {}) {
   // 1. aparelho primeiro — isto não pode falhar por causa de rede
   await enfileira({
     participantId,
-    eventId: state.currentEvent?.id,
+    // O evento é o DA PESSOA, não o da aba aberta: com o leitor unificado,
+    // quem é lido pode pertencer a outra lista da mesma família.
+    eventId: p.event_id || state.currentEvent?.id,
     checked: novoChecked,
     userId: state.user?.id
   });
@@ -517,17 +566,35 @@ async function credenciaPorCodigo(bruto) {
     return { tipo: "erro", titulo: "Código ilegível", sub: "Tente de novo aproximando um pouco mais." };
   }
 
-  const p = state.participants.find(x => normalizaCodigo(x.code) === cod);
+  // Procura primeiro na lista aberta, depois na família inteira. A ordem
+  // importa: quem está na aba atual é a maioria dos casos e não paga o
+  // custo de olhar o índice grande.
+  let p = state.participants.find(x => normalizaCodigo(x.code) === cod);
+  let deOutraLista = null;
+
+  if (!p) {
+    const naFamilia = state.familia.find(x => normalizaCodigo(x.code) === cod);
+    if (naFamilia) {
+      // A pessoa é válida, só está em outra lista da mesma família. O balcão
+      // não deve nem perceber: credencia igual e diz o que entregar.
+      p = naFamilia;
+      deOutraLista = naFamilia._categoria;
+    }
+  }
+
   if (!p) {
     haptic("error");
     return {
       tipo: "erro",
-      titulo: "Não está nesta lista",
-      sub: `${cod} — confira se é o evento certo, ou busque pelo nome.`
+      titulo: "Credencial não encontrada",
+      sub: `${cod} — não está em nenhuma lista deste evento.`
     };
   }
 
   const nome = (p.name || "").split(" ")[0];
+  // O que entregar. Só aparece quando o crachá é de outra lista, senão vira
+  // ruído repetindo o óbvio na aba certa.
+  const etiqueta = deOutraLista ? ` · ${deOutraLista}` : "";
 
   // Já passou: avisa e NÃO desfaz. Ler o mesmo crachá de novo é o erro mais
   // comum da fila, e desfazer um check-in por causa dele é o pior resultado
@@ -536,24 +603,50 @@ async function credenciaPorCodigo(bruto) {
     haptic("warning");
     return {
       tipo: "repetido",
-      titulo: `${nome} já passou`,
+      titulo: `${nome} já passou${etiqueta}`,
       sub: p.checked_at ? `Credenciado às ${fmtTime(p.checked_at)}` : "Já estava credenciado",
       conta: credenciadosNoLeitor
     };
   }
 
   await marcaPresenca(p, true, { silencioso: true });
+  // Espelha no índice: ler o mesmo crachá de novo tem que dizer "já passou",
+  // mesmo quando a pessoa é de outra lista e não está em state.participants.
+  const naFam = state.familia.find(x => x.id === p.id);
+  if (naFam) { naFam.checked = true; naFam.checked_at = new Date().toISOString(); }
   credenciadosNoLeitor++;
   return {
     tipo: "ok",
-    titulo: nome,
+    titulo: `${nome}${etiqueta}`,
     // Offline o check-in vale, mas ainda não subiu. Dizer só "feito" faz o
     // balcão achar que está tudo no banco — e é justo quando não está.
     sub: !estaOnline()
       ? "salvo no aparelho — sobe quando a rede voltar"
-      : (isRaceEvent(e) ? "kit liberado" : "check-in feito"),
+      : ((p._tipo === "race" || (!p._tipo && isRaceEvent(e))) ? "kit liberado" : "check-in feito"),
     conta: credenciadosNoLeitor
   };
+}
+
+// Credencia alguém que pertence a outra lista da mesma família, sem obrigar
+// o operador a fechar a busca e trocar de aba. O registro vai para o evento
+// correto da pessoa — quem decide isso é o cadastro dela, não a tela aberta.
+async function credenciaDeOutraLista(participantId) {
+  const x = state.familia.find(f => f.id === participantId);
+  if (!x || x.checked) return;
+
+  if (!isEditable(state.currentEvent)) {
+    toast(motivoBloqueio(state.currentEvent), "error");
+    haptic("error");
+    return;
+  }
+
+  await marcaPresenca(x, true, { silencioso: true });
+  x.checked = true;
+  x.checked_at = new Date().toISOString();
+
+  const nome = (x.name || "").split(" ")[0];
+  toast(`✓ ${nome} — ${x._categoria}`, "success");
+  renderCheckinList();
 }
 
 function abreLeitorDeCodigo() {
@@ -1187,6 +1280,7 @@ async function openCheckin(event) {
   state.expoModo = "empresas";
   state.retirada = null;
   await loadParticipants(event.id);
+  await loadFamilia(event.id);
   if (isRaceEvent(event)) {
     await loadRaceProfiles(event.id);
     await loadRaceStock(event.id);
@@ -1443,6 +1537,39 @@ function renderCheckinList() {
     return;
   }
   if (arr.length === 0) {
+    // Antes de dizer "nada encontrado", olha as outras listas do mesmo
+    // evento. Quem está sem QR e é de outra categoria — corredor na fila do
+    // congresso, visitante na fila da corrida — é justamente quem ficaria
+    // parado no balcão enquanto o operador troca de aba para procurar.
+    const emOutras = q
+      ? state.familia.filter(x =>
+          x.event_id !== state.currentEvent?.id &&
+          (norm(x.name).includes(q) || norm(x.code || "").includes(q)))
+        .slice(0, 12)
+      : [];
+
+    if (emOutras.length) {
+      list.innerHTML = `
+        <div class="lista-cruzada-aviso">
+          Não está nesta lista, mas ${emOutras.length === 1 ? 'está' : 'estão'} em outra do mesmo evento.
+        </div>
+        ${emOutras.map(x => `
+          <div class="row cruzada${x.checked ? ' is-checked' : ''}">
+            <div class="row-main">
+              <div class="row-name">${esc(x.name)}</div>
+              <div class="row-code">${esc(x.code || "")} · ${esc(x._categoria)}${x.checked ? ` · credenciado ${fmtTime(x.checked_at)}` : ''}</div>
+            </div>
+            ${x.checked
+              ? '<span class="row-ok">✓</span>'
+              : `<button class="btn-credenciar" data-cruzada="${x.id}">Credenciar</button>`}
+          </div>`).join("")}
+      `;
+      list.querySelectorAll("[data-cruzada]").forEach(b => {
+        b.addEventListener("click", () => credenciaDeOutraLista(b.dataset.cruzada));
+      });
+      return;
+    }
+
     list.innerHTML = `
       <div class="list-empty">
         <div class="list-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
