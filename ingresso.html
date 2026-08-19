@@ -111,6 +111,24 @@ h1{
 /* Aviso de navegador embutido. O WhatsApp do iPhone nao entrega o
    arquivo do passe para a Carteira: ele desenha o arquivo como texto.
    Nao ha cabecalho que resolva, e o caminho e sair para o Safari. */
+.passo{display:flex; gap:13px; align-items:flex-start; margin-bottom:15px}
+.passo:last-of-type{margin-bottom:0}
+.passo .num{
+  flex:none; width:25px; height:25px; border-radius:50%;
+  background:var(--tinta); color:var(--papel);
+  font-size:13px; font-weight:800; display:flex; align-items:center;
+  justify-content:center; margin-top:1px;
+}
+.passo.feito .num{background:#1a9c6b; color:#fff}
+.passo.espera .num{background:transparent; color:var(--fraco); border:1.5px solid var(--linha)}
+.passo .txt{min-width:0; flex:1}
+.passo .tit{font-size:15px; font-weight:700; letter-spacing:-.01em; margin-bottom:2px}
+.passo.espera .tit{color:var(--fraco); font-weight:600}
+.passo .exp{font-size:13.5px; line-height:1.5; color:var(--fraco); text-align:left}
+.preso .manual{
+  font-size:12.5px; line-height:1.55; color:var(--fraco);
+  margin:16px 0 0; padding-top:14px; border-top:1px solid var(--linha);
+}
 .preso{
   background:var(--caixa); border:1px solid var(--linha);
   border-radius:16px; padding:22px; margin-bottom:18px;
@@ -365,26 +383,76 @@ h1{
       // esta presa mesmo que a leitura do user-agent falhe.
       if (/[?&]app=1/.test(location.search)) presoNoApp = true;
 
+      // A jornada do iPhone tem DOIS passos, e a tela mostra em qual deles a
+      // pessoa esta. Uma pagina so, tres estados, porque o link e o mesmo no
+      // e-mail e no WhatsApp e duas paginas de ingresso seria pior.
+      //
+      //   passo 1  esta no WhatsApp, precisa sair para o Safari
+      //   passo 2  ja chegou no Safari, so falta tocar no bot\u00e3o
+      //   normal   veio do e-mail ou de um navegador de verdade
+      var noPasso2 = /[?&]passo=2/.test(location.search) && !presoNoApp;
+
       if (presoNoApp) {
-        var aqui = location.href.split('#')[0];
+        // Passo 1. O link carrega passo=2 para que a tela do Safari saiba
+        // que a pessoa ja andou metade do caminho e nao repita tudo.
+        var aqui = location.href.split('#')[0].replace(/[?&]app=1/, '');
+        var destino = aqui + (aqui.indexOf('?') === -1 ? '?' : '&') + 'passo=2';
         $('botoes').innerHTML =
           '<div class="preso">' +
-            '<h3>Falta um passo</h3>' +
-            '<p>A carteira do iPhone n\u00e3o abre por dentro do WhatsApp. \u00c9 uma limita\u00e7\u00e3o dele, n\u00e3o do seu ingresso.</p>' +
-            '<ol>' +
-              '<li>Toque nos <strong>tr\u00eas pontinhos</strong> no canto da tela.</li>' +
-              '<li>Escolha <strong>Abrir no Safari</strong>.</li>' +
-              '<li>L\u00e1 no Safari, toque em <strong>Adicionar \u00e0 Apple Wallet</strong>.</li>' +
-            '</ol>' +
-            '<a class="safari" href="' + esc('x-safari-' + aqui) + '">Tentar abrir o Safari agora</a>' +
+            '<h3>Adicionar ao Wallet em 2 passos</h3>' +
+            '<div class="passo">' +
+              '<div class="num">1</div>' +
+              '<div class="txt">' +
+                '<div class="tit">Abrir no Safari</div>' +
+                '<div class="exp">A carteira do iPhone n\u00e3o abre por dentro do WhatsApp.</div>' +
+              '</div>' +
+            '</div>' +
+            '<a class="safari" href="' + esc('x-safari-' + destino) + '">Abrir no Safari</a>' +
+            '<div class="passo espera" style="margin-top:18px">' +
+              '<div class="num">2</div>' +
+              '<div class="txt">' +
+                '<div class="tit">Tocar em Adicionar \u00e0 Apple Wallet</div>' +
+                '<div class="exp">O bot\u00e3o aparece l\u00e1, j\u00e1 nesta mesma tela.</div>' +
+              '</div>' +
+            '</div>' +
+            '<p class="manual">Se o bot\u00e3o acima n\u00e3o abrir o Safari, toque nos tr\u00eas pontinhos no canto da tela e escolha <strong>Abrir no Safari</strong>.</p>' +
           '</div>';
+
+      } else if (noPasso2) {
+        // Passo 2. Chegou no Safari. Nao repete a explicacao: mostra que o
+        // primeiro passo esta feito e poe o botao na frente.
+        $('botoes').innerHTML =
+          '<div class="preso" style="margin-bottom:14px">' +
+            '<div class="passo feito">' +
+              '<div class="num">\u2713</div>' +
+              '<div class="txt"><div class="tit">Safari aberto</div></div>' +
+            '</div>' +
+            '<div class="passo" style="margin-bottom:0">' +
+              '<div class="num">2</div>' +
+              '<div class="txt">' +
+                '<div class="tit">Agora \u00e9 s\u00f3 tocar no bot\u00e3o abaixo</div>' +
+                '<div class="exp">O ingresso vai direto para a carteira do celular.</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' + pApple;
+
       } else {
+        // No Android NAO se oferece a Apple Wallet.
+        //
+        // O link levava ao arquivo .pkpass, que o Android nao sabe abrir:
+        // baixa e para ali. E exatamente o mesmo beco sem saida do iPhone
+        // no WhatsApp, so que ao contrario, e nao adianta consertar um lado
+        // e deixar o outro.
+        //
+        // No iPhone o inverso continua valendo, e de proposito: o Google
+        // Wallet tem app para iOS, entao "Tenho Android" ali leva a um
+        // caminho que funciona de verdade.
         $('botoes').innerHTML = iOS      ? pApple + oGoogle
-                              : android  ? pGoogle + oApple
+                              : android  ? pGoogle
                               : '<div class="ou">Abra no celular para guardar na carteira</div>' + pApple + pGoogle;
       }
 
-      $('nota').textContent = presoNoApp
+      $('nota').textContent = (presoNoApp || noPasso2)
         ? 'Sem pressa: o código acima entra no credenciamento do mesmo jeito, com ou sem passe.'
         : (iOS || android
             ? 'Depois de adicionar, ele fica na carteira do celular mesmo sem sinal.'
