@@ -121,9 +121,10 @@ h1{
 .preso li{font-size:14.5px; line-height:1.65; margin-bottom:6px}
 .preso li:last-child{margin-bottom:0}
 .safari{
+  margin-top:16px;
   display:block; width:100%; background:#000; color:#fff; text-align:center;
   text-decoration:none; padding:16px 20px; border-radius:14px;
-  font-size:16px; font-weight:700; letter-spacing:-.01em; margin-bottom:16px;
+  font-size:16px; font-weight:700; letter-spacing:-.01em; margin-bottom:0;
 }
 @media(prefers-color-scheme:dark){ .safari{background:#fff; color:#000} }
 
@@ -341,8 +342,22 @@ h1{
       //
       // Android nao entra aqui: o Google Wallet e um redirecionamento
       // comum e funciona dentro do WhatsApp normalmente.
-      var embutido = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\/|MicroMessenger/i.test(ua);
-      var presoNoApp = embutido && iOS;
+      // Procurar "WhatsApp" no user-agent NAO funciona: o navegador embutido
+      // do WhatsApp no iOS e um WKWebView e em varias versoes se apresenta
+      // como Safari comum. Foi por isso que a primeira tentativa passou
+      // batida no teste real.
+      //
+      // O sinal confiavel: Safari de verdade no iPhone sempre traz
+      // "Version/x.y" e "Safari/604.1". Navegador embutido em app omite os
+      // dois. Chrome (CriOS) e Firefox (FxiOS) no iOS mantem "Safari/",
+      // entao continuam com o botao normal.
+      var seIdentifica = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\/|MicroMessenger/i.test(ua);
+      var pareceSafari = /Safari\//i.test(ua);
+      var presoNoApp = iOS && (seIdentifica || !pareceSafari);
+
+      // O ?app=1 vem do desvio da funcao: se a pessoa chegou por ali, ela
+      // esta presa mesmo que a leitura do user-agent falhe.
+      if (/[?&]app=1/.test(location.search)) presoNoApp = true;
 
       if (presoNoApp) {
         var aqui = location.href.split('#')[0];
@@ -350,12 +365,12 @@ h1{
           '<div class="preso">' +
             '<h3>Falta um passo</h3>' +
             '<p>A carteira do iPhone nao abre por dentro do WhatsApp. E uma limitacao dele, nao do seu ingresso.</p>' +
-            '<a class="safari" href="' + esc('x-safari-' + aqui) + '">Abrir no Safari</a>' +
             '<ol>' +
-              '<li>Se o botao acima nao abrir, toque nos tres pontinhos no canto da tela.</li>' +
+              '<li>Toque nos <strong>tr\u00eas pontinhos</strong> no canto da tela.</li>' +
               '<li>Escolha <strong>Abrir no Safari</strong>.</li>' +
-              '<li>Toque de novo em Adicionar a Apple Wallet.</li>' +
+              '<li>L\u00e1 no Safari, toque em <strong>Adicionar \u00e0 Apple Wallet</strong>.</li>' +
             '</ol>' +
+            '<a class="safari" href="' + esc('x-safari-' + aqui) + '">Tentar abrir o Safari agora</a>' +
           '</div>' + oGoogle;
       } else {
         $('botoes').innerHTML = iOS      ? pApple + oGoogle
