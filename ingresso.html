@@ -370,14 +370,14 @@ h1{
         $('botoes').innerHTML =
           '<div class="preso">' +
             '<h3>Falta um passo</h3>' +
-            '<p>A carteira do iPhone nao abre por dentro do WhatsApp. E uma limitacao dele, nao do seu ingresso.</p>' +
+            '<p>A carteira do iPhone n\u00e3o abre por dentro do WhatsApp. \u00c9 uma limita\u00e7\u00e3o dele, n\u00e3o do seu ingresso.</p>' +
             '<ol>' +
               '<li>Toque nos <strong>tr\u00eas pontinhos</strong> no canto da tela.</li>' +
               '<li>Escolha <strong>Abrir no Safari</strong>.</li>' +
               '<li>L\u00e1 no Safari, toque em <strong>Adicionar \u00e0 Apple Wallet</strong>.</li>' +
             '</ol>' +
             '<a class="safari" href="' + esc('x-safari-' + aqui) + '">Tentar abrir o Safari agora</a>' +
-          '</div>' + oGoogle;
+          '</div>';
       } else {
         $('botoes').innerHTML = iOS      ? pApple + oGoogle
                               : android  ? pGoogle + oApple
