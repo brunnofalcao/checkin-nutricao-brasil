@@ -988,7 +988,12 @@ function renderEvents() {
             ` : ''}
           </div>
           <div class="event-status">
-            ${e.event_type === 'race' ? '<span class="race-pill">Corrida</span>' : ''}
+            ${(() => {
+              const T = { congress: ['Congresso', '#6f4d89'], race: ['Corrida', '#2f8f68'],
+                          visitor: ['Visitante', '#2b6ea8'], exhibitor: ['Expositor', '#8b5fbf'] };
+              const [rot, cor] = T[e.event_type] || T.congress;
+              return `<span class="tipo-pill" style="display:inline-block;padding:4px 11px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:${cor};white-space:nowrap">${rot}</span>`;
+            })()}
             ${e.status === 'ativo'
               ? '<span class="status-pill ativo">AO VIVO</span>'
               : e.status === 'embreve'
