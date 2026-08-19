@@ -2429,6 +2429,11 @@ function openSettings() {
         </div>
 
         <div class="menu-grupo">
+          <div class="menu-grupo-rot">Acesso ao painel</div>
+          <button class="menu-item" id="btnEquipe"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="menu-item-txt"><b>Equipe</b><small>Quem entra no painel e com qual permissão</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
+        </div>
+
+        <div class="menu-grupo">
           <div class="menu-grupo-rot">Evento</div>
           <button class="menu-item" id="btnEditEvent"><span class="menu-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span><span class="menu-item-txt"><b>Editar dados do evento</b><small>Nome, data, local e horário</small></span><span class="menu-item-seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></button>
         </div>
@@ -2463,6 +2468,7 @@ function openSettings() {
   $("btnImport").addEventListener("click", () => { closeModal(); setTimeout(() => openImport(), 250); });
   $("btnExport").addEventListener("click", () => { closeModal(); setTimeout(() => exportCSV(), 250); });
   $("btnEditEvent").addEventListener("click", () => { closeModal(); setTimeout(() => openEventEditor(state.currentEvent), 250); });
+  if ($("btnEquipe")) $("btnEquipe").addEventListener("click", () => { closeModal(); setTimeout(() => openEquipe(), 250); });
   $("btnResetCheckins").addEventListener("click", async () => {
     if (!confirm("Resetar TODOS os check-ins deste evento? A lista de inscritos será mantida.")) return;
     const ids = state.participants.filter(p => p.checked).map(p => p.id);
@@ -2499,6 +2505,202 @@ function openSettings() {
     closeModal();
     await loadParticipants(state.currentEvent.id);
     renderCheckinList();
+  });
+}
+
+// =============================================================
+// EQUIPE · quem entra no painel
+//
+// Criar login exige a Admin API do Supabase, que só roda com a chave de
+// serviço, e essa chave não pode viver no navegador. Por isso criar, trocar
+// senha e remover passam pela edge function equipe-admin, que confere no
+// token quem está pedindo. A listagem é a RPC equipe_lista(), que tem a
+// mesma trava.
+//
+// A senha é definida aqui, na mão, e não por convite por e-mail. É escolha
+// deliberada: equipe de balcão não abre caixa de entrada às 7h da manhã.
+// Em compensação, essas contas devem ser apagadas depois do evento.
+// =============================================================
+const PAPEIS_PAINEL = {
+  admin:       { rot: "Admin",       desc: "Tudo, inclusive esta tela" },
+  operadora:   { rot: "Operadora",   desc: "Credencia na porta" },
+  expositores: { rot: "Expositores", desc: "Área de exposição" }
+};
+
+function senhaSugerida() {
+  const letras = "abcdefghijkmnpqrstuvwxyz";
+  const nums = "23456789";
+  const b = new Uint8Array(10);
+  crypto.getRandomValues(b);
+  let s = "";
+  for (let i = 0; i < 6; i++) s += letras[b[i] % letras.length];
+  for (let i = 6; i < 10; i++) s += nums[b[i] % nums.length];
+  return s;
+}
+
+function quandoFoi(iso) {
+  if (!iso) return "nunca entrou";
+  const d = new Date(iso);
+  if (isNaN(d)) return "nunca entrou";
+  const dias = Math.floor((Date.now() - d) / 86400000);
+  if (dias === 0) return "entrou hoje";
+  if (dias === 1) return "entrou ontem";
+  if (dias < 30) return `entrou há ${dias} dias`;
+  return "entrou em " + d.toLocaleDateString("pt-BR");
+}
+
+async function equipeChama(corpo) {
+  const { data, error } = await sb.functions.invoke("equipe-admin", { body: corpo });
+  if (error) {
+    // O corpo do erro traz o motivo; o objeto de erro sozinho só diz que houve.
+    try { return await error.context.json(); } catch (e) { return { erro: "rede" }; }
+  }
+  return data || {};
+}
+
+const ERROS_EQUIPE = {
+  sem_permissao: "Só admin pode mexer aqui.",
+  nome: "Falta o nome.",
+  email: "E-mail inválido.",
+  senha_curta: "A senha precisa de pelo menos 8 caracteres.",
+  papel: "Permissão inválida.",
+  ja_existe: "Já existe acesso com esse e-mail.",
+  proprio: "Você não pode remover o seu próprio acesso.",
+  ultimo_admin: "Este é o último admin. O painel não pode ficar sem nenhum.",
+  nao_existe: "Esse acesso não existe mais.",
+  rede: "Sem conexão. Tente de novo."
+};
+const erroEquipe = (r) => ERROS_EQUIPE[r?.erro] || r?.detalhe || "Não consegui completar.";
+
+async function openEquipe() {
+  if (!isAdmin()) { toast("Só admin", "error"); return; }
+
+  openModal(`
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header"><div class="modal-title">Equipe</div><button class="modal-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="modal-body" id="equipeCorpo">
+        <div style="padding:26px 0;text-align:center;opacity:.6;font-size:14px">Carregando…</div>
+      </div>
+    </div>
+  `);
+  await pintaEquipe();
+}
+
+async function pintaEquipe() {
+  const alvo = $("equipeCorpo");
+  if (!alvo) return;
+
+  const { data, error } = await sb.rpc("equipe_lista");
+  if (error || !data?.ok) {
+    alvo.innerHTML = `<div style="padding:22px 0;text-align:center;font-size:14px;color:#ff6b6b">${erroEquipe(data)}</div>`;
+    return;
+  }
+
+  const lista = data.equipe || [];
+  const sugestao = senhaSugerida();
+
+  alvo.innerHTML = `
+    <div class="menu-grupo">
+      <div class="menu-grupo-rot">Com acesso hoje (${lista.length})</div>
+      ${lista.map(p => `
+        <div style="display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border:1px solid var(--linha,rgba(255,255,255,.09));border-radius:10px;margin-bottom:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:14.5px;line-height:1.3">${esc(p.nome)}${p.eh_voce ? ' <span style="font-size:10px;font-weight:800;opacity:.6;letter-spacing:.08em">VOCÊ</span>' : ''}</div>
+            <div style="font-size:12.5px;opacity:.62;word-break:break-all;margin-top:1px">${esc(p.email)}</div>
+            <div style="font-size:11.5px;opacity:.5;margin-top:3px">${(PAPEIS_PAINEL[p.papel] || {}).rot || p.papel} · ${quandoFoi(p.ultimo_login)}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;flex:none">
+            <button class="eq-senha" data-id="${p.id}" data-nome="${esc(p.nome)}" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:inherit;font-size:11px;font-weight:700;padding:5px 9px;border-radius:6px;cursor:pointer;white-space:nowrap">Nova senha</button>
+            ${p.eh_voce ? '' : `<button class="eq-remove" data-id="${p.id}" data-nome="${esc(p.nome)}" style="background:rgba(255,107,107,.13);border:1px solid rgba(255,107,107,.35);color:#ff6b6b;font-size:11px;font-weight:700;padding:5px 9px;border-radius:6px;cursor:pointer;white-space:nowrap">Remover</button>`}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="menu-grupo">
+      <div class="menu-grupo-rot">Dar acesso a alguém</div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <input id="eqNome" type="text" placeholder="Nome" autocomplete="off"
+          style="width:100%;padding:11px 13px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:inherit;font-size:15px">
+        <input id="eqEmail" type="email" placeholder="E-mail" autocomplete="off" autocapitalize="off" spellcheck="false"
+          style="width:100%;padding:11px 13px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:inherit;font-size:15px">
+        <div style="display:flex;gap:7px">
+          <input id="eqSenha" type="text" value="${sugestao}" autocomplete="off" spellcheck="false"
+            style="flex:1;padding:11px 13px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:inherit;font-size:15px;font-family:ui-monospace,Menlo,monospace">
+          <button id="eqSorteia" type="button" style="flex:none;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:inherit;font-size:12px;font-weight:700;padding:0 13px;border-radius:9px;cursor:pointer">Sortear</button>
+        </div>
+        <div style="display:flex;gap:7px">
+          ${Object.entries(PAPEIS_PAINEL).map(([k, v], i) => `
+            <button type="button" class="eq-papel${i === 1 ? ' on' : ''}" data-papel="${k}"
+              style="flex:1;padding:9px 6px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:${i === 1 ? 'rgba(167,139,250,.22)' : 'rgba(255,255,255,.04)'};color:inherit;cursor:pointer;font-size:12.5px;font-weight:700">${v.rot}</button>
+          `).join("")}
+        </div>
+        <div id="eqPapelDesc" style="font-size:12px;opacity:.55;margin-top:-3px">${PAPEIS_PAINEL.operadora.desc}</div>
+        <div id="eqErro" style="font-size:13px;color:#ff6b6b;min-height:0"></div>
+        <button id="eqCria" class="btn-primary" style="width:100%;padding:13px;border-radius:10px;border:none;background:#6b2d8b;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Criar acesso</button>
+        <div style="font-size:12px;opacity:.5;line-height:1.45">A pessoa entra com o e-mail e a senha acima. Anote a senha antes de criar: ela não aparece de novo.</div>
+      </div>
+    </div>
+
+    <div class="menu-grupo">
+      <div class="menu-perigo-aviso" style="margin:0">Contas de equipe carregam a lista de inscritos no aparelho, com e-mail e telefone. Crie só o necessário e remova todas depois do evento.</div>
+    </div>
+  `;
+
+  let papelEscolhido = "operadora";
+
+  $("eqSorteia").addEventListener("click", () => { $("eqSenha").value = senhaSugerida(); });
+
+  document.querySelectorAll(".eq-papel").forEach(b => {
+    b.addEventListener("click", () => {
+      papelEscolhido = b.dataset.papel;
+      document.querySelectorAll(".eq-papel").forEach(o => {
+        const on = o === b;
+        o.style.background = on ? "rgba(167,139,250,.22)" : "rgba(255,255,255,.04)";
+      });
+      $("eqPapelDesc").textContent = PAPEIS_PAINEL[papelEscolhido].desc;
+    });
+  });
+
+  $("eqCria").addEventListener("click", async () => {
+    const nome = $("eqNome").value.trim();
+    const email = $("eqEmail").value.trim();
+    const senha = $("eqSenha").value;
+    $("eqErro").textContent = "";
+
+    if (!nome) { $("eqErro").textContent = "Falta o nome."; return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $("eqErro").textContent = "E-mail inválido."; return; }
+    if (senha.length < 8) { $("eqErro").textContent = "A senha precisa de pelo menos 8 caracteres."; return; }
+
+    const b = $("eqCria"); b.disabled = true; b.textContent = "Criando…";
+    const r = await equipeChama({ acao: "cria", nome, email, senha, papel: papelEscolhido });
+    if (!r.ok) {
+      $("eqErro").textContent = erroEquipe(r);
+      b.disabled = false; b.textContent = "Criar acesso";
+      return;
+    }
+    toast(`${nome} agora tem acesso`);
+    await pintaEquipe();
+  });
+
+  document.querySelectorAll(".eq-senha").forEach(b => {
+    b.addEventListener("click", async () => {
+      const nova = senhaSugerida();
+      if (!confirm(`Nova senha para ${b.dataset.nome}:\n\n${nova}\n\nAnote agora. Confirmar a troca?`)) return;
+      const r = await equipeChama({ acao: "senha", id: b.dataset.id, senha: nova });
+      toast(r.ok ? "Senha trocada" : erroEquipe(r), r.ok ? "success" : "error");
+    });
+  });
+
+  document.querySelectorAll(".eq-remove").forEach(b => {
+    b.addEventListener("click", async () => {
+      if (!confirm(`Remover o acesso de ${b.dataset.nome}?\n\nA pessoa perde o login imediatamente.`)) return;
+      const r = await equipeChama({ acao: "remove", id: b.dataset.id });
+      if (!r.ok) { toast(erroEquipe(r), "error"); return; }
+      toast("Acesso removido");
+      await pintaEquipe();
+    });
   });
 }
 
