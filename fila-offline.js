@@ -54,29 +54,87 @@ function tx(modo, fn) {
 }
 
 // Se o IndexedDB não existir (navegador antigo, aba anônima travada), a fila
-// vira memória. Perde ao fechar a aba, mas não derruba o credenciamento.
+// cai para localStorage, e só em último caso para memória.
+//
+// O comentário do topo explica por que localStorage não serve como
+// armazenamento PRINCIPAL: é síncrono e trava a tela gravando a lista inteira.
+// Como plano B ele serve bem, porque aqui só entra check-in ainda não
+// confirmado, que são poucos itens de cada vez. E ele sobrevive a fechar a
+// aba, que é exatamente o que a memória não fazia: o operador via "salvo no
+// aparelho" e não estava.
+const CHAVE_RESPALDO = "nb-fila-respaldo";
 const memoria = new Map();
 let usandoMemoria = false;
+let usandoLocal = false;
+
+function leLocal() {
+  try {
+    const cru = localStorage.getItem(CHAVE_RESPALDO);
+    const obj = cru ? JSON.parse(cru) : {};
+    return obj && typeof obj === "object" ? obj : {};
+  } catch { return null; }
+}
+
+function gravaLocal(obj) {
+  try { localStorage.setItem(CHAVE_RESPALDO, JSON.stringify(obj)); return true; }
+  catch { return false; }
+}
+
+// Chamado quando o IndexedDB falha. Escolhe o plano B e leva junto o que já
+// estiver em memória, para a troca não perder leitura nenhuma.
+function caiParaRespaldo() {
+  if (usandoLocal || usandoMemoria) return;
+  const atual = leLocal();
+  if (atual !== null) {
+    for (const [id, item] of memoria) atual[id] = item;
+    if (gravaLocal(atual)) { usandoLocal = true; memoria.clear(); return; }
+  }
+  usandoMemoria = true;
+}
 
 async function guarda(item) {
+  if (usandoLocal) {
+    const obj = leLocal() || {};
+    obj[item.id] = item;
+    if (!gravaLocal(obj)) { usandoLocal = false; usandoMemoria = true; memoria.set(item.id, item); }
+    return item;
+  }
   if (usandoMemoria) { memoria.set(item.id, item); return item; }
   try { await tx("readwrite", (l) => l.put(item)); }
-  catch { usandoMemoria = true; memoria.set(item.id, item); }
+  catch {
+    caiParaRespaldo();
+    if (usandoLocal) { const o = leLocal() || {}; o[item.id] = item; gravaLocal(o); }
+    else memoria.set(item.id, item);
+  }
   return item;
 }
 
 async function remove(id) {
+  if (usandoLocal) {
+    const obj = leLocal() || {};
+    delete obj[id];
+    gravaLocal(obj);
+    return;
+  }
   if (usandoMemoria) { memoria.delete(id); return; }
   try { await tx("readwrite", (l) => l.delete(id)); }
-  catch { memoria.delete(id); }
+  catch {
+    caiParaRespaldo();
+    if (usandoLocal) { const o = leLocal() || {}; delete o[id]; gravaLocal(o); }
+    else memoria.delete(id);
+  }
 }
 
 export async function listaFila() {
+  if (usandoLocal) return Object.values(leLocal() || {});
   if (usandoMemoria) return [...memoria.values()];
   try {
     const itens = await tx("readonly", (l) => l.getAll());
     return itens || [];
-  } catch { usandoMemoria = true; return [...memoria.values()]; }
+  } catch {
+    caiParaRespaldo();
+    return usandoLocal ? Object.values(leLocal() || {}) : [...memoria.values()];
+  }
 }
 
 // id estável por participante: dois toques na mesma pessoa não viram duas
@@ -203,5 +261,10 @@ export async function _limpaTudo() {
   const f = await listaFila();
   for (const i of f) await remove(i.id);
   memoria.clear();
+  try { localStorage.removeItem(CHAVE_RESPALDO); } catch {}
 }
-export function _forcaMemoria(v) { usandoMemoria = !!v; }
+export function _forcaMemoria(v) { usandoMemoria = !!v; if (v) usandoLocal = false; }
+export function _forcaLocal(v) { usandoLocal = !!v; if (v) usandoMemoria = false; }
+export function _ondeEstou() {
+  return usandoLocal ? "localStorage" : usandoMemoria ? "memoria" : "indexeddb";
+}
