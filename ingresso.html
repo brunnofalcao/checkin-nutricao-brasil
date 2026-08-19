@@ -351,9 +351,15 @@ h1{
       // "Version/x.y" e "Safari/604.1". Navegador embutido em app omite os
       // dois. Chrome (CriOS) e Firefox (FxiOS) no iOS mantem "Safari/",
       // entao continuam com o botao normal.
-      var seIdentifica = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\/|MicroMessenger/i.test(ua);
+      // Regra tirada de acesso real, nao de suposicao. O WhatsApp do iPhone
+      // manda isto:
+      //   ... Version/26.6.1 Mobile/15E148 Safari/604.1 [WAiOS/2.26.31]
+      // Ou seja: NAO escreve "WhatsApp", escreve "WAiOS" entre colchetes no
+      // fim, e TRAZ "Safari/". As duas regras anteriores erraram por isso.
+      var marcaDeApp = /\[[A-Za-z]+(iOS|Android)?\/[\d.]+\]\s*$/i.test((ua || '').trim());
+      var seIdentifica = /WAiOS|WhatsApp|Instagram|FBAN|FBAV|FB_IAB|FBIOS|Messenger|Line\/|MicroMessenger|GSA\//i.test(ua);
       var pareceSafari = /Safari\//i.test(ua);
-      var presoNoApp = iOS && (seIdentifica || !pareceSafari);
+      var presoNoApp = iOS && (marcaDeApp || seIdentifica || !pareceSafari);
 
       // O ?app=1 vem do desvio da funcao: se a pessoa chegou por ali, ela
       // esta presa mesmo que a leitura do user-agent falhe.
