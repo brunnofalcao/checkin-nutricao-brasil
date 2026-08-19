@@ -108,6 +108,25 @@ h1{
 }
 .outra u{text-decoration-thickness:1px; text-underline-offset:3px}
 
+/* Aviso de navegador embutido. O WhatsApp do iPhone nao entrega o
+   arquivo do passe para a Carteira: ele desenha o arquivo como texto.
+   Nao ha cabecalho que resolva, e o caminho e sair para o Safari. */
+.preso{
+  background:var(--caixa); border:1px solid var(--linha);
+  border-radius:16px; padding:22px; margin-bottom:18px;
+}
+.preso h3{font-size:17px; font-weight:800; letter-spacing:-.02em; margin:0 0 8px}
+.preso p{font-size:14.5px; line-height:1.6; color:var(--fraco); margin:0 0 16px}
+.preso ol{margin:0; padding-left:20px}
+.preso li{font-size:14.5px; line-height:1.65; margin-bottom:6px}
+.preso li:last-child{margin-bottom:0}
+.safari{
+  display:block; width:100%; background:#000; color:#fff; text-align:center;
+  text-decoration:none; padding:16px 20px; border-radius:14px;
+  font-size:16px; font-weight:700; letter-spacing:-.01em; margin-bottom:16px;
+}
+@media(prefers-color-scheme:dark){ .safari{background:#fff; color:#000} }
+
 .ou{
   text-align:center; font-size:12px; color:var(--fraco);
   margin:16px 0 12px; letter-spacing:.01em;
@@ -315,13 +334,40 @@ h1{
         : 'Guarde no celular e apresente na entrada. Funciona sem internet.';
 
       // ordem pelo aparelho; o outro fica disponível mas discreto
-      $('botoes').innerHTML = iOS      ? pApple + oGoogle
-                            : android  ? pGoogle + oApple
-                            : '<div class="ou">Abra no celular para guardar na carteira</div>' + pApple + pGoogle;
+      // Navegador embutido de app (WhatsApp, Instagram, Facebook) no iPhone
+      // nao consegue entregar o passe para a Carteira: ele abre o arquivo
+      // como texto. E limitacao do navegador deles, nao do ingresso, e nao
+      // existe cabecalho que corrija. O unico caminho e sair para o Safari.
+      //
+      // Android nao entra aqui: o Google Wallet e um redirecionamento
+      // comum e funciona dentro do WhatsApp normalmente.
+      var embutido = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\/|MicroMessenger/i.test(ua);
+      var presoNoApp = embutido && iOS;
 
-      $('nota').textContent = iOS || android
-        ? 'Depois de adicionar, ele fica na carteira do celular mesmo sem sinal.'
-        : 'Você também pode fazer o check-in só com o código acima.';
+      if (presoNoApp) {
+        var aqui = location.href.split('#')[0];
+        $('botoes').innerHTML =
+          '<div class="preso">' +
+            '<h3>Falta um passo</h3>' +
+            '<p>A carteira do iPhone nao abre por dentro do WhatsApp. E uma limitacao dele, nao do seu ingresso.</p>' +
+            '<a class="safari" href="' + esc('x-safari-' + aqui) + '">Abrir no Safari</a>' +
+            '<ol>' +
+              '<li>Se o botao acima nao abrir, toque nos tres pontinhos no canto da tela.</li>' +
+              '<li>Escolha <strong>Abrir no Safari</strong>.</li>' +
+              '<li>Toque de novo em Adicionar a Apple Wallet.</li>' +
+            '</ol>' +
+          '</div>' + oGoogle;
+      } else {
+        $('botoes').innerHTML = iOS      ? pApple + oGoogle
+                              : android  ? pGoogle + oApple
+                              : '<div class="ou">Abra no celular para guardar na carteira</div>' + pApple + pGoogle;
+      }
+
+      $('nota').textContent = presoNoApp
+        ? 'Sem pressa: o código acima entra no credenciamento do mesmo jeito, com ou sem passe.'
+        : (iOS || android
+            ? 'Depois de adicionar, ele fica na carteira do celular mesmo sem sinal.'
+            : 'Você também pode fazer o check-in só com o código acima.');
 
       // Badge oficial que não carrega vira botão de texto — nunca imagem quebrada.
       Array.prototype.forEach.call($('botoes').querySelectorAll('.placa img'), function (img) {
