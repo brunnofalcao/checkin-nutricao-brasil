@@ -259,7 +259,10 @@ async function loadProfile() {
     state.profile = {
       id: state.user.id,
       email: state.user.email,
-      role: state.user.email.includes("falcao") ? "admin" : "operadora"
+      // Papel minimo quando o perfil nao carrega. Nunca elevar por e-mail:
+      // autorizacao decidida por pedaco de string e o tipo de coisa que vira
+      // buraco no dia em que alguem criar um caminho que nao passa por RLS.
+      role: "operadora"
     };
   }
 }
@@ -283,6 +286,19 @@ async function doLogout() {
 }
 
 function isAdmin() { return state.profile?.role === "admin"; }
+
+// Janela do evento: dos 15 dias antes ate uma semana depois. Dentro dela, a
+// acao de apagar a lista inteira sai do menu. Nao existe motivo legitimo para
+// zerar inscritos com o credenciamento no ar, e existe motivo de sobra para o
+// toque errado custar o dia.
+function naJanelaDoEvento(evento) {
+  const dia = evento?.event_date || evento?.date_start;
+  if (!dia) return false;
+  const quando = new Date(String(dia).length === 10 ? dia + "T12:00:00" : dia);
+  if (isNaN(quando)) return false;
+  const dias = (quando - new Date()) / 86400000;
+  return dias <= 15 && dias >= -7;
+}
 
 // =============================================================
 // EVENTS DATA
@@ -890,7 +906,14 @@ function parseImport(text) {
 }
 
 function generateCode() {
-  return "NB" + Math.random().toString(36).slice(2, 10).toUpperCase();
+  // Math.random nao serve para codigo que vale entrada no evento. Mesmo
+  // comprimento visual de antes, origem criptografica.
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let sorteio = "";
+  for (const n of bytes) sorteio += alfabeto[n % alfabeto.length];
+  return "NB" + sorteio;
 }
 
 // =============================================================
@@ -2444,14 +2467,26 @@ function openSettings() {
     if (!confirm("Resetar TODOS os check-ins deste evento? A lista de inscritos será mantida.")) return;
     const ids = state.participants.filter(p => p.checked).map(p => p.id);
     if (!ids.length) { toast("Nada para resetar"); closeModal(); return; }
-    const { error } = await sb.from("participants").update({ checked: false, checked_at: null, checked_by: null, whatsapp_sent: false }).in("id", ids);
+    // Nao tocar em whatsapp_sent aqui. O gatilho trg_whatsapp_confirmacao roda
+    // em UPDATE e a primeira coisa que ele checa e esse campo: zerar rearma o
+    // envio para quem se inscreveu nos ultimos 2 dias. Presenca e mensageria
+    // sao comandos diferentes. Reenvio e trabalho da fila de disparo.
+    const { error } = await sb.from("participants").update({ checked: false, checked_at: null, checked_by: null }).in("id", ids);
     if (error) { toast("Erro: " + error.message, "error"); return; }
     toast("Check-ins resetados");
     closeModal();
     await loadParticipants(state.currentEvent.id);
     renderCheckinList();
   });
-  $("btnClearAll").addEventListener("click", async () => {
+  const btnLimpar = $("btnClearAll");
+  if (naJanelaDoEvento(state.currentEvent)) {
+    // Some do menu em vez de ficar desabilitado: botao cinza convida a
+    // insistir, botao ausente nao.
+    if (btnLimpar) btnLimpar.remove();
+    const avisoPerigo = document.querySelector(".menu-perigo-aviso");
+    if (avisoPerigo) avisoPerigo.textContent =
+      "Apagar a lista inteira fica indisponível na semana do evento. Resetar check-ins não tem desfazer: confira o evento no topo antes de tocar.";
+  } else if (btnLimpar) btnLimpar.addEventListener("click", async () => {
     const total = state.participants.length;
     if (!total) { toast("Lista já está vazia"); closeModal(); return; }
     if (!confirm(`⚠️ APAGAR todos os ${total} participantes deste evento?\n\nIsso vai deletar a lista inteira (incluindo check-ins, histórico e dados de WhatsApp).\n\nUse antes de reimportar uma lista do zero.\n\nEsta ação NÃO pode ser desfeita.`)) return;
