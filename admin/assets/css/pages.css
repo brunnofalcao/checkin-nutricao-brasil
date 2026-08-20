@@ -2742,3 +2742,78 @@
 .ct-lista .table th, .ct-lista .table td { font-size: 12.5px; padding: 9px 12px; }
 .ct-import { margin-top: 6px; }
 .ct-import .lote-drop { margin-top: 4px; }
+
+
+/* ═══ EQUIPE DO EXPOSITOR · edição de credenciais ═══
+   A equipe deixou de ser só leitura. Cada linha edita no lugar, dentro da
+   própria tabela: abrir um segundo modal por cima da empresa fecharia a
+   empresa, porque o painel só mantém um modal por vez. */
+.exp-equipe-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 8px;
+}
+.exp-equipe-topo .page-sub { margin: 0; }
+
+.exp-eq-botoes {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.exp-eq-edit > td { background: var(--violet-soft); }
+
+.exp-eq-grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+.exp-eq-campo { display: flex; flex-direction: column; gap: 4px; }
+.exp-eq-campo .exp-dado-rot { margin: 0; }
+
+.exp-eq-retira {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.exp-eq-retira input { flex: none; }
+
+.exp-eq-acoes { display: flex; gap: 8px; margin-top: 14px; }
+
+/* Só existe um lugar que apaga presença registrada, e ele precisa parecer
+   diferente de salvar. */
+.btn-perigo {
+  background: var(--red);
+  color: var(--on-fill);
+  border-color: var(--red);
+}
+.btn-perigo:hover:not(:disabled) { filter: brightness(0.92); }
+
+@media (max-width: 640px) {
+  .exp-eq-grade { grid-template-columns: 1fr; }
+  .exp-equipe-topo { flex-direction: column; align-items: stretch; }
+}
+.exp-eq-aviso {
+  margin-top: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--violet-border);
+  padding-left: 10px;
+}
+/* A tabela da equipe ganhou uma coluna e passou a estourar a largura do
+   modal, cortando o nome à esquerda. Largura fixa e quebra de texto
+   resolvem sem tirar informação da tela. */
+.exp-equipe .table { table-layout: fixed; width: 100%; }
+.exp-equipe .table td, .exp-equipe .table th { overflow-wrap: anywhere; }
+.exp-eq-tirar { margin-left: auto; color: var(--red); }
+.exp-eq-acoes { align-items: center; }
+.exp-eq-selo { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 4px; }
+.exp-eq-selo .row-sub { font-size: 11.5px; }

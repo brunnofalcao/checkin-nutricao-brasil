@@ -335,6 +335,13 @@ function abreEmpresa(x) {
   const c = {};                       // referências dos campos do formulário
   const ficha = h('div', { class: 'exp-ficha' });
   const barra = h('div', { class: 'exp-modal-acoes' });
+  const equipe = h('div', { class: 'exp-equipe' });
+  // Qual linha está aberta para edição: o id do membro, 'novo', ou null.
+  // Uma por vez — duas linhas abertas ao mesmo tempo em tablet fazem a
+  // pessoa salvar a errada.
+  let linhaAberta = null;
+  let gravando = false;
+  let ultimaTroca = null;
 
   const dado = (rot, valor, tom) =>
     h('div', { class: 'exp-dado' },
@@ -459,8 +466,288 @@ function abreEmpresa(x) {
     toast.success(`${nome} salva.`);
   }
 
+
+  // ── EQUIPE ─────────────────────────────────────────────────────────
+  //
+  // Até aqui a equipe era só leitura: a empresa preenchia sozinha pelo
+  // manual e, se errasse um nome ou faltasse alguém, a única saída era
+  // pedir para a empresa refazer. Na véspera do evento isso não existe.
+  //
+  // Uma credencial por vez, de propósito. A função expo_salva, que o
+  // formulário público usa, substitui a equipe inteira e apaga quem não
+  // veio na lista. Aqui quem edita mexe numa linha, então o banco tem
+  // funções próprias de uma linha (expo_credencial_salva / _remove).
+  async function recarregaEquipe() {
+    const { data, error } = await supabase.from('exhibitor_members')
+      .select('id, cargo, pode_retirar, retirado_em, retirado_por_nome, ' +
+              'participants!exhibitor_members_participant_id_fkey(id, name, phone, email, code, checked)')
+      .eq('exhibitor_id', x.id);
+    if (error) { toast.danger(error.message); return; }
+    x.time = (data ?? []).map((m) => ({
+      id: m.id, cargo: m.cargo, pode_retirar: m.pode_retirar,
+      retirado_em: m.retirado_em, retirado_por: m.retirado_por_nome,
+      nome: m.participants?.name, phone: m.participants?.phone,
+      email: m.participants?.email, participant_id: m.participants?.id,
+      code: m.participants?.code
+    })).sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
+    x.retirados = x.time.filter((p) => p.retirado_em).length;
+  }
+
+  // Recado do banco traduzido. 'limite' e 'ja_retirou' são decisões de
+  // negócio, não falha — quem lê precisa saber o que fazer a seguir.
+  const RECADO = {
+    sem_permissao: 'Seu acesso não permite mexer em credenciais.',
+    pessoa:        'Essa pessoa não existe mais. Feche e abra de novo.',
+    sem_contato:   'Sem e-mail e sem WhatsApp não dá para mandar o ingresso.',
+    empresa:       'Empresa não encontrada. Feche e abra de novo.',
+    nome:          'A pessoa precisa de nome.',
+    credencial:    'Essa credencial não existe mais. Feche e abra de novo.',
+    duplicado:     'Essa pessoa já está cadastrada nesta empresa.',
+    ja_retirou:    'Essa pessoa já retirou o crachá. Remover apaga o registro de presença dela.'
+  };
+
+  async function salvaCredencial(campos, membroId) {
+    if (gravando) return;
+    const nome = (campos.nome.value || '').trim();
+    if (!nome) { toast.danger('A pessoa precisa de nome.'); campos.nome.focus(); return; }
+
+    gravando = true; pintaEquipe();
+    const { data, error } = await supabase.rpc('expo_credencial_salva', {
+      p_exhibitor_id: x.id,
+      p_nome:         nome,
+      p_cargo:        (campos.cargo.value || '').trim() || null,
+      p_whatsapp:     (campos.fone.value || '').trim() || null,
+      p_email:        (campos.email.value || '').trim() || null,
+      p_pode_retirar: !!campos.retira.checked,
+      p_member_id:    membroId ?? null
+    });
+    gravando = false;
+
+    if (error) { toast.danger(error.message); pintaEquipe(); return; }
+    if (data?.erro === 'limite') {
+      toast.danger(`Esta empresa tem ${data.limite} credenciais. Aumente o limite na ficha antes de cadastrar mais.`);
+      pintaEquipe(); return;
+    }
+    if (data?.erro) { toast.danger(RECADO[data.erro] || data.erro); pintaEquipe(); return; }
+
+    await recarregaEquipe();
+    // Trocar a pessoa cancela o ingresso antigo e gera outro. Quem editou
+    // precisa ver isso na hora: o crachá que já estava no celular de alguém
+    // parou de valer, e o novo ainda não saiu de casa.
+    linhaAberta = data?.trocou_codigo ? 'ingresso:' + membroId : null;
+    ultimaTroca = data?.trocou_codigo
+      ? { membroId, nome, codigo: data.codigo, antigo: data.codigo_antigo }
+      : null;
+    pintaEquipe();
+    // Os contadores do topo e o aviso de "acima do limite" leem x.time.
+    if (E.view) pinta(E.view); else redesenha();
+    if (data?.criou) toast.success(`${nome} cadastrada. Código ${data.codigo}.`);
+    else if (data?.trocou_codigo) toast.success(`${nome} entrou no lugar. Ingresso anterior cancelado.`);
+    else toast.success(`${nome} atualizada.`);
+  }
+
+  // O ingresso novo só sai se alguém mandar. Botão explícito, uma pessoa por
+  // vez: disparo automático em edição vira mensagem repetida para quem teve o
+  // nome corrigido duas vezes no mesmo dia.
+  //
+  // Sai pelos dois canais, igual a um ingresso novo qualquer: e-mail e
+  // WhatsApp de utilidade. Quem despacha é a fila no banco, não esta tela.
+  // O passe de wallet é um HMAC com chave que só existe na edge function,
+  // então logo depois da troca a coluna está vazia e o botão do template
+  // ficaria sem parâmetro, que é recusa na Meta. A fila espera o passe.
+  async function mandaIngresso(pid, nome) {
+    if (gravando) return;
+    gravando = true; pintaEquipe();
+    const { data, error } = await supabase.rpc('credencial_ingresso_reenvia',
+      { p_participant_id: pid });
+    gravando = false;
+    linhaAberta = null; ultimaTroca = null;
+    pintaEquipe();
+
+    if (error) { toast.danger(error.message); return; }
+    if (data?.erro === 'sem_contato') {
+      toast.danger(`${nome} não tem e-mail nem WhatsApp no cadastro. Preencha um dos dois e mande de novo.`);
+      return;
+    }
+    if (data?.erro) { toast.danger(RECADO[data.erro] || data.erro); return; }
+    if (data?.ja_estava_na_fila) { toast.success(`O ingresso de ${nome} já estava na fila.`); return; }
+    toast.success(data?.passe_pronto
+      ? `Ingresso novo de ${nome} saindo por e-mail e WhatsApp.`
+      : `Ingresso de ${nome} na fila. Sai por e-mail e WhatsApp em até dois minutos, assim que o passe ficar pronto.`);
+  }
+
+  function linhaIngressoNovo(p) {
+    const t = ultimaTroca || {};
+    return h('tr', { class: 'exp-eq-edit' },
+      h('td', { colspan: '4' },
+        h('div', { class: 'pn-alerta', style: { marginBottom: '10px' } },
+          h('div', {},
+            h('div', { class: 'pn-alerta-titulo' },
+              'Ingresso anterior cancelado' + (t.antigo ? ` (${t.antigo})` : '')),
+            h('div', { class: 'pn-alerta-texto' },
+              `O código de ${t.nome || p.nome} agora é ${t.codigo || p.code}. ` +
+              'O crachá antigo não abre mais a porta e o passe de celular foi refeito. ' +
+              'Mande o ingresso novo, que sai por e-mail e WhatsApp, para a pessoa conseguir entrar.'))),
+        h('div', { class: 'exp-eq-acoes' },
+          h('button', { class: 'btn btn-primary btn-sm',
+            onclick: () => mandaIngresso(p.participant_id, t.nome || p.nome) },
+            gravando ? 'Enviando…' : 'Enviar o ingresso novo'),
+          h('button', { class: 'btn btn-ghost btn-sm',
+            onclick: () => { linhaAberta = null; ultimaTroca = null; pintaEquipe(); } },
+            'Mando depois'))));
+  }
+
+  async function removeCredencial(p, forcar) {
+    if (gravando) return;
+    gravando = true; pintaEquipe();
+    const { data, error } = await supabase.rpc('expo_credencial_remove',
+      { p_member_id: p.id, p_forcar: !!forcar });
+    gravando = false;
+
+    if (error) { toast.danger(error.message); pintaEquipe(); return; }
+    if (data?.erro === 'ja_retirou') {
+      pintaEquipe();
+      openConfirmaRemocao(p);
+      return;
+    }
+    if (data?.erro) { toast.danger(RECADO[data.erro] || data.erro); pintaEquipe(); return; }
+
+    await recarregaEquipe();
+    linhaAberta = null;
+    pintaEquipe();
+    if (E.view) pinta(E.view); else redesenha();
+    toast.success(`${p.nome} removida da equipe.`);
+  }
+
+  // Só há um modal por vez no painel, então não dá para abrir um diálogo
+  // por cima da empresa: perderia a tela toda. A confirmação vira uma
+  // faixa dentro da própria lista.
+  function openConfirmaRemocao(p) {
+    linhaAberta = 'confirma:' + p.id;
+    pintaEquipe();
+  }
+
+  const campoLinha = (rot, ref, props) =>
+    h('label', { class: 'exp-eq-campo' },
+      h('span', { class: 'exp-dado-rot' }, rot),
+      h('input', Object.assign({ class: 'input', ref }, props)));
+
+  function formularioCredencial(p) {
+    const campos = {};
+    const guarda = (k) => (el) => { campos[k] = el; };
+    return h('tr', { class: 'exp-eq-edit' },
+      h('td', { colspan: '4' },
+        h('div', { class: 'exp-eq-grade' },
+          campoLinha('Nome no crachá', guarda('nome'),
+            { value: p?.nome || '', placeholder: 'Nome e sobrenome' }),
+          campoLinha('Cargo no crachá', guarda('cargo'),
+            { value: p?.cargo || '', placeholder: 'opcional' }),
+          campoLinha('WhatsApp', guarda('fone'),
+            { value: p?.phone || '', placeholder: '61 99999-0000' }),
+          campoLinha('E-mail', guarda('email'),
+            { value: p?.email || '', placeholder: 'opcional', type: 'email' })),
+        p ? h('div', { class: 'exp-eq-aviso' },
+              'Trocar nome, e-mail ou telefone cancela o ingresso atual e gera um código novo. ' +
+              'Só o cargo pode mudar sem mexer no crachá.') : null,
+        h('label', { class: 'exp-eq-retira' },
+          h('input', { type: 'checkbox', ref: guarda('retira'),
+                       checked: p?.pode_retirar ? 'checked' : null }),
+          h('span', {}, 'Esta pessoa pode retirar os crachás da empresa no balcão')),
+        h('div', { class: 'exp-eq-acoes' },
+          h('button', { class: 'btn btn-primary btn-sm',
+            onclick: () => salvaCredencial(campos, p?.id ?? null) },
+            gravando ? 'Salvando…' : (p ? 'Salvar' : 'Cadastrar')),
+          h('button', { class: 'btn btn-ghost btn-sm',
+            onclick: () => { linhaAberta = null; pintaEquipe(); } }, 'Cancelar'),
+          // Tirar alguém da equipe mora aqui dentro, atrás do gesto de abrir
+          // a pessoa. Um botão de apagar na lista, em tablet, é acidente.
+          p ? h('button', { class: 'btn btn-ghost btn-sm exp-eq-tirar',
+                onclick: () => removeCredencial(p, false) }, 'Tirar da equipe') : null)));
+  }
+
+  function linhaConfirma(p) {
+    return h('tr', { class: 'exp-eq-edit' },
+      h('td', { colspan: '4' },
+        h('div', { class: 'pn-alerta trava', style: { marginBottom: '10px' } },
+          h('div', {},
+            h('div', { class: 'pn-alerta-titulo' }, p.nome + ' já retirou o crachá.'),
+            h('div', { class: 'pn-alerta-texto' },
+              'Remover apaga também o registro de que ela esteve aqui. ' +
+              'Se foi só o nome que saiu errado, use Editar em vez de remover.'))),
+        h('div', { class: 'exp-eq-acoes' },
+          h('button', { class: 'btn btn-perigo btn-sm',
+            onclick: () => removeCredencial(p, true) },
+            gravando ? 'Removendo…' : 'Remover mesmo assim'),
+          h('button', { class: 'btn btn-ghost btn-sm',
+            onclick: () => { linhaAberta = null; pintaEquipe(); } }, 'Cancelar'))));
+  }
+
+  // O modal é estreito. Cinco colunas espremiam o nome e encavalavam o
+  // selo do crachá no botão, então o estado do crachá desceu para junto do
+  // nome, que é onde a pessoa procura por ele de qualquer jeito.
+  function linhaLeitura(p) {
+    return h('tr', {},
+      h('td', {},
+        h('div', { class: 'row-name' }, p.nome),
+        h('div', { class: 'exp-eq-selo' },
+          p.retirado_em
+            ? h('span', { class: 'status live' }, 'Retirado')
+            : h('span', { class: 'status done' }, 'No balcão'),
+          p.code ? h('span', { class: 'mono row-sub' }, p.code) : null),
+        p.pode_retirar ? h('div', { class: 'row-sub' }, 'retira os crachás') : null,
+        p.retirado_por ? h('div', { class: 'row-sub' }, 'retirou com ' + p.retirado_por) : null),
+      h('td', {}, p.cargo || '—'),
+      h('td', { class: 'mono' }, p.phone ? telefoneBonito(p.phone) : '—'),
+      h('td', { class: 'exp-eq-botoes' },
+        h('button', { class: 'btn btn-ghost btn-sm',
+          onclick: () => { linhaAberta = p.id; pintaEquipe(); } }, 'Editar')));
+  }
+
+  function pintaEquipe() {
+    const cheio = x.time.length >= (x.limite_credenciais || 0);
+    const cabecalho = h('div', { class: 'exp-equipe-topo' },
+      h('div', { class: 'page-sub' },
+        `Equipe · ${x.time.length} de ${x.limite_credenciais}`),
+      linhaAberta === 'novo' ? null : h('button',
+        { class: 'btn btn-secondary btn-sm',
+          onclick: () => {
+            if (cheio) {
+              toast.danger(`Esta empresa tem ${x.limite_credenciais} credenciais. Aumente o limite na ficha primeiro.`);
+              return;
+            }
+            linhaAberta = 'novo'; pintaEquipe();
+          } },
+        'Adicionar pessoa'));
+
+    const corpo = [];
+    for (const p of x.time) {
+      if (linhaAberta === p.id) corpo.push(formularioCredencial(p));
+      else if (linhaAberta === 'confirma:' + p.id) corpo.push(linhaConfirma(p));
+      else if (linhaAberta === 'ingresso:' + p.id) { corpo.push(linhaLeitura(p)); corpo.push(linhaIngressoNovo(p)); }
+      else corpo.push(linhaLeitura(p));
+    }
+    if (linhaAberta === 'novo') corpo.push(formularioCredencial(null));
+
+    equipe.replaceChildren(
+      cabecalho,
+      corpo.length
+        ? h('table', { class: 'table' },
+            h('thead', {}, h('tr', {},
+              h('th', {}, 'Pessoa'),
+              h('th', { style: { width: '24%' } }, 'Cargo no crachá'),
+              h('th', { style: { width: '22%' } }, 'WhatsApp'),
+              h('th', { style: { width: '80px' } }, ''))),
+            h('tbody', {}, ...corpo))
+        : h('div', { class: 'empty', style: { padding: '28px 10px' } },
+            h('div', { class: 'empty-title' }, 'Ninguém cadastrado ainda'),
+            h('div', { class: 'empty-body' },
+              'A empresa ainda não abriu o manual. Copie o link e mande de novo, ' +
+              'ou cadastre a equipe aqui mesmo.')));
+  }
+
   pintaLeitura();
   pintaBarra();
+  pintaEquipe();
 
   openModal({
     title: x.empresa || 'Empresa sem nome',
@@ -484,33 +771,7 @@ function abreEmpresa(x) {
           'Atalho direto para credenciar, já com o código na URL.',
           link, () => copia(link, 'Link do cadastro de equipe copiado.'))),
 
-      h('div', { class: 'page-sub', style: { margin: '22px 0 8px' } },
-        `Equipe · ${x.time.length} de ${x.limite_credenciais}`),
-
-      x.time.length
-        ? h('table', { class: 'table' },
-            h('thead', {}, h('tr', {},
-              h('th', {}, 'Pessoa'),
-              h('th', { style: { width: '24%' } }, 'Cargo no crachá'),
-              h('th', { style: { width: '20%' } }, 'WhatsApp'),
-              h('th', { style: { width: '18%' } }, 'Crachá'))),
-            h('tbody', {}, ...x.time.map((p) =>
-              h('tr', {},
-                h('td', {},
-                  h('div', { class: 'row-name' }, p.nome),
-                  p.pode_retirar ? h('div', { class: 'row-sub' }, 'retira os crachás') : null),
-                h('td', {}, p.cargo || '—'),
-                h('td', { class: 'mono' }, p.phone ? telefoneBonito(p.phone) : '—'),
-                h('td', {},
-                  p.retirado_em
-                    ? h('div', {},
-                        h('span', { class: 'status live' }, 'Retirado'),
-                        p.retirado_por ? h('div', { class: 'row-sub' }, 'por ' + p.retirado_por) : null)
-                    : h('span', { class: 'status done' }, 'No balcão'))))))
-        : h('div', { class: 'empty', style: { padding: '28px 10px' } },
-            h('div', { class: 'empty-title' }, 'Ninguém cadastrado ainda'),
-            h('div', { class: 'empty-body' },
-              'A empresa ainda não abriu o manual. Copie o link e mande de novo.'))),
+      equipe),
     actions: [
       { label: 'Fechar', kind: 'btn-ghost', onClick: (fechar) => fechar() },
       { label: 'Copiar manual', kind: 'btn-primary',

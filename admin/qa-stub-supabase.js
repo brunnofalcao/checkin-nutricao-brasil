@@ -178,7 +178,10 @@ const TABELAS = {
   cortesias_uso: () => CORTESIAS_USO,
   nb_publico: () => NB_PUBLICO,
   race_profiles: () => RACE_PROFILES,
-  exhibitor_members: () => EXHIBITOR_MEMBERS,
+  // A tela de equipe recarrega uma empresa só, então precisa dos membros
+  // com o exhibitor_id junto. Os de crachás continuam vindo por participant_id.
+  exhibitor_members: () => EXHIBITOR_MEMBERS.concat(
+    EXHIBITORS.flatMap((x) => (x.exhibitor_members || []).map((m) => ({ ...m, exhibitor_id: x.id })))),
   whatsapp_templates: () => WA_TEMPLATES,
   profiles: () => PERFIS,
   ai_kb: () => AI_KB,
@@ -363,6 +366,73 @@ export function createClient() {
         };
         EXHIBITORS = [...EXHIBITORS, novo];
         return { data: { codigo: novo.codigo, token: novo.token, id: novo.id }, error: null };
+      }
+      // Credencial avulsa: o painel edita uma linha por vez. A função de
+      // verdade também cria a pessoa e devolve o código, então o stub faz o
+      // mesmo — senão a tela testa um caminho que não existe em produção.
+      if (nome === 'expo_credencial_salva') {
+        const x = EXHIBITORS.find((e) => e.id === args.p_exhibitor_id);
+        if (!x) return { data: { erro: 'empresa' }, error: null };
+        const nomePessoa = String(args.p_nome || '').trim();
+        if (!nomePessoa) return { data: { erro: 'nome' }, error: null };
+        const fone = String(args.p_whatsapp || '').replace(/\D/g, '') || null;
+        const mail = String(args.p_email || '').trim().toLowerCase() || null;
+        const cargo = String(args.p_cargo || '').trim() || null;
+        const lista = x.exhibitor_members || (x.exhibitor_members = []);
+
+        if (args.p_member_id == null) {
+          if (lista.length >= (x.limite_credenciais || 0)) {
+            return { data: { erro: 'limite', limite: x.limite_credenciais || 0 }, error: null };
+          }
+          if (lista.some((m) => String(m.participants?.name || '').toLowerCase() === nomePessoa.toLowerCase())) {
+            return { data: { erro: 'duplicado' }, error: null };
+          }
+          const novoId = 'm-novo-' + Math.random().toString(36).slice(2, 8);
+          lista.push({
+            id: novoId, cargo, pode_retirar: !!args.p_pode_retirar,
+            retirado_em: null, retirado_por_nome: null,
+            participants: { id: 'p-' + novoId, name: nomePessoa, phone: fone,
+                            email: mail, code: 'EX' + novoId.slice(-6).toUpperCase(), checked: false }
+          });
+          EXHIBITORS = [...EXHIBITORS];
+          return { data: { ok: true, criou: true, participant_id: 'p-' + novoId,
+                           codigo: lista[lista.length - 1].participants.code }, error: null };
+        }
+
+        const m = lista.find((r) => r.id === args.p_member_id);
+        if (!m) return { data: { erro: 'credencial' }, error: null };
+        // Trocar a pessoa cancela o ingresso e gera outro; mudar só o cargo não.
+        const trocou = String(m.participants?.name || '').toLowerCase() !== nomePessoa.toLowerCase()
+          || (m.participants?.email || null) !== mail
+          || (m.participants?.phone || null) !== fone;
+        const antigo = m.participants?.code || null;
+        m.cargo = cargo;
+        m.pode_retirar = !!args.p_pode_retirar;
+        m.participants = { ...m.participants, name: nomePessoa, phone: fone, email: mail,
+          code: trocou ? 'EX' + Math.random().toString(36).slice(2, 8).toUpperCase() : antigo };
+        EXHIBITORS = [...EXHIBITORS];
+        return { data: { ok: true, criou: false, participant_id: m.participants.id,
+                         trocou_codigo: trocou, codigo: m.participants.code,
+                         codigo_antigo: trocou ? antigo : null }, error: null };
+      }
+      // Reenvio do ingresso: a tela só pede, quem despacha é a fila do banco.
+      if (nome === 'credencial_ingresso_reenvia') {
+        window.__QA_REENVIO = (window.__QA_REENVIO || []).concat([args.p_participant_id]);
+        const repetido = window.__QA_REENVIO.filter((i) => i === args.p_participant_id).length > 1;
+        return { data: { ok: true, template: 'nb_credencial_expositor',
+                         passe_pronto: false, ja_estava_na_fila: repetido }, error: null };
+      }
+      if (nome === 'expo_credencial_remove') {
+        for (const x of EXHIBITORS) {
+          const lista = x.exhibitor_members || [];
+          const m = lista.find((r) => r.id === args.p_member_id);
+          if (!m) continue;
+          if (m.retirado_em && !args.p_forcar) return { data: { erro: 'ja_retirou' }, error: null };
+          x.exhibitor_members = lista.filter((r) => r.id !== args.p_member_id);
+          EXHIBITORS = [...EXHIBITORS];
+          return { data: { ok: true }, error: null };
+        }
+        return { data: { erro: 'credencial' }, error: null };
       }
       if (nome === 'checkin_participant' || nome === 'uncheckin_participant') {
         const ligar = nome === 'checkin_participant';
