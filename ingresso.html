@@ -1,491 +1,436 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Seu ingresso · Nutrição Brasil</title>
-<meta name="description" content="Adicione seu ingresso do Nutrição Brasil à carteira do celular.">
-<meta name="robots" content="noindex">
-<meta name="theme-color" content="#0D0618">
-<link rel="preconnect" href="https://res.cloudinary.com">
+<title>Cores dos Ingressos NB2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* =============================================================
-   INGRESSO · redesenho ago/2026 (Claude Design)
-   Mesmo contrato de dados e mesma lógica do arquivo anterior;
-   muda o desenho: cartão premium (verniz de luz + fio interno +
-   sombra na cor do tipo), rodapé do cartão unificado com o passe
-   (campo variável + Datas + Local), raios maiores, nota central.
-   ============================================================= */
 :root{
-  --tinta:#0D0618; --papel:#F7F5FA; --caixa:#FFFFFF;
-  --linha:#E4DCED; --fraco:#6F6383; --roxo:#5A2475;
-  --fundo-cartao:#6f4d89; --texto-cartao:#FFFFFF;
-  --sombra-cartao:0 24px 44px -14px rgba(111,77,137,.62), 0 4px 12px rgba(13,6,24,.10);
+  --ground:#faf9fb; --surface:#ffffff; --surface-2:#f4f2f7;
+  --ink:#1a1424; --ink-2:#4a4358; --muted:#6b6478;
+  --line:#e5e2ea; --line-2:#d5d0de;
+  --accent:#6f4d89; --accent-soft:#f0eaf6;
+  --alerta:#a8232b; --alerta-soft:#fbecec;
+  --ok:#0f6b4a; --ok-soft:#e7f4ee;
+  --sombra:0 1px 2px rgba(26,20,36,.05), 0 8px 24px -12px rgba(26,20,36,.18);
 }
 @media (prefers-color-scheme:dark){
-  :root{ --tinta:#FFFFFF; --papel:#080014; --caixa:#15102B;
-         --linha:#2A2547; --fraco:#9A94B8; --roxo:#A78BFA; }
+  :root:not([data-theme="light"]){
+    --ground:#110f18; --surface:#1a1725; --surface-2:#221e30;
+    --ink:#f1eff6; --ink-2:#c3bdd0; --muted:#918aa2;
+    --line:#2b2639; --line-2:#3a3450;
+    --accent:#b795d4; --accent-soft:#251d33;
+    --alerta:#f08b90; --alerta-soft:#2e1a1d;
+    --ok:#6ec49b; --ok-soft:#16281f;
+    --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
 }
+:root[data-theme="dark"]{
+  --ground:#110f18; --surface:#1a1725; --surface-2:#221e30;
+  --ink:#f1eff6; --ink-2:#c3bdd0; --muted:#918aa2;
+  --line:#2b2639; --line-2:#3a3450;
+  --accent:#b795d4; --accent-soft:#251d33;
+  --alerta:#f08b90; --alerta-soft:#2e1a1d;
+  --ok:#6ec49b; --ok-soft:#16281f;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
 body{
-  background:var(--papel); color:var(--tinta);
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15.5px; line-height:1.6;
   -webkit-font-smoothing:antialiased;
-  padding:28px 20px calc(32px + env(safe-area-inset-bottom));
-  display:flex; justify-content:center;
 }
-.folha{width:100%; max-width:400px}
+.pagina{max-width:940px; margin:0 auto; padding:44px 24px 90px}
 
-.topo{text-align:center; margin-bottom:24px}
-.topo img{height:24px; opacity:.95}
+h1,h2,h3{font-family:"Bricolage Grotesque","DM Sans",sans-serif; text-wrap:balance; margin:0}
+h1{font-size:clamp(30px,4.4vw,42px); font-weight:700; letter-spacing:-.022em; line-height:1.1}
+h2{font-size:19px; font-weight:700; letter-spacing:-.012em}
+h3{font-size:15px; font-weight:600}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
 
-h1{
-  font-size:27px; line-height:1.18; font-weight:800;
-  letter-spacing:-.035em; margin:0 0 8px; text-align:center;
+header{border-bottom:2px solid var(--ink); padding-bottom:22px}
+.olho{
+  font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--accent); margin-bottom:10px;
 }
-.sub{
-  font-size:14.5px; line-height:1.5; color:var(--fraco);
-  margin:0 0 24px; text-align:center;
+.lead{color:var(--ink-2); max-width:64ch; margin:12px 0 0; font-size:16px}
+.fonte{
+  margin-top:18px; font-size:12.5px; color:var(--muted);
+  display:flex; flex-wrap:wrap; gap:6px 18px;
+}
+.fonte b{color:var(--ink-2); font-weight:500}
+
+section{margin-top:44px}
+.secao-cab{display:flex; align-items:baseline; gap:12px; margin-bottom:6px}
+.secao-cab .conta{
+  font-size:12px; color:var(--muted); font-family:"JetBrains Mono",monospace;
+}
+.secao-nota{color:var(--muted); font-size:14px; margin:0 0 20px; max-width:66ch}
+
+/* ── grupos de ingresso ───────────────────────────── */
+.grupo{margin-top:30px}
+.grupo-t{
+  font-size:11px; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line);
+  margin-bottom:16px;
+}
+.linhas{display:flex; flex-direction:column; gap:12px}
+
+.linha{
+  display:grid; grid-template-columns:220px 1fr; gap:20px; align-items:center;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:12px; padding:14px; box-shadow:var(--sombra);
 }
 
-/* ---------- o cartão ---------- */
+/* o cartão de verdade, nas cores de verdade */
 .cartao{
-  background:var(--fundo-cartao); color:var(--texto-cartao);
-  border-radius:24px; padding:22px;
-  box-shadow:var(--sombra-cartao);
-  margin-bottom:24px; position:relative; overflow:hidden;
+  border-radius:9px; padding:13px 15px; min-height:96px;
+  display:flex; flex-direction:column; justify-content:space-between;
+  position:relative; overflow:hidden;
 }
-/* verniz de luz — funciona sobre qualquer cor da API */
-.cartao::before{
-  content:""; position:absolute; inset:0; pointer-events:none;
-  background:linear-gradient(150deg,rgba(255,255,255,.22),rgba(255,255,255,.06) 36%,rgba(255,255,255,0) 55%,rgba(13,6,24,.09) 100%);
-}
-/* fio interno */
 .cartao::after{
-  content:""; position:absolute; inset:0; pointer-events:none; border-radius:24px;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.26), inset 0 1px 0 rgba(255,255,255,.30);
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(160deg,rgba(255,255,255,.13),transparent 62%);
+  pointer-events:none;
 }
-.cartao>*{position:relative; z-index:1}
-.cartao-topo{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:24px}
-.cartao-logo{height:21px; width:auto; max-width:150px; object-fit:contain}
-.cartao-selo{text-align:right; flex:none}
-.cartao-selo b{display:block; font-size:13px; font-weight:800; letter-spacing:-.01em; line-height:1.2}
-.cartao-selo small{display:block; font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; opacity:.65; margin-bottom:2px}
-.cartao-rot{font-size:9.5px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; opacity:.65; margin-bottom:4px}
-.cartao-nome{font-size:21px; font-weight:700; letter-spacing:-.02em; line-height:1.22; margin-bottom:20px; word-break:break-word}
-.cartao-pe{display:flex; gap:24px}
-.cartao-pe div{min-width:0}
-.cartao-pe small{display:block; font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; opacity:.65; margin-bottom:3px}
-.cartao-pe b{display:block; font-size:13.5px; font-weight:650; letter-spacing:-.01em}
+.cartao-topo{display:flex; justify-content:space-between; align-items:flex-start; gap:10px}
+.cartao-marca{font-size:11.5px; font-weight:700; letter-spacing:-.01em; opacity:.85}
+.cartao-tipo{text-align:right; line-height:1.25}
+.cartao-cab{font-size:8.5px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; opacity:.72}
+.cartao-rot{font-size:13px; font-weight:700; letter-spacing:.01em}
+.cartao-pe{font-size:9px; letter-spacing:.09em; text-transform:uppercase; opacity:.6}
 
-/* ---------- botões ----------
-   Apple e Google proíbem, por escrito, botão recriado à mão: tem que ser
-   a arte oficial deles, sem mexer em fonte, cor, raio ou espaçamento.
-   O CSS cuida só da moldura (placa branca) em volta. */
-.placa{
-  display:flex; align-items:center; justify-content:center;
-  width:100%; padding:12px;                 /* folga > 8dp exigidos */
-  background:#fff; border-radius:18px;
-  border:1px solid rgba(13,6,24,.07);
-  box-shadow:0 1px 2px rgba(13,6,24,.05), 0 10px 26px rgba(13,6,24,.06);
-  margin-bottom:10px; text-decoration:none;
-  transition:transform .13s ease;
+.dados{display:flex; flex-direction:column; gap:9px; min-width:0}
+.dados-topo{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+.dados-topo h3{font-size:16px}
+.chave{
+  font-family:"JetBrains Mono",monospace; font-size:11.5px;
+  color:var(--muted); background:var(--surface-2);
+  padding:2px 7px; border-radius:5px; border:1px solid var(--line);
 }
-.placa:active{transform:scale(.975)}
-.placa img{display:block; height:52px; width:auto}   /* mínimo é 48dp */
+.campos{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  gap:10px 18px;
+}
+.campo-r{font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+.campo-v{font-size:13.5px; color:var(--ink-2); margin-top:1px}
+.hex{display:inline-flex; align-items:center; gap:7px}
+.amostra{width:13px; height:13px; border-radius:4px; border:1px solid rgba(128,120,145,.4); flex:none}
+.gente{font-weight:700; color:var(--ink)}
+.zero{color:var(--muted); font-weight:400}
 
-/* Reserva de quando a arte oficial não carrega — só texto, nunca badge imitado. */
-.placa.reserva{
-  background:#111; color:#fff; border-color:#111;
-  min-height:56px; font-size:15.5px; font-weight:650; letter-spacing:-.015em;
-}
-
-.outra{
-  display:block; text-align:center;
-  font-size:13.5px; font-weight:600; color:var(--fraco);
-  text-decoration:none; padding:13px 10px; margin-bottom:2px;
-}
-.outra u{text-decoration-thickness:1px; text-underline-offset:3px}
-
-/* Aviso de navegador embutido. O WhatsApp do iPhone nao entrega o
-   arquivo do passe para a Carteira: ele desenha o arquivo como texto.
-   Nao ha cabecalho que resolva, e o caminho e sair para o Safari. */
-.passo{display:flex; gap:13px; align-items:flex-start; margin-bottom:15px}
-.passo:last-of-type{margin-bottom:0}
-.passo .num{
-  flex:none; width:25px; height:25px; border-radius:50%;
-  background:var(--tinta); color:var(--papel);
-  font-size:13px; font-weight:800; display:flex; align-items:center;
-  justify-content:center; margin-top:1px;
-}
-.passo.feito .num{background:#1a9c6b; color:#fff}
-.passo.espera .num{background:transparent; color:var(--fraco); border:1.5px solid var(--linha)}
-.passo .txt{min-width:0; flex:1}
-.passo .tit{font-size:15px; font-weight:700; letter-spacing:-.01em; margin-bottom:2px}
-.passo.espera .tit{color:var(--fraco); font-weight:600}
-.passo .exp{font-size:13.5px; line-height:1.5; color:var(--fraco); text-align:left}
-.preso .manual{
-  font-size:12.5px; line-height:1.55; color:var(--fraco);
-  margin:16px 0 0; padding-top:14px; border-top:1px solid var(--linha);
-}
-.preso{
-  background:var(--caixa); border:1px solid var(--linha);
-  border-radius:16px; padding:22px; margin-bottom:18px;
-}
-.preso h3{font-size:17px; font-weight:800; letter-spacing:-.02em; margin:0 0 8px}
-.preso p{font-size:14.5px; line-height:1.6; color:var(--fraco); margin:0 0 16px}
-.preso ol{margin:0; padding-left:20px}
-.preso li{font-size:14.5px; line-height:1.65; margin-bottom:6px}
-.preso li:last-child{margin-bottom:0}
-.safari{
-  margin-top:16px;
-  display:block; width:100%; background:#000; color:#fff; text-align:center;
-  text-decoration:none; padding:16px 20px; border-radius:14px;
-  font-size:16px; font-weight:700; letter-spacing:-.01em; margin-bottom:0;
-}
-@media(prefers-color-scheme:dark){ .safari{background:#fff; color:#000} }
-
-.ou{
-  text-align:center; font-size:12px; color:var(--fraco);
-  margin:16px 0 12px; letter-spacing:.01em;
-}
-
-/* ---------- código manual ---------- */
-.codigo-caixa{
-  background:var(--caixa); border:1px solid var(--linha);
-  border-radius:18px; padding:17px 18px; text-align:center; margin-top:22px;
-}
-.codigo-rot{font-size:10.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--fraco); margin-bottom:6px}
-.codigo{font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:28px; font-weight:700; letter-spacing:.11em}
-.codigo-pe{font-size:12.5px; color:var(--fraco); margin-top:7px; line-height:1.45}
-
-.nota{
-  font-size:12.5px; line-height:1.55; color:var(--fraco);
-  text-align:center; margin:20px auto 0; max-width:32ch;
-}
-
-/* ---------- estados ---------- */
+/* ── faixa de atenção ─────────────────────────────── */
 .aviso{
-  background:var(--caixa); border:1px solid var(--linha);
-  border-radius:18px; padding:22px 20px; text-align:center;
+  background:var(--alerta-soft); border:1px solid var(--alerta);
+  border-radius:12px; padding:20px 22px; margin-top:16px;
 }
-.aviso b{display:block; font-size:17px; margin-bottom:8px; letter-spacing:-.02em}
-.aviso p{margin:0; font-size:14px; line-height:1.55; color:var(--fraco)}
-.aviso a{color:var(--roxo); font-weight:600}
-.esconde{display:none !important}
+.aviso h3{color:var(--alerta); font-size:16px; margin-bottom:8px}
+.aviso p{margin:0 0 12px; color:var(--ink-2); font-size:14.5px; max-width:70ch}
+.aviso p:last-child{margin-bottom:0}
+.empresas{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
+.emp{
+  background:var(--surface); border:1px solid var(--line-2); border-radius:8px;
+  padding:7px 11px; font-size:13px; display:flex; align-items:center; gap:8px;
+}
+.emp .n{font-weight:700}
+.emp .q{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--muted)}
 
-.carregando{text-align:center; padding:50px 0; color:var(--fraco); font-size:14px}
-.giro{
-  width:26px; height:26px; margin:0 auto 14px;
-  border:2.5px solid var(--linha); border-top-color:var(--roxo);
-  border-radius:50%; animation:gira .7s linear infinite;
+/* ── regra de precedência ─────────────────────────── */
+.regra{
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:12px; padding:20px 22px; box-shadow:var(--sombra);
 }
-@keyframes gira{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){ .giro{animation-duration:2s} .placa:active{transform:none} }
+.passos{display:flex; flex-direction:column; gap:0; margin:14px 0 0}
+.passo{
+  display:grid; grid-template-columns:20px 1fr; gap:14px;
+  padding:11px 0; border-top:1px solid var(--line);
+}
+.passo:first-child{border-top:0; padding-top:0}
+.passo-n{
+  font-family:"JetBrains Mono",monospace; font-size:12px; font-weight:500;
+  color:var(--accent); padding-top:2px;
+}
+.passo-t{font-size:14.5px; color:var(--ink-2)}
+.passo-t b{color:var(--ink); font-weight:700}
+.passo-t code{
+  font-family:"JetBrains Mono",monospace; font-size:12.5px;
+  background:var(--surface-2); padding:1px 5px; border-radius:4px;
+  border:1px solid var(--line);
+}
+
+/* ── checklist ────────────────────────────────────── */
+.checks{display:flex; flex-direction:column; gap:0; margin-top:14px}
+.check{
+  display:grid; grid-template-columns:22px 1fr; gap:13px; align-items:start;
+  padding:13px 0; border-top:1px solid var(--line);
+}
+.check:first-child{border-top:0}
+.caixa{
+  width:16px; height:16px; border:1.5px solid var(--line-2);
+  border-radius:4px; margin-top:3px; flex:none;
+}
+.check.feito .caixa{background:var(--ok); border-color:var(--ok); position:relative}
+.check.feito .caixa::after{
+  content:"✓"; position:absolute; inset:0; color:#fff;
+  font-size:11px; line-height:13px; text-align:center; font-weight:700;
+}
+.check-t{font-size:14.5px}
+.check-t b{font-weight:700}
+.check-s{font-size:13px; color:var(--muted); margin-top:2px}
+.selo{
+  font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  padding:2px 7px; border-radius:20px; margin-left:8px; vertical-align:2px;
+}
+.selo.ok{background:var(--ok-soft); color:var(--ok)}
+.selo.abre{background:var(--alerta-soft); color:var(--alerta)}
+
+footer{
+  margin-top:52px; padding-top:20px; border-top:1px solid var(--line);
+  color:var(--muted); font-size:12.5px; max-width:74ch;
+}
+footer code{font-family:"JetBrains Mono",monospace; font-size:12px}
+
+@media (max-width:680px){
+  .linha{grid-template-columns:1fr; gap:14px}
+  .pagina{padding:32px 18px 70px}
+}
 </style>
-</head>
-<body>
-<div class="folha">
 
-  <div class="topo">
-    <!-- O arquivo de origem é branco. No tema claro ele precisa da versão
-         recolorida, senão some no fundo; no escuro vai como está. -->
-    <picture>
-      <source media="(prefers-color-scheme: dark)"
-              srcset="https://res.cloudinary.com/dlzrfhwin/image/upload/c_fit,w_480,h_150/v1775583229/nb_logotipo_hor_05_wqsydv.png">
-      <img id="marca" alt="Nutrição Brasil"
-           src="https://res.cloudinary.com/dlzrfhwin/image/upload/c_fit,w_480,h_150/e_colorize,co_rgb:1A0F2E/v1775583229/nb_logotipo_hor_05_wqsydv.png">
-    </picture>
+<div class="pagina">
+
+<header>
+  <div class="olho">Nutrição Brasil 2026 · Brasília</div>
+  <h1>Oito ingressos, oito cores</h1>
+  <p class="lead">Cada tipo de credencial tem cor, rótulo e rodapé próprios, no passe da Apple, no do Google e na página do ingresso. Esta é a lista do que está no ar hoje, conferida chamando a função de verdade, um código real por tipo.</p>
+  <div class="fonte">
+    <span><b>Fonte:</b> wallet-passe v17</span>
+    <span><b>Conferido:</b> 21/08/2026</span>
+    <span><b>Base:</b> 1.914 pessoas nos seis eventos de Brasília</span>
   </div>
+</header>
 
-  <div id="carregando" class="carregando">
-    <div class="giro"></div>
-    Preparando seu ingresso…
-  </div>
+<section>
+  <div class="secao-cab"><h2>Os oito tipos</h2></div>
+  <p class="secao-nota">O cartão ao lado de cada linha está pintado com a cor real do passe. A contagem é de gente de verdade no banco, agora.</p>
 
-  <div id="erro" class="aviso esconde">
-    <b id="erro-t">Não consegui abrir este ingresso</b>
-    <p id="erro-s"></p>
-  </div>
+  <div class="grupo">
+    <div class="grupo-t">Congresso e corrida</div>
+    <div class="linhas">
 
-  <div id="pronto" class="esconde">
-    <h1 id="titulo">Seu ingresso está pronto</h1>
-    <p class="sub" id="subtitulo">Guarde no celular e apresente na entrada.</p>
-
-    <div class="cartao" id="cartao">
-      <div class="cartao-topo">
-        <img class="cartao-logo" id="cartao-logo" alt="">
-        <div class="cartao-selo">
-          <small id="c-cab">INGRESSO</small>
-          <b id="c-tipo">CONGRESSISTA</b>
+      <div class="linha">
+        <div class="cartao" style="background:#6f4d89;color:#fff">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab">Ingresso</div><div class="cartao-rot">CONGRESSISTA</div></div>
+          </div>
+          <div class="cartao-pe">Módulo · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>Congressista</h3><span class="chave">congressista</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#6f4d89"></span><span class="mono">#6f4d89</span></div></div>
+            <div><div class="campo-r">Rodapé</div><div class="campo-v">Módulo comprado</div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v gente mono">992</div></div>
+          </div>
         </div>
       </div>
-      <div class="cartao-rot">Participante</div>
-      <div class="cartao-nome" id="c-nome"></div>
-      <div class="cartao-pe" id="cartao-pe"></div>
+
+      <div class="linha">
+        <div class="cartao" style="background:#5ab78e;color:#0d0618">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab">Corrida</div><div class="cartao-rot">NB RUN</div></div>
+          </div>
+          <div class="cartao-pe">Percurso · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>NB Run</h3><span class="chave">nbrun</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#5ab78e"></span><span class="mono">#5ab78e</span></div></div>
+            <div><div class="campo-r">Rodapé</div><div class="campo-v">Percurso (5K ou 10K)</div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v gente mono">497</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="cartao" style="background:#80c0ff;color:#0d0618">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab">Acesso</div><div class="cartao-rot">VISITANTE</div></div>
+          </div>
+          <div class="cartao-pe">Área · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>Visitante da exposição</h3><span class="chave">visitante</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#80c0ff"></span><span class="mono">#80c0ff</span></div></div>
+            <div><div class="campo-r">Rodapé</div><div class="campo-v">Área: Exposição</div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v gente mono">339</div></div>
+          </div>
+        </div>
+      </div>
+
     </div>
-
-    <div id="botoes"></div>
-
-    <div class="codigo-caixa">
-      <div class="codigo-rot">Se preferir, seu código</div>
-      <div class="codigo" id="c-codigo"></div>
-      <div class="codigo-pe">Serve no credenciamento do mesmo jeito.</div>
-    </div>
-
-    <p class="nota" id="nota"></p>
   </div>
+
+  <div class="grupo">
+    <div class="grupo-t">Exposição · a cota contratada decide</div>
+    <div class="linhas">
+
+      <div class="linha">
+        <div class="cartao" style="background:#8b5fbf;color:#fff">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab">Credencial</div><div class="cartao-rot">EXPOSITOR</div></div>
+          </div>
+          <div class="cartao-pe">Empresa · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>Expositor</h3><span class="chave">expositor</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#8b5fbf"></span><span class="mono">#8b5fbf</span></div></div>
+            <div><div class="campo-r">Quando cai aqui</div><div class="campo-v">Cota vazia, SEBRAE, simpósio</div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v gente mono">78</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="cartao" style="background:#16121f;color:#fff">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab">Cota</div><div class="cartao-rot">PATROCÍNIO</div></div>
+          </div>
+          <div class="cartao-pe">Empresa · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>Patrocínio</h3><span class="chave">patrocinio</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#16121f"></span><span class="mono">#16121f</span></div></div>
+            <div><div class="campo-r">Quando cai aqui</div><div class="campo-v">Cota contém "patrocin"</div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v gente mono">5</div><div class="campo-v" style="font-size:12.5px">só Prana Nutrition</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="cartao" style="background:#1D66C3;color:#fff">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab">Cota</div><div class="cartao-rot">APOIO</div></div>
+          </div>
+          <div class="cartao-pe">Empresa · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>Apoio</h3><span class="chave">apoio</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#1D66C3"></span><span class="mono">#1D66C3</span></div></div>
+            <div><div class="campo-r">Quando cai aqui</div><div class="campo-v">Cota exatamente "APOIO"</div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v zero mono">0 · uma empresa sem equipe</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grupo">
+    <div class="grupo-t">Convidados · credencial preta, criados em 21/08</div>
+    <div class="linhas">
+
+      <div class="linha">
+        <div class="cartao" style="background:#0b0612;color:#fff">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab" style="color:#ffc800;opacity:1">Convite</div><div class="cartao-rot" style="color:#ffc800">BLACK</div></div>
+          </div>
+          <div class="cartao-pe">Acesso · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>Convidado BLACK</h3><span class="chave">convidado_black</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#0b0612"></span><span class="mono">#0b0612</span></div></div>
+            <div><div class="campo-r">Rótulo</div><div class="campo-v hex"><span class="amostra" style="background:#ffc800"></span><span class="mono">#ffc800</span></div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v gente mono">2</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="cartao" style="background:#0b0612;color:#fff">
+          <div class="cartao-topo">
+            <div class="cartao-marca">nutrição<span style="opacity:.7">brasil</span></div>
+            <div class="cartao-tipo"><div class="cartao-cab" style="color:#ffc800;opacity:1">Credencial</div><div class="cartao-rot" style="color:#ffc800">IMPRENSA</div></div>
+          </div>
+          <div class="cartao-pe">Acesso · Datas · Local</div>
+        </div>
+        <div class="dados">
+          <div class="dados-topo"><h3>Imprensa</h3><span class="chave">imprensa</span></div>
+          <div class="campos">
+            <div><div class="campo-r">Fundo</div><div class="campo-v hex"><span class="amostra" style="background:#0b0612"></span><span class="mono">#0b0612</span></div></div>
+            <div><div class="campo-r">Rótulo</div><div class="campo-v hex"><span class="amostra" style="background:#ffc800"></span><span class="mono">#ffc800</span></div></div>
+            <div><div class="campo-r">Pessoas</div><div class="campo-v gente mono">1</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="secao-cab"><h2>Precisa de decisão sua</h2></div>
+  <div class="aviso">
+    <h3>Nestlé e Rousselot vão receber crachá roxo de expositor</h3>
+    <p>O passe de patrocinador existe e funciona: a Prana Nutrition tem a cota preenchida como <span class="mono">Patrocinador</span> e as 5 credenciais dela saem pretas, corretamente. O problema não é o código, é o cadastro.</p>
+    <p>Nestlé e Rousselot estão com o campo <span class="mono">cota</span> <b>vazio</b>. Cota vazia cai no tema genérico de expositor. Ou seja: dois dos três patrocinadores que aparecem no rodapé de todo e-mail do evento chegam com a mesma credencial roxa da equipe de um estande pequeno.</p>
+    <div class="empresas">
+      <div class="emp"><span class="n">Prana Nutrition</span><span class="q">cota Patrocinador · 5 credenciais · preto</span></div>
+      <div class="emp"><span class="n">Nestlé</span><span class="q">cota vazia · 5 credenciais · roxo</span></div>
+      <div class="emp"><span class="n">Rousselot</span><span class="q">cota vazia · 5 credenciais · roxo</span></div>
+    </div>
+    <p>Preencher a cota é a correção, e leva um segundo por empresa na ficha da Exposição. Não fiz por conta própria porque cota é fato comercial: só você sabe quem contratou patrocínio, quem é apoio e quem é expositor. Outras 17 empresas também estão com cota vazia, então vale uma passada geral na lista enquanto isso está aberto.</p>
+  </div>
+</section>
+
+<section>
+  <div class="secao-cab"><h2>Como o sistema escolhe a cor</h2></div>
+  <p class="secao-nota">Na ordem. O primeiro que casar decide, e o resto nem é consultado. Vale conhecer porque é onde os erros aconteceram.</p>
+  <div class="regra">
+    <div class="passos">
+      <div class="passo">
+        <div class="passo-n">1</div>
+        <div class="passo-t"><b>Slug do evento.</b> Só para <code>convidados-black-brasilia-2026</code> e <code>imprensa-brasilia-2026</code>. Existe porque esses dois eventos são do tipo <code>visitor</code> por dentro, e sem esta regra o convidado de credencial preta recebia o crachá azul de visitante da expo.</div>
+      </div>
+      <div class="passo">
+        <div class="passo-n">2</div>
+        <div class="passo-t"><b>Tipo do evento.</b> <code>race</code> vira NB Run, <code>visitor</code> vira visitante, <code>congress</code> vira congressista.</div>
+      </div>
+      <div class="passo">
+        <div class="passo-n">3</div>
+        <div class="passo-t"><b>Cota contratada</b>, só para expositor. Cota com "patrocin" vira preto, cota exatamente "APOIO" vira azul, e todo o resto, inclusive vazio, vira o roxo genérico. É de propósito: chutar a cota de quem pagou é pior do que usar o rótulo comum.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="secao-cab"><h2>Checklist</h2><span class="conta">6 de 8 fechados</span></div>
+  <div class="checks">
+    <div class="check feito"><div class="caixa"></div><div><div class="check-t"><b>Os oito temas rendem certo</b><span class="selo ok">conferido</span></div><div class="check-s">Um código real por tipo, chamando a função no ar. Congressista, NB Run, visitante, expositor, patrocínio, apoio, imprensa e convidado BLACK.</div></div></div>
+    <div class="check feito"><div class="caixa"></div><div><div class="check-t"><b>Imprensa e BLACK saem pretos</b><span class="selo ok">conferido</span></div><div class="check-s">Fundo #0b0612 com rótulo dourado, nos códigos VYRUGG e VBUDL5.</div></div></div>
+    <div class="check feito"><div class="caixa"></div><div><div class="check-t"><b>Nada regrediu</b><span class="selo ok">conferido</span></div><div class="check-s">Congressista continua roxo, visitante azul, expositor roxo com a empresa, patrocínio preto. Testados depois do deploy da v17.</div></div></div>
+    <div class="check feito"><div class="caixa"></div><div><div class="check-t"><b>O arquivo .pkpass assina</b><span class="selo ok">conferido</span></div><div class="check-s">Os dois novos geram 9 arquivos, manifest batendo com o zip e assinatura de 3337 bytes. Não é só a prévia em JSON.</div></div></div>
+    <div class="check feito"><div class="caixa"></div><div><div class="check-t"><b>Patrocínio segue intocado</b><span class="selo ok">conferido</span></div><div class="check-s">Prana Nutrition, 5 credenciais, COTA / PATROCÍNIO em #16121f. Foi o que motivou esta conferência.</div></div></div>
+    <div class="check feito"><div class="caixa"></div><div><div class="check-t"><b>Apoio segue intocado</b><span class="selo ok">conferido</span></div><div class="check-s">Tema testado forçado, porque nenhuma empresa de apoio cadastrou equipe ainda.</div></div></div>
+    <div class="check"><div class="caixa"></div><div><div class="check-t"><b>Subir o ingresso.html</b><span class="selo abre">falta</span></div><div class="check-s">Um arquivo, na raiz do repositório. Sem ele a página já mostra preto e IMPRENSA, mas com a palavra "INGRESSO" em cima em vez de "CREDENCIAL".</div></div></div>
+    <div class="check"><div class="caixa"></div><div><div class="check-t"><b>Preencher a cota das empresas</b><span class="selo abre">falta</span></div><div class="check-s">Nestlé e Rousselot em primeiro lugar, e mais 17 empresas com o campo vazio.</div></div></div>
+  </div>
+</section>
+
+<footer>
+  Números tirados do banco em 21/08/2026, contando os seis eventos de Brasília. As cores foram lidas da resposta da própria função, não de memória: <code>wallet-passe?e=CODIGO&amp;t=TOKEN&amp;f=json</code> devolve tipo, cabeçalho, fundo e rótulo de qualquer pessoa, e <code>&amp;f=auditoria</code> abre o .pkpass por dentro sem precisar baixar o arquivo.
+</footer>
+
 </div>
-
-<script>
-(function () {
-  var FUNCAO = 'https://tjrarpnqoemdhxjjbtgk.supabase.co/functions/v1/wallet-passe';
-  var CL = 'https://res.cloudinary.com/dlzrfhwin/image/upload';
-  var LOGO = 'v1775583229/nb_logotipo_hor_05_wqsydv.png';
-  var $ = function (id) { return document.getElementById(id); };
-  var esc = function (s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
-    });
-  };
-
-  function falha(titulo, texto) {
-    $('carregando').classList.add('esconde');
-    $('erro').classList.remove('esconde');
-    $('erro-t').textContent = titulo;
-    $('erro-s').innerHTML = texto;
-  }
-
-  // ---- o link vem como ?i=CODIGO-TOKEN; o token é a última parte ----
-  var i = new URLSearchParams(location.search).get('i') || '';
-  var corte = i.lastIndexOf('-');
-  var codigo = corte > 0 ? i.slice(0, corte) : '';
-  var token  = corte > 0 ? i.slice(corte + 1) : '';
-
-  if (!codigo || !token) {
-    falha('Link incompleto',
-      'O endereço veio cortado. Isso acontece quando a mensagem é copiada pela metade. ' +
-      'Abra o link direto da mensagem original, ou fale com a gente pelo WhatsApp do evento.');
-    return;
-  }
-
-  var base = FUNCAO + '?e=' + encodeURIComponent(codigo) + '&t=' + encodeURIComponent(token);
-
-  // ---- que aparelho é ----
-  var ua = navigator.userAgent || '';
-  var iOS = /iPad|iPhone|iPod/.test(ua) ||
-            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  var android = /Android/.test(ua);
-
-  // Artes OFICIAIS — não recriar, não recolorir.
-  var BADGE = {
-    google: 'https://res.cloudinary.com/dlzrfhwin/image/upload/v1787001220/nb2026/botao_google_wallet_pt.svg',
-    apple:  'https://res.cloudinary.com/dlzrfhwin/image/upload/v1787001220/nb2026/botao_apple_wallet_pt.svg',
-  };
-
-  function placa(loja, href, alt) {
-    return '<a class="placa" href="' + esc(href) + '">' +
-           '<img src="' + esc(BADGE[loja]) + '" alt="' + esc(alt) + '"></a>';
-  }
-  function outra(href, texto) {
-    return '<a class="outra" href="' + esc(href) + '"><u>' + esc(texto) + '</u></a>';
-  }
-
-  var pApple  = placa('apple',  base, 'Adicionar à Apple Wallet');
-  var pGoogle = placa('google', base + '&f=google', 'Adicionar ao Google Wallet');
-  var oApple  = outra(base, 'Tenho iPhone, adicionar à Apple Wallet');
-  var oGoogle = outra(base + '&f=google', 'Tenho Android, adicionar ao Google Wallet');
-
-  function rgbDe(hex) {
-    var h = String(hex || '').replace('#', '');
-    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-    var n = parseInt(h, 16);
-    if (isNaN(n) || h.length !== 6) return '111,77,137';
-    return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
-  }
-
-  // ---- busca os dados para montar a tela ----
-  fetch(base + '&f=json')
-    .then(function (r) {
-      if (r.status === 403) throw new Error('403');
-      if (r.status === 404) throw new Error('404');
-      if (!r.ok) throw new Error('http' + r.status);
-      return r.json();
-    })
-    .then(function (d) {
-      if (d.erro) throw new Error('dados');
-
-      document.documentElement.style.setProperty('--fundo-cartao', d.fundo);
-      var claro = !!d.texto_escuro;                 // fundo claro pede tinta escura
-      document.documentElement.style.setProperty('--texto-cartao', claro ? '#0D0618' : '#FFFFFF');
-      // sombra na cor do tipo — o "premium" do cartão
-      document.documentElement.style.setProperty('--sombra-cartao',
-        '0 24px 44px -14px rgba(' + rgbDe(d.fundo) + ',.62), 0 4px 12px rgba(13,6,24,.10)');
-      $('cartao-logo').src = CL + '/c_fit,w_320,h_100' +
-        (claro ? '/e_colorize,co_rgb:1A0F2E' : '') + '/' + LOGO;
-
-      var CAB = { congressista:'INGRESSO', nbrun:'CORRIDA', visitante:'ACESSO',
-                  expositor:'CREDENCIAL', patrocinio:'COTA', apoio:'COTA' };
-      $('c-cab').textContent = CAB[d.tipo] || 'INGRESSO';
-      $('c-tipo').textContent = d.rotulo || '';
-      $('c-nome').textContent = d.nome || '';
-      $('c-codigo').textContent = d.codigo || codigo;
-
-      // Rodapé unificado com o passe: campo variável do tipo + Datas + Local.
-      // Módulo (congressista) e percurso (NB Run) dependem da função devolver
-      // d.detalhe / d.detalhe_rotulo — enquanto não devolve, esses dois tipos
-      // mostram só Datas + Local, sem quebrar nada.
-      var pe = [];
-      if (d.empresa) pe.push(['Empresa', d.empresa]);
-      else if (d.tipo === 'visitante') pe.push(['Área', 'Exposição']);
-      else if (d.detalhe) pe.push([d.detalhe_rotulo || 'Ingresso', d.detalhe]);
-      pe.push(['Datas', d.datas || '']);
-      pe.push(['Local', d.cidade || '']);
-      $('cartao-pe').innerHTML = pe.map(function (par) {
-        return '<div><small>' + esc(par[0]) + '</small><b>' + esc(par[1]) + '</b></div>';
-      }).join('');
-
-      var pnome = String(d.nome || '').trim().split(/\s+/)[0];
-      $('titulo').textContent = pnome ? (pnome + ', seu ingresso está pronto') : 'Seu ingresso está pronto';
-      $('subtitulo').textContent = d.tipo === 'nbrun'
-        ? 'Guarde no celular e apresente na retirada do kit.'
-        : 'Guarde no celular e apresente na entrada. Funciona sem internet.';
-
-      // ordem pelo aparelho; o outro fica disponível mas discreto
-      // Navegador embutido de app (WhatsApp, Instagram, Facebook) no iPhone
-      // nao consegue entregar o passe para a Carteira: ele abre o arquivo
-      // como texto. E limitacao do navegador deles, nao do ingresso, e nao
-      // existe cabecalho que corrija. O unico caminho e sair para o Safari.
-      //
-      // Android nao entra aqui: o Google Wallet e um redirecionamento
-      // comum e funciona dentro do WhatsApp normalmente.
-      // Procurar "WhatsApp" no user-agent NAO funciona: o navegador embutido
-      // do WhatsApp no iOS e um WKWebView e em varias versoes se apresenta
-      // como Safari comum. Foi por isso que a primeira tentativa passou
-      // batida no teste real.
-      //
-      // O sinal confiavel: Safari de verdade no iPhone sempre traz
-      // "Version/x.y" e "Safari/604.1". Navegador embutido em app omite os
-      // dois. Chrome (CriOS) e Firefox (FxiOS) no iOS mantem "Safari/",
-      // entao continuam com o botao normal.
-      // Regra tirada de acesso real, nao de suposicao. O WhatsApp do iPhone
-      // manda isto:
-      //   ... Version/26.6.1 Mobile/15E148 Safari/604.1 [WAiOS/2.26.31]
-      // Ou seja: NAO escreve "WhatsApp", escreve "WAiOS" entre colchetes no
-      // fim, e TRAZ "Safari/". As duas regras anteriores erraram por isso.
-      var marcaDeApp = /\[[A-Za-z]+(iOS|Android)?\/[\d.]+\]\s*$/i.test((ua || '').trim());
-      var seIdentifica = /WAiOS|WhatsApp|Instagram|FBAN|FBAV|FB_IAB|FBIOS|Messenger|Line\/|MicroMessenger|GSA\//i.test(ua);
-      var pareceSafari = /Safari\//i.test(ua);
-      var presoNoApp = iOS && (marcaDeApp || seIdentifica || !pareceSafari);
-
-      // O ?app=1 vem do desvio da funcao: se a pessoa chegou por ali, ela
-      // esta presa mesmo que a leitura do user-agent falhe.
-      if (/[?&]app=1/.test(location.search)) presoNoApp = true;
-
-      // A jornada do iPhone tem DOIS passos, e a tela mostra em qual deles a
-      // pessoa esta. Uma pagina so, tres estados, porque o link e o mesmo no
-      // e-mail e no WhatsApp e duas paginas de ingresso seria pior.
-      //
-      //   passo 1  esta no WhatsApp, precisa sair para o Safari
-      //   passo 2  ja chegou no Safari, so falta tocar no bot\u00e3o
-      //   normal   veio do e-mail ou de um navegador de verdade
-      var noPasso2 = /[?&]passo=2/.test(location.search) && !presoNoApp;
-
-      if (presoNoApp) {
-        // Passo 1. O link carrega passo=2 para que a tela do Safari saiba
-        // que a pessoa ja andou metade do caminho e nao repita tudo.
-        var aqui = location.href.split('#')[0].replace(/[?&]app=1/, '');
-        var destino = aqui + (aqui.indexOf('?') === -1 ? '?' : '&') + 'passo=2';
-        $('botoes').innerHTML =
-          '<div class="preso">' +
-            '<h3>Adicionar ao Wallet em 2 passos</h3>' +
-            '<div class="passo">' +
-              '<div class="num">1</div>' +
-              '<div class="txt">' +
-                '<div class="tit">Abrir no Safari</div>' +
-                '<div class="exp">A carteira do iPhone n\u00e3o abre por dentro do WhatsApp.</div>' +
-              '</div>' +
-            '</div>' +
-            '<a class="safari" href="' + esc('x-safari-' + destino) + '">Abrir no Safari</a>' +
-            '<div class="passo espera" style="margin-top:18px">' +
-              '<div class="num">2</div>' +
-              '<div class="txt">' +
-                '<div class="tit">Tocar em Adicionar \u00e0 Apple Wallet</div>' +
-                '<div class="exp">O bot\u00e3o aparece l\u00e1, j\u00e1 nesta mesma tela.</div>' +
-              '</div>' +
-            '</div>' +
-            '<p class="manual">Se o bot\u00e3o acima n\u00e3o abrir o Safari, toque nos tr\u00eas pontinhos no canto da tela e escolha <strong>Abrir no Safari</strong>.</p>' +
-          '</div>';
-
-      } else if (noPasso2) {
-        // Passo 2. Chegou no Safari. Nao repete a explicacao: mostra que o
-        // primeiro passo esta feito e poe o botao na frente.
-        $('botoes').innerHTML =
-          '<div class="preso" style="margin-bottom:14px">' +
-            '<div class="passo feito">' +
-              '<div class="num">\u2713</div>' +
-              '<div class="txt"><div class="tit">Safari aberto</div></div>' +
-            '</div>' +
-            '<div class="passo" style="margin-bottom:0">' +
-              '<div class="num">2</div>' +
-              '<div class="txt">' +
-                '<div class="tit">Agora \u00e9 s\u00f3 tocar no bot\u00e3o abaixo</div>' +
-                '<div class="exp">O ingresso vai direto para a carteira do celular.</div>' +
-              '</div>' +
-            '</div>' +
-          '</div>' + pApple;
-
-      } else {
-        // No Android NAO se oferece a Apple Wallet.
-        //
-        // O link levava ao arquivo .pkpass, que o Android nao sabe abrir:
-        // baixa e para ali. E exatamente o mesmo beco sem saida do iPhone
-        // no WhatsApp, so que ao contrario, e nao adianta consertar um lado
-        // e deixar o outro.
-        //
-        // No iPhone o inverso continua valendo, e de proposito: o Google
-        // Wallet tem app para iOS, entao "Tenho Android" ali leva a um
-        // caminho que funciona de verdade.
-        $('botoes').innerHTML = iOS      ? pApple + oGoogle
-                              : android  ? pGoogle
-                              : '<div class="ou">Abra no celular para guardar na carteira</div>' + pApple + pGoogle;
-      }
-
-      $('nota').textContent = (presoNoApp || noPasso2)
-        ? 'Sem pressa: o código acima entra no credenciamento do mesmo jeito, com ou sem passe.'
-        : (iOS || android
-            ? 'Depois de adicionar, ele fica na carteira do celular mesmo sem sinal.'
-            : 'Você também pode fazer o check-in só com o código acima.');
-
-      // Badge oficial que não carrega vira botão de texto — nunca imagem quebrada.
-      Array.prototype.forEach.call($('botoes').querySelectorAll('.placa img'), function (img) {
-        img.addEventListener('error', function () {
-          var a = img.parentNode;
-          a.className = 'placa reserva';
-          a.textContent = img.getAttribute('alt') || 'Adicionar à carteira';
-        });
-      });
-
-      $('carregando').classList.add('esconde');
-      $('pronto').classList.remove('esconde');
-    })
-    .catch(function (e) {
-      var m = String(e && e.message);
-      if (m === '403') {
-        falha('Este link não confere',
-          'Ele pode ter sido copiado pela metade ou alterado. Abra direto da mensagem que você recebeu.');
-      } else if (m === '404') {
-        falha('Não achei esta inscrição',
-          'O código <b>' + esc(codigo) + '</b> não está na nossa lista. ' +
-          'Se você acabou de se inscrever, espere alguns minutos e tente de novo.');
-      } else {
-        falha('Não consegui carregar agora',
-          'Pode ser a conexão. Tente de novo em instantes. Seu ingresso continua valendo, ' +
-          'e no credenciamento o código <b>' + esc(codigo) + '</b> resolve.');
-      }
-    });
-})();
-</script>
-</body>
-</html>
