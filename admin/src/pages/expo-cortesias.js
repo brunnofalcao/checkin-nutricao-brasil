@@ -179,6 +179,9 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
     if ((data.avisos || []).length) console.warn('cortesias:', data.avisos);
   }
 
+  let linhaAberta = null;   // id do uso, ou 'remove:<id>'
+  let gravando = false;
+
   async function carregaUsos() {
     const { data } = await supabase.from('cortesias_uso')
       .select('id, nome, email, modulo, origem, criado_em')
@@ -199,25 +202,149 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
             : 'Defina a cota e gere o código para a empresa começar a distribuir.')));
       return;
     }
+    const linhas = [];
+    usos.forEach((u) => {
+      const quando = new Date(u.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) +
+        ' ' + new Date(u.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      linhas.push(h('tr', {},
+        h('td', {},
+          h('div', { class: 'row-name' }, u.nome || '—'),
+          h('div', { class: 'row-sub' }, u.email || '')),
+        h('td', { class: 'row-sub' }, u.modulo),
+        h('td', {}, h('span', { class: 'status ' + (u.origem === 'patrocinador' ? 'soon' : 'done') },
+          u.origem === 'patrocinador' ? 'Empresa' : 'Convidado')),
+        h('td', { class: 'row-sub' }, quando),
+        h('td', { style: { textAlign: 'right' } },
+          linhaAberta === u.id
+            ? null
+            : h('button', {
+                class: 'btn btn-ghost btn-sm',
+                disabled: gravando,
+                onclick: () => { linhaAberta = u.id; desenhaLista(); }
+              }, 'Editar'))));
+
+      // CONFIRMACAO DE REMOCAO, logo abaixo da propria linha
+      if (linhaAberta === 'remove:' + u.id) {
+        linhas.push(h('tr', { class: 'exp-eq-edit' },
+          h('td', { colSpan: '5' },
+            h('div', { class: 'exp-eq-aviso' },
+              'Remover ' + (u.nome || 'esta pessoa') + ' do módulo ' + (u.modulo || '') + '. ' +
+              'O ingresso é cancelado e a cortesia volta para a cota da empresa. Não tem como desfazer.'),
+            h('div', { class: 'exp-eq-botoes' },
+              h('button', { class: 'btn btn-perigo btn-sm', disabled: gravando,
+                onclick: () => removeUso(u) }, 'Remover mesmo'),
+              h('button', { class: 'btn btn-ghost btn-sm', disabled: gravando,
+                onclick: () => { linhaAberta = null; desenhaLista(); } }, 'Cancelar')))));
+        return;
+      }
+
+      if (linhaAberta !== u.id) return;
+
+      // FORMULARIO DE EDICAO
+      //
+      // Trocar nome, e-mail ou celular cancela o codigo antigo e emite um
+      // novo, com reenvio por e-mail e WhatsApp. E a mesma doutrina da
+      // credencial de expositor: convite repassado nao pode deixar dois QR
+      // validos para a mesma vaga.
+      let cNome, cEmail, cCel;
+      linhas.push(h('tr', { class: 'exp-eq-edit' },
+        h('td', { colSpan: '5' },
+          h('div', { class: 'exp-eq-grade' },
+            h('div', { class: 'exp-eq-campo' },
+              h('label', { class: 'campo-rot' }, 'Nome'),
+              cNome = h('input', { class: 'input', type: 'text', value: u.nome || '' })),
+            h('div', { class: 'exp-eq-campo' },
+              h('label', { class: 'campo-rot' }, 'E-mail'),
+              cEmail = h('input', { class: 'input', type: 'email', value: u.email || '' })),
+            h('div', { class: 'exp-eq-campo' },
+              h('label', { class: 'campo-rot' }, 'Celular'),
+              cCel = h('input', { class: 'input', type: 'text', value: u.celular || '' }))),
+
+          h('div', { class: 'exp-eq-aviso' },
+            'Mudar nome, e-mail ou celular cancela o ingresso atual e emite um novo, ' +
+            'que sai por e-mail e WhatsApp. Quem já passou pelo credenciamento não pode ser trocado.'),
+
+          h('div', { class: 'exp-eq-botoes' },
+            h('button', {
+              class: 'btn btn-primary btn-sm', disabled: gravando,
+              onclick: () => salvaUso(u, cNome.value, cEmail.value, cCel.value)
+            }, 'Salvar'),
+            h('button', {
+              class: 'btn btn-ghost btn-sm', disabled: gravando,
+              onclick: () => { linhaAberta = null; desenhaLista(); }
+            }, 'Cancelar'),
+            h('button', {
+              class: 'btn btn-perigo btn-sm', disabled: gravando,
+              onclick: () => { linhaAberta = 'remove:' + u.id; desenhaLista(); }
+            }, 'Remover')))));
+    });
+
     setContent(corpoLista,
       h('table', { class: 'table' },
         h('thead', {}, h('tr', {},
           h('th', {}, 'Pessoa'),
-          h('th', { style: { width: '30%' } }, 'Módulo'),
-          h('th', { style: { width: '110px' } }, 'Veio de'),
-          h('th', { style: { width: '110px' } }, 'Quando'))),
-        h('tbody', {}, ...usos.map((u) =>
-          h('tr', {},
-            h('td', {},
-              h('div', { class: 'row-name' }, u.nome || '—'),
-              h('div', { class: 'row-sub' }, u.email || '')),
-            h('td', { class: 'row-sub' }, u.modulo),
-            h('td', {}, h('span', { class: 'status ' + (u.origem === 'patrocinador' ? 'soon' : 'done') },
-              u.origem === 'patrocinador' ? 'Empresa' : 'Convidado')),
-            h('td', { class: 'row-sub' },
-              new Date(u.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) +
-              ' ' + new Date(u.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }))))))
+          h('th', { style: { width: '26%' } }, 'Módulo'),
+          h('th', { style: { width: '100px' } }, 'Veio de'),
+          h('th', { style: { width: '100px' } }, 'Quando'),
+          h('th', { style: { width: '90px' } }, ''))),
+        h('tbody', {}, ...linhas))
     );
+  }
+
+  async function salvaUso(u, nome, email, celular) {
+    if (gravando) return;
+    if (!String(nome || '').trim()) { toast.danger('O nome não pode ficar em branco.'); return; }
+    gravando = true; desenhaLista();
+
+    const { data, error } = await supabase.rpc('cortesia_uso_salva', {
+      p_uso_id: u.id, p_nome: nome, p_email: email, p_celular: celular });
+
+    gravando = false;
+    if (error || data?.erro) {
+      const m = {
+        sem_permissao: 'Seu acesso não permite editar cortesias.',
+        ja_credenciado: (data?.nome || 'Essa pessoa') + ' já passou pelo credenciamento. Não dá para trocar.',
+        sem_inscricao: 'Esta cortesia não tem inscrição ligada. Chame o suporte.',
+        duplicado: 'Já existe alguém com esse e-mail neste módulo.',
+        nome: 'O nome não pode ficar em branco.'
+      };
+      toast.danger(m[data?.erro] || error?.message || 'Não deu para salvar.');
+      desenhaLista();
+      return;
+    }
+
+    linhaAberta = null;
+    await carregaUsos();
+    if (data.trocou_codigo) {
+      toast.success('Ingresso novo de ' + nome + ' (' + data.codigo + '). O antigo foi cancelado e o novo sai por e-mail e WhatsApp.');
+    } else {
+      toast.success('Dados atualizados.');
+    }
+  }
+
+  async function removeUso(u) {
+    if (gravando) return;
+    gravando = true; desenhaLista();
+
+    const { data, error } = await supabase.rpc('cortesia_uso_remove', {
+      p_uso_id: u.id, p_forcar: false });
+
+    gravando = false;
+    if (error || data?.erro) {
+      const m = {
+        sem_permissao: 'Seu acesso não permite remover cortesias.',
+        ja_credenciado: (data?.nome || 'Essa pessoa') + ' já passou pelo credenciamento. Fale com a produção antes de remover.',
+        cortesia: 'Essa cortesia já não existe mais.'
+      };
+      toast.danger(m[data?.erro] || error?.message || 'Não deu para remover.');
+      desenhaLista();
+      return;
+    }
+
+    linhaAberta = null;
+    await carregaUsos();
+    toast.success((data.nome || 'Cortesia') + ' removida. A cota voltou para a empresa.');
   }
 
   const usadas = () => usos.length;
