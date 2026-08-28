@@ -44,23 +44,49 @@ export async function pageHome(view) {
 
   const quando = (e) => e.date_start || e.event_date || null;
 
+  // ── A família do evento mãe ────────────────────────────────────────────────
+  // Brasília são cinco públicos no mesmo lugar mais a corrida no domingo.
+  // Quatro penduram em parent_event_id. BLACK e imprensa não podem: o cadastro
+  // de convidado usa parent_event_id para recusar quem já é congressista, e o
+  // convidado não pode ser recusado por isso. Eles se ligam por evento_mae_id,
+  // que existe só para leitura: mesmo balcão, mesma soma nesta tela.
+  const ehRaiz = (e) => !e.parent_event_id && !e.evento_mae_id;
+  const filhosDe = (e) =>
+    eventos.filter((f) => f.parent_event_id === e.id || f.evento_mae_id === e.id);
+
+  // Até quando o evento ainda está acontecendo. Não basta a data de início:
+  // Brasília começa 27, o congresso fecha 29 e a corrida é 30. Enquanto
+  // qualquer público da família não acabou, o evento continua sendo o âncora.
+  const fimDe = (e) => {
+    const datas = [e, ...filhosDe(e)]
+      .map((x) => x.event_end_date || quando(x))
+      .filter(Boolean)
+      .map((d) => new Date(String(d).length <= 10 ? String(d) + 'T23:59:59' : d));
+    return datas.length ? new Date(Math.max(...datas)) : null;
+  };
+
   // ── O evento âncora ────────────────────────────────────────────────────────
-  // Só congressos-raiz disputam: sub-evento é público, não é evento.
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const candidatos = eventos
-    .filter((e) => !e.parent_event_id && e.status !== 'encerrado' && quando(e))
-    .filter((e) => new Date(quando(e)) >= hoje)
+    .filter((e) => ehRaiz(e) && e.status !== 'encerrado' && quando(e))
+    .filter((e) => { const f = fimDe(e); return f ? f >= hoje : false; })
     .sort((a, b) => new Date(quando(a)) - new Date(quando(b)));
   const ancora = candidatos[0] || null;
 
   const publicos = ancora
-    ? [ancora, ...eventos.filter((e) => e.parent_event_id === ancora.id)]
-        .sort((a, b) => (TIPO[a.event_type]?.ordem || 9) - (TIPO[b.event_type]?.ordem || 9))
+    ? [ancora, ...filhosDe(ancora)].sort(
+        (a, b) =>
+          ((TIPO[a.event_type]?.ordem || 9) - (TIPO[b.event_type]?.ordem || 9)) ||
+          ((b.total_inscritos || 0) - (a.total_inscritos || 0))
+      )
     : [];
   const inscritosTotal = publicos.reduce((s, e) => s + (e.total_inscritos || 0), 0);
   const presentesTotal = publicos.reduce((s, e) => s + (e.total_checkins || 0), 0);
-  const dias = ancora ? Math.ceil((new Date(quando(ancora)) - hoje) / 86400000) : null;
+  // Evento em andamento é "hoje", nunca "em -1 dias".
+  const dias = ancora
+    ? Math.max(0, Math.ceil((new Date(quando(ancora)) - hoje) / 86400000))
+    : null;
 
   // ── Pendências reais ───────────────────────────────────────────────────────
   const pend = [];
@@ -176,10 +202,10 @@ export async function pageHome(view) {
         ),
 
     h('h2', { class: 'home-secao' }, 'Calendário 2026'),
-    calendario(eventos),
+    calendario(eventos, ehRaiz),
 
     h('h2', { class: 'home-secao' }, 'Ir direto para'),
-    atalhos(eventos, expositores)
+    atalhos(eventos, expositores, ehRaiz)
   );
 }
 
@@ -214,6 +240,17 @@ function dataExtensa(e) {
       : `${a.getUTCDate()} de ${mes} a ${b.getUTCDate()} de ${mesB}`;
   }
   return `${a.getUTCDate()} de ${mes}`;
+}
+
+// Rótulo do público. O tipo basta quando ele é único no grupo. Quando dois
+// dividem o mesmo tipo, e é o caso de visitante, BLACK e imprensa, que no banco
+// são todos 'visitor', usa-se o nome curto do evento para não sair "Visitantes"
+// três vezes seguidas.
+function rotuloPublico(e, grupo) {
+  const curto = String(e.name || '').split(/\s+[–-]\s+/)[0].trim();
+  const mesmoTipo = grupo.filter((x) => x.event_type === e.event_type).length;
+  if (mesmoTipo > 1) return curto || e.name;
+  return TIPO[e.event_type]?.rot || curto || e.name;
 }
 
 function cardAncora(ev, publicos, dias, inscritos, presentes) {
@@ -253,7 +290,7 @@ function cardAncora(ev, publicos, dias, inscritos, presentes) {
             onclick: () =>
               navigate(p.event_type === 'exhibitor' ? '/expositores' : `/eventos/${p.id}`)
           },
-          h('div', { class: 'ancora-publico-rot' }, TIPO[p.event_type]?.rot || p.name),
+          h('div', { class: 'ancora-publico-rot' }, rotuloPublico(p, publicos)),
           h('div', { class: 'ancora-publico-num' }, (p.total_inscritos || 0).toLocaleString('pt-BR')),
           h(
             'div',
@@ -305,9 +342,9 @@ function cardPendencia(p) {
   );
 }
 
-function calendario(eventos) {
+function calendario(eventos, ehRaiz) {
   const raizes = eventos
-    .filter((e) => !e.parent_event_id)
+    .filter(ehRaiz)
     .sort((a, b) => new Date(a.date_start || a.event_date || 0) - new Date(b.date_start || b.event_date || 0));
 
   return h(
@@ -367,10 +404,10 @@ function situacao(e) {
   return h('span', { class: 'status soon' }, 'Em breve');
 }
 
-function atalhos(eventos, expositores) {
+function atalhos(eventos, expositores, ehRaiz) {
   const inscritos = eventos.reduce((s, e) => s + (e.total_inscritos || 0), 0);
   const itens = [
-    { icone: 'calendar', titulo: 'Eventos', sub: `${eventos.filter((e) => !e.parent_event_id).length} no calendário`, caminho: '/eventos' },
+    { icone: 'calendar', titulo: 'Eventos', sub: `${eventos.filter(ehRaiz).length} no calendário`, caminho: '/eventos' },
     { icone: 'people', titulo: 'Pessoas', sub: `${inscritos.toLocaleString('pt-BR')} inscrições na base`, caminho: '/pessoas' },
     { icone: 'briefcase', titulo: 'Exposição', sub: expositores.length ? `${expositores.length} empresas` : 'sem convites ainda', caminho: '/expositores' },
     { icone: 'send', titulo: 'Marketing', sub: 'disparos e divulgação', caminho: '/disparos' },
