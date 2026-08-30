@@ -134,6 +134,10 @@ h1 span{color:var(--roxo)}
 @media(max-width:520px){.fotos{flex-direction:column;align-items:stretch}
   .btn-ft{text-align:center}}
 
+.marca-c{margin:0 auto 22px}
+.aviso{min-height:20px;margin:14px auto 0;max-width:430px;font-size:13px;line-height:1.5;color:#fbbf24}
+.aviso.ok{color:var(--t3)}
+
 .rodape{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);color:var(--t3);font-size:12.5px}
 .rodape b{color:var(--t2);font-weight:600}
 
@@ -150,6 +154,11 @@ h1 span{color:var(--roxo)}
 .entrada input:focus{border-color:var(--roxo)}
 .entrada button{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:0;border-radius:11px;
   padding:12px 22px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.entrada button:disabled{opacity:.6;cursor:default}
+@media(max-width:430px){
+  .entrada{flex-direction:column}
+  .entrada button{width:100%;padding:13px}
+}
 
 /* ── modal da foto ─────────────────────────────────────── */
 .modal{position:fixed;inset:0;background:rgba(6,2,12,.86);backdrop-filter:blur(6px);
@@ -188,17 +197,21 @@ label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-
   </div>
 
   <div id="erro" class="estado hide">
-    <h2 id="erroTt">Esta página abre pelo link do seu e-mail</h2>
-    <p id="erroDs">Enviamos para você um link pessoal, terminado num código de 22 letras.
-       Abra por ele, ou cole o link (ou só o código) aqui embaixo.</p>
+    <img class="marca marca-c" id="marcaEntrada" alt="Nutrição Brasil">
+    <h2 id="erroTt">Acesse o seu certificado</h2>
+    <p id="erroDs">Digite o e-mail ou o WhatsApp que você usou na inscrição do
+       Nutrição Brasil 2026. Se preferir, cole o link que enviamos para você.</p>
     <div id="entradaBox">
       <div class="entrada">
-        <input id="tk" placeholder="cole aqui o link ou o código" autocomplete="off" spellcheck="false">
-        <button id="irTk">Abrir</button>
+        <input id="tk" placeholder="e-mail, WhatsApp ou o link recebido"
+               autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+        <button id="irTk">Acessar</button>
       </div>
-      <p style="margin-top:20px;color:var(--t3);font-size:13px">
-        Não achou o e-mail? Confira a caixa de promoções e o spam. Se não estiver lá,
-        responda o e-mail da sua inscrição que a gente reenvia.</p>
+      <p class="aviso" id="aviso"></p>
+      <p style="margin-top:18px;color:var(--t3);font-size:13px;max-width:430px;
+                margin-left:auto;margin-right:auto">
+        Use o mesmo e-mail da compra do ingresso. O certificado fica disponível para
+        quem teve o check-in registrado no credenciamento.</p>
     </div>
   </div>
 
@@ -659,10 +672,11 @@ function pintaAbas(){
 function mostraEntrada(errou){
   $('carregando').classList.add('hide');
   $('pagina').classList.add('hide');
+  const mc = $('marcaEntrada'); if (mc && !mc.src) mc.src = MARCA;
   if (errou){
-    $('erroTt').textContent = 'Link não encontrado';
+    $('erroTt').textContent = 'Não achei esse link';
     $('erroDs').textContent = 'Esse código não corresponde a nenhuma inscrição. ' +
-      'Confira se copiou o link inteiro do e-mail: ele termina com um código de 22 letras.';
+      'Você pode entrar pelo e-mail ou pelo WhatsApp que usou na inscrição.';
   }
   $('erro').classList.remove('hide');
   $('tk').focus();
@@ -678,16 +692,63 @@ function mostraSemCheckin(d){
     ' certificado do ' + ((d && d.evento) || 'evento') + ' fica disponível depois que ' +
     'seu check-in é registrado no credenciamento. Se você esteve no evento e isso não ' +
     'apareceu, fale com a equipe pelo WhatsApp do Nutrição Brasil que a gente resolve.';
+  const mc = $('marcaEntrada'); if (mc && !mc.src) mc.src = MARCA;
   const cx = $('entradaBox');
   if (cx) cx.classList.add('hide');
   $('erro').classList.remove('hide');
 }
-function abrePorCodigo(){
-  const v = ($('tk').value || '').trim();
-  const m = v.match(/[A-Za-z0-9]{16,40}(?=[^A-Za-z0-9]*$)/);
-  if (!m) { $('tk').focus(); return; }
+function vaiPara(token){
   location.href = location.pathname.replace(/\/[^/]*$/, '/') +
-    (location.pathname.endsWith('.html') ? location.pathname.split('/').pop() : '') + '?t=' + m[0];
+    (location.pathname.endsWith('.html') ? location.pathname.split('/').pop() : '') +
+    '?t=' + encodeURIComponent(token);
+}
+function diz(txt, ok){
+  const a = $('aviso'); a.textContent = txt || ''; a.classList.toggle('ok', !!ok);
+}
+// O campo aceita quatro coisas: o link inteiro, só o código, o e-mail da
+// inscrição ou o WhatsApp. Token é resolvido aqui mesmo; e-mail e telefone
+// passam pelo servidor, que devolve só o token e mais nada.
+let buscando = false;
+async function abrePorCodigo(){
+  if (buscando) return;
+  const v = ($('tk').value || '').trim();
+  if (!v){ $('tk').focus(); return; }
+
+  const tk = v.match(/[A-Za-z0-9]{16,40}(?=[^A-Za-z0-9]*$)/);
+  if (tk && v.indexOf('@') < 0){ vaiPara(tk[0]); return; }
+
+  const ehEmail = v.indexOf('@') > 0;
+  const digitos = v.replace(/\D/g, '');
+  if (!ehEmail && digitos.length < 8){
+    diz('Digite o e-mail ou o WhatsApp da sua inscrição, com DDD.');
+    return;
+  }
+
+  buscando = true;
+  const bt = $('irTk'), rot = bt.textContent;
+  bt.textContent = 'Procurando…'; bt.disabled = true;
+  diz('');
+  try{
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/cert_busca_publica', {
+      method:'POST',
+      headers:{ 'apikey':SUPABASE_ANON, 'Authorization':'Bearer ' + SUPABASE_ANON, 'Content-Type':'application/json' },
+      body: JSON.stringify({ p_termo: v })
+    });
+    const d = await r.json();
+    if (d && d.achou && d.token){ vaiPara(d.token); return; }
+    if (d && d.ambiguo){
+      diz('Esse número aparece em mais de uma inscrição. Digite o e-mail para eu saber qual é a sua.');
+    } else if (ehEmail){
+      diz('Não encontrei inscrição com esse e-mail. Confira se é o mesmo usado na compra do ingresso.');
+    } else {
+      diz('Não encontrei inscrição com esse número. Tente com DDD, ou use o e-mail da compra.');
+    }
+  } catch(e){
+    console.error('busca do certificado:', e);
+    diz('Não consegui consultar agora. Tente de novo em instantes.');
+  } finally{
+    buscando = false; bt.textContent = rot; bt.disabled = false;
+  }
 }
 
 /* ── artes de rede social (opcionais) ───────────────────────────── */
