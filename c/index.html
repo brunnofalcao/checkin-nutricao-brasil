@@ -116,6 +116,24 @@ h1 span{color:var(--roxo)}
   font-weight:700;cursor:pointer}
 .artes-btn:hover{background:rgba(167,139,250,.12)}
 
+/* ── fotos oficiais do evento ───────────────────────────────────── */
+.fotos{
+  margin-top:30px;background:var(--card2);border:1px solid var(--line);border-radius:18px;
+  padding:22px 24px;display:flex;gap:20px;align-items:center;flex-wrap:wrap
+}
+.fotos-txt{flex:1;min-width:230px}
+.selo-ft{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--ciano);background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.32);
+  padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.fotos h2{font-size:19px;font-weight:700;margin:0 0 6px;letter-spacing:-.3px}
+.fotos p{margin:0;color:var(--t2);font-size:13.5px;line-height:1.6}
+.btn-ft{flex:none;background:transparent;border:1px solid var(--ciano);color:var(--ciano);
+  border-radius:12px;padding:13px 22px;font-family:inherit;font-size:14px;font-weight:700;
+  cursor:pointer;text-decoration:none;display:inline-block;white-space:nowrap}
+.btn-ft:hover{background:rgba(34,211,238,.12)}
+@media(max-width:520px){.fotos{flex-direction:column;align-items:stretch}
+  .btn-ft{text-align:center}}
+
 .rodape{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);color:var(--t3);font-size:12.5px}
 .rodape b{color:var(--t2);font-weight:600}
 
@@ -206,6 +224,17 @@ label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-
 
     <div class="grade" id="grade"></div>
 
+    <a class="fotos" id="fotos" href="https://banlek.com/album/266c57-nutricao-brasil-2026"
+       target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+      <div class="fotos-txt">
+        <span class="selo-ft">Fotos oficiais</span>
+        <h2>Baixe as fotos do evento</h2>
+        <p>O acervo completo do congresso está no álbum oficial. Baixe as suas e use uma delas
+           como fundo do certificado aqui em cima.</p>
+      </div>
+      <span class="btn-ft">Baixar as fotos</span>
+    </a>
+
     <div class="rodape">
       <b>Os dados deste certificado vêm da sua inscrição</b> e não podem ser editados nesta página.
       O PDF oficial é montado no servidor e sai com um código de autenticidade que qualquer pessoa
@@ -247,11 +276,11 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const FN_PDF = SUPABASE_URL + '/functions/v1/cert-pdf';
 const CDN = 'https://res.cloudinary.com/dlzrfhwin/image/upload/';
 const MARCA = CDN + 'v1775583229/nb_logotipo_hor_05_wqsydv.png';
-const GALERIA = 'https://nutricaobrasil.com.br/fotos';
+const GALERIA = 'https://banlek.com/album/266c57-nutricao-brasil-2026';
 const ART = {
-  a4:    { limpo:'nb2026/cert_pdf_limpo.png' },
-  feed:  { limpo:'nb2026/cert_feed_limpo.png',  preto:'nb2026/cert_feed_preto.png',  branco:'nb2026/cert_feed_branco.png' },
-  story: { limpo:'nb2026/cert_story_limpo.png', preto:'nb2026/cert_story_preto.png', branco:'nb2026/cert_story_branco.png' }
+  a4:    { limpo:'nb2026/cert_pdf_v2.png' },
+  feed:  { limpo:'nb2026/cert_feed_v2.png',  over:'nb2026/cert_feed_over_v2.png' },
+  story: { limpo:'nb2026/cert_story_v2.png', over:'nb2026/cert_story_over_v2.png' }
 };
 
 const FORMATOS = {
@@ -268,7 +297,7 @@ const FORMATOS = {
 
 const NB = ' ';
 const LISO = '#170b24';
-const VEU = 0.75;                       // véu chapado sobre foto do participante
+const VEU = 0.30;                       // véu extra sob a arte, para foto clara não apagar o texto
 
 /* ── medição ────────────────────────────────────────────────── */
 const med = document.createElement('canvas').getContext('2d');
@@ -385,22 +414,6 @@ function carrega(url, ms){
   });
 }
 function off(w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
-function montaOverlay(preto, branco){
-  const w = preto.naturalWidth, h = preto.naturalHeight;
-  const cp = off(w, h), cb = off(w, h), cm = off(w, h);
-  cp.getContext('2d').drawImage(preto, 0, 0);
-  cb.getContext('2d').drawImage(branco, 0, 0);
-  const P = cp.getContext('2d').getImageData(0,0,w,h).data;
-  const B = cb.getContext('2d').getImageData(0,0,w,h).data;
-  const dm = cm.getContext('2d').createImageData(w, h), M = dm.data;
-  for (let i = 0; i < P.length; i += 4){
-    const dif = ((B[i]-P[i]) + (B[i+1]-P[i+1]) + (B[i+2]-P[i+2])) / 3;
-    let a = 255 - dif; if (a < 0) a = 0; else if (a > 255) a = 255;
-    M[i] = M[i+1] = M[i+2] = 0; M[i+3] = a;
-  }
-  cm.getContext('2d').putImageData(dm, 0, 0);
-  return { mask: cm, prem: cp };
-}
 
 /* ── composição de uma peça ───────────────────────────────────── */
 function compoe(fmt, nome, m, opts){
@@ -420,12 +433,9 @@ function compoe(fmt, nome, m, opts){
     } else {
       ctx.fillStyle = LISO; ctx.fillRect(0, 0, c.width, c.height);
     }
-    const ov = over[fmt];
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.drawImage(ov.mask, 0, 0, c.width, c.height);
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.drawImage(ov.prem, 0, 0, c.width, c.height);
-    ctx.globalCompositeOperation = 'source-over';
+    // A arte já vem em PNG com alpha: o fundo dela é preto a 30%, a curva é
+    // semitransparente e o texto é opaco. Um drawImage resolve tudo.
+    ctx.drawImage(over[fmt], 0, 0, c.width, c.height);
   }
   desenha(ctx, fmt, nome, m, k);
   return c;
@@ -545,7 +555,7 @@ function pintaGrade(){
     dica.innerHTML = 'Nas duas versões com a sua foto, escolha uma imagem sua no congresso. ' +
       'A arte escurece o fundo sozinha, então funciona bem até com foto clara, e você enquadra ' +
       'arrastando. A foto não sai do seu aparelho. ' +
-      '<a href="' + GALERIA + '" target="_blank" rel="noopener">Galeria oficial de fotos →</a>';
+      '<a href="' + GALERIA + '" target="_blank" rel="noopener">Baixar as fotos do evento →</a>';
     g.appendChild(dica);
     return;
   }
@@ -586,7 +596,7 @@ function abreModal(o){
   $('mDesc').innerHTML = 'Escolha uma foto sua no congresso, enquadre e baixe. ' +
     'A arte escurece o fundo sozinha, então funciona bem até com foto clara. ' +
     'A imagem não sai do seu aparelho. ' +
-    '<a href="' + GALERIA + '" target="_blank" rel="noopener">Galeria oficial de fotos →</a>';
+    '<a href="' + GALERIA + '" target="_blank" rel="noopener">Baixar as fotos do evento →</a>';
   $('modal').classList.remove('hide');
   pintaModal();
 }
@@ -699,15 +709,15 @@ async function buscaArtes(){
       new Promise(r => setTimeout(r, 6000))
     ]);
 
-    const [a4, fL, fP, fB, sL, sP, sB] = await Promise.all([
+    const [a4, fL, fO, sL, sO] = await Promise.all([
       carrega(CDN + ART.a4.limpo),
-      carrega(CDN + ART.feed.limpo),  carrega(CDN + ART.feed.preto),  carrega(CDN + ART.feed.branco),
-      carrega(CDN + ART.story.limpo), carrega(CDN + ART.story.preto), carrega(CDN + ART.story.branco)
+      carrega(CDN + ART.feed.limpo),  carrega(CDN + ART.feed.over),
+      carrega(CDN + ART.story.limpo), carrega(CDN + ART.story.over)
     ]);
     imgs.a4 = a4; imgs.feed = fL; imgs.story = sL;
-    // getImageData exige CORS liberado no CDN. Se um dia não estiver, o erro
-    // cai aqui dentro e a página segue de pé.
-    over.feed = montaOverlay(fP, fB); over.story = montaOverlay(sP, sB);
+    // Baixar a arte final exige CORS liberado no CDN por causa do toBlob.
+    // Se um dia não estiver, o erro cai aqui dentro e a página segue de pé.
+    over.feed = fO; over.story = sO;
     S.artes = 'ok';
   } catch(e){
     console.error('artes do certificado:', e);
