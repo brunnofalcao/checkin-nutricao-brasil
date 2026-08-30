@@ -31,7 +31,7 @@ h1{font-size:clamp(26px,5.2vw,40px);font-weight:700;letter-spacing:-1px;margin:0
 h1 span{color:var(--roxo)}
 .sub{color:var(--t2);margin:0 0 26px;max-width:600px}
 
-/* ── ficha de dados (só leitura) ───────────────────────────────── */
+/* ── ficha de dados (só leitura) ───────────────────────────── */
 .ficha{
   background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
   border-radius:18px;padding:20px 22px;margin-bottom:14px
@@ -47,7 +47,7 @@ h1 span{color:var(--roxo)}
 .dado .r{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--t3)}
 .dado .v{font-size:15px;font-weight:600;color:var(--t1);margin-top:2px}
 
-/* ── abas de módulo ────────────────────────────────────────────── */
+/* ── abas de módulo ─────────────────────────────────────── */
 .abas{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .aba{
   background:#160c26;border:1px solid var(--line);color:var(--t2);border-radius:999px;
@@ -55,7 +55,7 @@ h1 span{color:var(--roxo)}
 }
 .aba.on{background:linear-gradient(135deg,#7c3aed,#a78bfa);border-color:transparent;color:#fff}
 
-/* ── grade de opções ───────────────────────────────────────────── */
+/* ── grade de opções ───────────────────────────────────── */
 .grade{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
 .op{
   background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
@@ -82,6 +82,35 @@ h1 span{color:var(--roxo)}
 .artes-nota span{font-size:12.5px;color:var(--t3);line-height:1.5}
 .artes-nota.ruim{border-style:solid;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.06)}
 .artes-nota.ruim b{color:#f6e3b4}
+
+/* ── o documento oficial, em destaque ──────────────────────────── */
+.oficial{
+  background:linear-gradient(135deg,#2b1549 0%,#1a0f2d 55%,#160c26 100%);
+  border:1px solid #513281;border-radius:20px;padding:24px 26px;margin-bottom:30px;
+  display:flex;gap:24px;align-items:center;flex-wrap:wrap;
+  box-shadow:0 0 0 1px rgba(167,139,250,.08),0 20px 44px -30px rgba(124,58,237,.95)
+}
+.oficial-mini{width:150px;flex:none;aspect-ratio:2480/1754;border-radius:10px;overflow:hidden;
+  background:#0f0720;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.oficial-mini img{max-width:100%;max-height:100%;display:block}
+.oficial-txt{flex:1;min-width:240px}
+.selo-of{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:#c4b5fd;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.34);
+  padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.oficial h2{font-size:20px;font-weight:700;margin:0 0 7px;letter-spacing:-.3px}
+.oficial p{margin:0;color:var(--t2);font-size:13.5px;line-height:1.6}
+.btn-of{margin-top:16px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:0;
+  border-radius:12px;padding:13px 24px;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.btn-of:hover{filter:brightness(1.08)}
+
+/* ── abertura do certificado social ────────────────────────────── */
+.social-abre{margin:0 0 16px}
+.novo{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+  color:#0b0516;background:var(--ciano);padding:4px 11px;border-radius:999px;margin-bottom:11px}
+.social-tt{font-size:22px;font-weight:700;margin:0 0 7px;letter-spacing:-.4px}
+.social-ds{margin:0;color:var(--t2);font-size:14px;line-height:1.6;max-width:660px}
+.dica-foto{grid-column:1/-1;font-size:12.5px;color:var(--t3);line-height:1.6;padding-top:2px}
+.dica-foto a{color:var(--roxo)}
 .artes-btn{align-self:flex-start;margin-top:9px;background:transparent;border:1px solid var(--roxo);
   color:var(--roxo);border-radius:9px;padding:8px 14px;font-family:inherit;font-size:12.5px;
   font-weight:700;cursor:pointer}
@@ -90,7 +119,7 @@ h1 span{color:var(--roxo)}
 .rodape{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);color:var(--t3);font-size:12.5px}
 .rodape b{color:var(--t2);font-weight:600}
 
-/* ── estados ───────────────────────────────────────────────────── */
+/* ── estados ───────────────────────────────────────────── */
 .estado{text-align:center;padding:90px 20px;color:var(--t2)}
 .estado h2{font-size:22px;color:var(--t1);margin:0 0 8px}
 .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--roxo);border-radius:50%;
@@ -104,7 +133,7 @@ h1 span{color:var(--roxo)}
 .entrada button{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:0;border-radius:11px;
   padding:12px 22px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
 
-/* ── modal da foto ─────────────────────────────────────────────── */
+/* ── modal da foto ─────────────────────────────────────── */
 .modal{position:fixed;inset:0;background:rgba(6,2,12,.86);backdrop-filter:blur(6px);
   z-index:50;display:flex;align-items:center;justify-content:center;padding:18px}
 .caixa{
@@ -143,7 +172,7 @@ label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-
   <div id="erro" class="estado hide">
     <h2 id="erroTt">Esta página abre pelo link do seu e-mail</h2>
     <p id="erroDs">Enviamos para você um link pessoal, terminado num código de 22 letras.
-       Abra por ele — ou cole o link (ou só o código) aqui embaixo.</p>
+       Abra por ele, ou cole o link (ou só o código) aqui embaixo.</p>
     <div id="entradaBox">
       <div class="entrada">
         <input id="tk" placeholder="cole aqui o link ou o código" autocomplete="off" spellcheck="false">
@@ -159,34 +188,46 @@ label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-
     <img class="marca" id="marca" alt="Nutrição Brasil">
     <div class="kicker" id="kick">Nutrição Brasil 2026</div>
     <h1>Seu certificado está pronto,<br><span id="primeiro"></span>.</h1>
-    <p class="sub">Baixe o documento oficial e, se quiser, as versões para o Instagram —
-       inclusive uma com a sua própria foto de fundo.</p>
+    <p class="sub">Baixe o documento oficial. E, se quiser, leve o certificado para as suas
+       redes, inclusive com uma foto sua do congresso.</p>
 
     <div class="abas hide" id="abas"></div>
     <div class="ficha" id="ficha"></div>
+
+    <div class="oficial" id="oficial"></div>
+
+    <div class="social-abre">
+      <span class="novo">Novidade</span>
+      <h2 class="social-tt">Certificado Social</h2>
+      <p class="social-ds">O mesmo certificado, agora em versão de publicar. Arte oficial pronta
+         para o feed e para os stories, no tamanho certo de cada um. E, se quiser, com uma foto
+         sua no congresso como fundo.</p>
+    </div>
+
     <div class="grade" id="grade"></div>
 
     <div class="rodape">
       <b>Os dados deste certificado vêm da sua inscrição</b> e não podem ser editados nesta página.
       O PDF oficial é montado no servidor e sai com um código de autenticidade que qualquer pessoa
-      pode conferir — útil para conselho, empregador ou processo seletivo.<br>
+      pode conferir, útil para conselho, empregador ou processo seletivo.<br>
       Guarde este link: ele não expira e você pode voltar quando quiser para gerar de novo.
     </div>
   </div>
 </div>
 
-<!-- ── modal da foto ─────────────────────────────────────────────── -->
+<!-- ── modal da foto ─────────────────────────────────────── -->
 <div class="modal hide" id="modal">
   <div class="caixa">
     <h3 id="mTitulo">Story com a sua foto</h3>
-    <p class="ds" id="mDesc">Escolha uma foto do evento, enquadre e baixe. A imagem não sai do seu aparelho.</p>
+    <p class="ds" id="mDesc">Escolha uma foto sua do congresso, enquadre e baixe.</p>
     <div class="editor">
       <div id="pal"><canvas id="cv"></canvas></div>
       <div>
         <button class="btn sec file">Escolher foto<input type="file" id="arq" accept="image/*"></button>
         <label class="mini">Zoom</label>
         <input type="range" class="slider" id="zoom" min="100" max="320" value="100">
-        <p class="dica">Arraste em cima da imagem para reposicionar.<br>
+        <p class="dica">Arraste em cima da imagem para reposicionar e use o zoom para enquadrar.<br>
+           Prefira uma foto em que você apareça mais para um lado: o texto do certificado ocupa o meio.<br>
            Sem foto escolhida, o fundo fica liso.</p>
         <button class="btn pri" id="mBaixar" style="margin-top:18px">Baixar</button>
         <button class="btn sec" id="mFechar">Fechar</button>
@@ -196,10 +237,10 @@ label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════
    PÁGINA DO CERTIFICADO · Nutrição Brasil 2026
    Os dados variáveis vêm do servidor pelo token. Não há campo editável.
-   ═══════════════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════════ */
 const SUPABASE_URL = 'https://tjrarpnqoemdhxjjbtgk.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcmFycG5xb2VtZGh4ampidGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTkyNjMsImV4cCI6MjA5NDQzNTI2M30.i6O-z9FpSqRa-1snNPwVv7QuyZ1vM9woZn2Rlq10vXY';
 
@@ -229,13 +270,13 @@ const NB = ' ';
 const LISO = '#170b24';
 const VEU = 0.75;                       // véu chapado sobre foto do participante
 
-/* ── medição ─────────────────────────────────────────────────────────── */
+/* ── medição ────────────────────────────────────────────────── */
 const med = document.createElement('canvas').getContext('2d');
 med.fontKerning = 'none';
 function face(p, s){ return p + ' ' + s + 'px Poppins, sans-serif'; }
 function wid(t, p, s){ med.font = face(p, s); return med.measureText(t).width; }
 
-/* ── frase ───────────────────────────────────────────────────────────── */
+/* ── frase ─────────────────────────────────────────────────── */
 function frase(m, extenso){
   const data  = (extenso ? m.extenso : m.curta).replace(/ /g, NB);
   const verbo = m.dias > 1 ? 'realizado nos dias ' : 'realizado no dia ';
@@ -330,7 +371,7 @@ function desenha(ctx, fmt, nome, m, k){
   }
 }
 
-/* ── assets + alfa ───────────────────────────────────────────────────── */
+/* ── assets + alfa ──────────────────────────────────────────── */
 const imgs = {}, over = {};
 // Sem prazo, uma imagem que trava no 3G do centro de convenções deixa a
 // promessa pendurada para sempre — e a página ficava no "carregando" sem fim.
@@ -361,7 +402,7 @@ function montaOverlay(preto, branco){
   return { mask: cm, prem: cp };
 }
 
-/* ── composição de uma peça ──────────────────────────────────────────── */
+/* ── composição de uma peça ───────────────────────────────────── */
 function compoe(fmt, nome, m, opts){
   const o = opts || {}, k = o.k || 1, f = FORMATOS[fmt];
   const c = off(Math.round(f.W * k), Math.round(f.H * k));
@@ -390,7 +431,7 @@ function compoe(fmt, nome, m, opts){
   return c;
 }
 
-/* ── downloads ───────────────────────────────────────────────────────── */
+/* ── downloads ──────────────────────────────────────────────── */
 function slug(s){
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
           .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'certificado';
@@ -406,9 +447,9 @@ function baixaPdfOficial(chave){
   location.href = FN_PDF + '?t=' + encodeURIComponent(S.token) + '&m=' + encodeURIComponent(chave);
 }
 
-/* ═════════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════════
    ESTADO DA PÁGINA
-   ═════════════════════════════════════════════════════════════════════ */
+   ════════════════════════════════════════════════════════════════════ */
 const S = { token:null, dados:null, mod:0, modalFmt:null, foto:null, zoom:1, dx:0, dy:0,
             artes:'carregando' };  // carregando · ok · falhou
 const $ = id => document.getElementById(id);
@@ -421,8 +462,9 @@ function pegaToken(){
   return (location.hash || '').replace('#','').trim();
 }
 
+// O oficial saiu daqui. Ele não é mais uma opção entre cinco: virou o card de
+// cima, sozinho, porque é o documento. O resto é o Certificado Social.
 const OPCOES = [
-  { id:'pdf',        fmt:'a4',    troca:false, tt:'Certificado oficial',  ds:'PDF A4 · emitido pelo servidor, com código de autenticidade',       tag:'PDF' },
   { id:'feed',       fmt:'feed',  troca:false, tt:'Post para o feed',     ds:'1080 × 1350 · arte oficial',          tag:'FEED' },
   { id:'feed-foto',  fmt:'feed',  troca:true,  tt:'Feed com sua foto',    ds:'1080 × 1350 · você escolhe o fundo',  tag:'SUA FOTO' },
   { id:'story',      fmt:'story', troca:false, tt:'Story',                ds:'1080 × 1920 · arte oficial',          tag:'STORY' },
@@ -452,10 +494,35 @@ function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&'
 // falhasse, a pessoa lia "esse código não corresponde a nenhuma inscrição"
 // com o link certo na mão. Agora o PDF aparece na hora e as artes entram
 // depois, sozinhas.
+// O documento oficial tem card próprio, no topo e sozinho. Ele não depende das
+// artes do CDN: o PDF é montado no servidor e o botão funciona mesmo que a
+// miniatura nunca carregue.
+function pintaOficial(){
+  const el = $('oficial'), m = modAtual();
+  el.innerHTML =
+    '<div class="oficial-mini" id="oficialMini"></div>' +
+    '<div class="oficial-txt">' +
+      '<span class="selo-of">Documento oficial</span>' +
+      '<h2>Certificado oficial em PDF</h2>' +
+      '<p>É este o documento que vale para conselho, empregador e processo seletivo. ' +
+      'Sai montado no servidor, em A4, com código de autenticidade que qualquer pessoa ' +
+      'pode conferir.</p>' +
+      '<button class="btn-of" id="btnOficial">Baixar o certificado oficial</button>' +
+    '</div>';
+  $('btnOficial').addEventListener('click', () => baixaPdfOficial(m.chave));
+  if (S.artes === 'ok'){
+    try{
+      const mini = compoe('a4', S.dados.nome, m, { k:0.16 });
+      const im = new Image(); im.src = mini.toDataURL('image/jpeg', .8);
+      $('oficialMini').appendChild(im);
+    } catch(e){ console.error('miniatura do oficial:', e); }
+  }
+}
+
 function pintaGrade(){
   const g = $('grade'); g.innerHTML = '';
   const nome = S.dados.nome, m = modAtual();
-  const lista = S.artes === 'ok' ? OPCOES : OPCOES.filter(o => o.id === 'pdf');
+  const lista = S.artes === 'ok' ? OPCOES : [];
 
   lista.forEach(o => {
     const b = document.createElement('button');
@@ -472,14 +539,23 @@ function pintaGrade(){
     b.addEventListener('click', () => acionar(o));
   });
 
-  if (S.artes === 'ok') return;
+  if (S.artes === 'ok'){
+    const dica = document.createElement('div');
+    dica.className = 'dica-foto';
+    dica.innerHTML = 'Nas duas versões com a sua foto, escolha uma imagem sua no congresso. ' +
+      'A arte escurece o fundo sozinha, então funciona bem até com foto clara, e você enquadra ' +
+      'arrastando. A foto não sai do seu aparelho. ' +
+      '<a href="' + GALERIA + '" target="_blank" rel="noopener">Galeria oficial de fotos →</a>';
+    g.appendChild(dica);
+    return;
+  }
 
   const nota = document.createElement('div');
   nota.className = 'artes-nota' + (S.artes === 'falhou' ? ' ruim' : '');
   nota.id = 'artesNota';
   if (S.artes === 'carregando'){
-    nota.innerHTML = '<b>Preparando as versões para o Instagram…</b>' +
-      '<span>O certificado oficial acima já pode ser baixado — não precisa esperar.</span>';
+    nota.innerHTML = '<b>Preparando as versões para publicar…</b>' +
+      '<span>O certificado oficial acima já pode ser baixado, não precisa esperar.</span>';
   } else {
     nota.innerHTML = '<b>As artes para redes sociais não carregaram</b>' +
       '<span>Foi a conexão com o servidor de imagens, não o seu link. ' +
@@ -501,14 +577,16 @@ function acionar(o){
   baixaCanvas(c, 'certificado-nb2026-' + slug(S.dados.nome) + '-' + slug(m.nome) + '-' + o.fmt + '.png');
 }
 
-/* ── modal ───────────────────────────────────────────────────────────── */
+/* ── modal ──────────────────────────────────────────────────── */
 const cv = $('cv'), cvx = cv.getContext('2d');
 function abreModal(o){
   S.modalFmt = o.fmt; S.foto = null; S.zoom = 1; S.dx = S.dy = 0;
   $('zoom').value = 100;
   $('mTitulo').textContent = o.tt;
-  $('mDesc').innerHTML = 'Escolha uma foto sua no evento, enquadre e baixe. ' +
-    'A imagem não sai do seu aparelho. <a href="' + GALERIA + '" target="_blank" rel="noopener">Galeria oficial de fotos →</a>';
+  $('mDesc').innerHTML = 'Escolha uma foto sua no congresso, enquadre e baixe. ' +
+    'A arte escurece o fundo sozinha, então funciona bem até com foto clara. ' +
+    'A imagem não sai do seu aparelho. ' +
+    '<a href="' + GALERIA + '" target="_blank" rel="noopener">Galeria oficial de fotos →</a>';
   $('modal').classList.remove('hide');
   pintaModal();
 }
@@ -550,7 +628,7 @@ cv.addEventListener('pointermove', e => {
 ['pointerup','pointercancel'].forEach(ev =>
   cv.addEventListener(ev, () => { arr = null; cv.classList.remove('drag'); }));
 
-/* ── abas ────────────────────────────────────────────────────────────── */
+/* ── abas ──────────────────────────────────────────────────── */
 function pintaAbas(){
   const a = $('abas');
   if (S.dados.modulos.length < 2) return;
@@ -562,7 +640,7 @@ function pintaAbas(){
     b.addEventListener('click', () => {
       S.mod = i;
       [...a.children].forEach((x, j) => x.classList.toggle('on', j === i));
-      pintaFicha(); pintaGrade();
+      pintaFicha(); pintaOficial(); pintaGrade();
     });
     a.appendChild(b);
   });
@@ -574,7 +652,7 @@ function mostraEntrada(errou){
   if (errou){
     $('erroTt').textContent = 'Link não encontrado';
     $('erroDs').textContent = 'Esse código não corresponde a nenhuma inscrição. ' +
-      'Confira se copiou o link inteiro do e-mail — ele termina com um código de 22 letras.';
+      'Confira se copiou o link inteiro do e-mail: ele termina com um código de 22 letras.';
   }
   $('erro').classList.remove('hide');
   $('tk').focus();
@@ -602,7 +680,7 @@ function abrePorCodigo(){
     (location.pathname.endsWith('.html') ? location.pathname.split('/').pop() : '') + '?t=' + m[0];
 }
 
-/* ── artes de rede social (opcionais) ────────────────────────────────── */
+/* ── artes de rede social (opcionais) ───────────────────────────── */
 // Roda depois que a página já está na tela. Se falhar, some com as opções de
 // Instagram e explica; nunca derruba o certificado.
 async function buscaArtes(){
@@ -635,10 +713,10 @@ async function buscaArtes(){
     console.error('artes do certificado:', e);
     S.artes = 'falhou';
   }
-  if (S.dados) pintaGrade();
+  if (S.dados){ pintaOficial(); pintaGrade(); }
 }
 
-/* ── boot ────────────────────────────────────────────────────────────── */
+/* ── boot ─────────────────────────────────────────────────── */
 document.getElementById('irTk').addEventListener('click', abrePorCodigo);
 document.getElementById('tk').addEventListener('keydown', e => { if (e.key === 'Enter') abrePorCodigo(); });
 
@@ -669,7 +747,7 @@ document.getElementById('tk').addEventListener('keydown', e => { if (e.key === '
   $('marca').src = MARCA;
   $('kick').textContent = S.dados.evento;
   $('primeiro').textContent = String(S.dados.nome).split(' ')[0];
-  pintaAbas(); pintaFicha(); pintaGrade();
+  pintaAbas(); pintaFicha(); pintaOficial(); pintaGrade();
   $('carregando').classList.add('hide');
   $('pagina').classList.remove('hide');
 
