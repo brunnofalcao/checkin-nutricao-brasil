@@ -22,7 +22,11 @@ const TETO   = 20000;
 
 const estado = {
   eventos: [], eventId: null, modulos: [], pessoas: [],
-  busca: '', filtro: 'todos', pagina: 300
+  busca: '', filtro: 'todos', pagina: 300,
+  // O container da tela. Sem guardar aqui, qualquer ação disparada de uma
+  // lista redesenhada (que não recebe `view`) recarregaria em cima de
+  // `undefined` e derrubaria a página.
+  view: null
 };
 
 // ── dados ────────────────────────────────────────────────────────────
@@ -105,6 +109,7 @@ async function salvaModulos(eventId, linhas) {
 
 // ── página ───────────────────────────────────────────────────────────
 export async function pageCertEntrega(view) {
+  estado.view = view;
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
   try {
     estado.eventos = await carregaEventos();
@@ -115,6 +120,8 @@ export async function pageCertEntrega(view) {
 }
 
 async function recarrega(view) {
+  view = view || estado.view;
+  estado.view = view;
   if (!estado.eventId) { setContent(view, avisoErro(new Error('Nenhum evento cadastrado.'))); return; }
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
   try {
@@ -201,7 +208,7 @@ function pinta(view) {
       })
     ),
     h('div', { class: 'evd-subtoolbar', id: 'cert-filtros' }, ...chipsFiltro()),
-    h('div', { class: 'table-card', id: 'lista-links' }, tabelaPessoas(view))
+    h('div', { class: 'table-card', id: 'lista-links' }, tabelaPessoas())
   );
 }
 
@@ -331,7 +338,7 @@ function redesenhaLista() {
   if (alvo) alvo.replaceChildren(tabelaPessoas());
 }
 
-function tabelaPessoas(view) {
+function tabelaPessoas() {
   const linhas = filtradas();
   const mostra = linhas.slice(0, estado.pagina);
   return h('div', {},
@@ -343,7 +350,7 @@ function tabelaPessoas(view) {
         h('th', { style: { width: '18%' } }, 'Certificado'),
         h('th', { style: { width: '26%', textAlign: 'right' } }, 'Ações')
       )),
-      h('tbody', {}, ...mostra.map((p) => linhaPessoa(p, view)))
+      h('tbody', {}, ...mostra.map((p) => linhaPessoa(p)))
     ),
     linhas.length > mostra.length
       ? h('div', { class: 'table-pager' },
@@ -360,7 +367,7 @@ function tabelaPessoas(view) {
   );
 }
 
-function linhaPessoa(p, view) {
+function linhaPessoa(p) {
   const baixou = p.emitidos.reduce((s, e) => s + (e.downloads || 0), 0);
   const url = p.token ? BASE_ALUNO + '?t=' + p.token : null;
 
@@ -392,11 +399,11 @@ function linhaPessoa(p, view) {
       !p.checked
         ? h('button', {
             class: 'btn btn-secondary btn-sm',
-            onClick: (e) => marcaCheckin(p, e.currentTarget, view)
+            onClick: (e) => marcaCheckin(p, e.currentTarget)
           }, 'Marcar check-in')
         : h('button', {
             class: 'btn btn-primary btn-sm',
-            onClick: (e) => enviaCertificado(p, e.currentTarget, view)
+            onClick: (e) => enviaCertificado(p, e.currentTarget)
           }, p.enviadoEm ? 'Reenviar' : 'Enviar certificado'),
       url
         ? h('button', {
@@ -413,21 +420,21 @@ function linhaPessoa(p, view) {
 }
 
 // ── ações por pessoa ─────────────────────────────────────────────────
-async function marcaCheckin(p, btn, view) {
+async function marcaCheckin(p, btn) {
   btn.disabled = true; btn.textContent = 'Marcando…';
   try {
     const { error } = await supabase.rpc('checkin_participant', { p_id: p.id });
     if (error) throw error;
     p.checked = true;
     toast.success('Check-in de ' + (p.nome || 'participante') + ' registrado. O certificado já está liberado.');
-    await recarrega(view);
+    await recarrega();
   } catch (e) {
     toast.danger('Não deu para marcar: ' + (e.message || e));
     btn.disabled = false; btn.textContent = 'Marcar check-in';
   }
 }
 
-async function enviaCertificado(p, btn, view) {
+async function enviaCertificado(p, btn) {
   const rot = btn.textContent;
   if (p.enviadoEm && !confirm(`${p.nome} já recebeu o certificado. Enviar de novo?`)) return;
   btn.disabled = true; btn.textContent = 'Enviando…';
