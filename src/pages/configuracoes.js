@@ -39,12 +39,18 @@ const PAPEIS = {
 export async function pageConfiguracoes(view) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
 
-  const [eu, perfis, eventos, fontes] = await Promise.all([
+  // `reservas` muda quando alguém reserva ou remove: por isso `let`.
+  let [eu, perfis, eventos, fontes, reservas] = await Promise.all([
     getProfile(),
+    // O .catch(() => []) transformava falha de rede e recusa de permissão
+    // em "nenhum acesso cadastrado" — a tela mais perigosa para se olhar e
+    // acreditar, porque é onde se confere quem tem acesso ao sistema.
     supabase.from('profiles').select('id, email, display_name, role, created_at')
-      .order('created_at').then((r) => r.data ?? []).catch(() => []),
+      .order('created_at')
+      .then((r) => { if (r.error) throw r.error; return r.data ?? []; }),
     listEvents(),
-    carregaFontes()
+    carregaFontes(),
+    carregaReservas()
   ]);
 
   function render() {
@@ -58,6 +64,9 @@ export async function pageConfiguracoes(view) {
 
       h('h2', { class: 'home-secao', style: { marginTop: '0' } }, 'Quem tem acesso'),
       blocoAcessos(),
+
+      h('h2', { class: 'home-secao' }, 'Minha senha'),
+      blocoSenha(),
 
       h('h2', { class: 'home-secao' }, 'De onde vêm os inscritos'),
       blocoFontes(),
@@ -80,18 +89,155 @@ export async function pageConfiguracoes(view) {
             h('th', { style: { width: '150px' } }, ''))),
           h('tbody', {}, ...perfis.map((p) => linhaPerfil(p, admins))))),
 
-      h('div', { class: 'cfg-nota' },
-        icons.info(),
-        h('div', {},
-          h('strong', {}, 'Criar login novo ainda não é feito aqui. '),
-          'Conta nova precisa ser criada no Supabase (Authentication → Users). ' +
-          'Depois que ela existe, o acesso se ajusta nesta tela. ',
-          perfis.length <= 2
-            ? h('span', { class: 'cfg-alerta' },
-                `Hoje existem ${perfis.length} contas no sistema. ` +
-                'Se mais alguém vai trabalhar no credenciamento, cada pessoa precisa da sua — ' +
-                'senha compartilhada tira a rastreabilidade de quem fez cada check-in.')
-            : null)));
+      blocoNovoAcesso());
+  }
+
+  // Dar acesso a alguém novo são dois passos, e um deles não é aqui: a
+  // senha mora no Supabase. O que se resolve nesta tela é o outro lado.
+  // Sem a reserva, todo login novo nascia como Operação, que não abre o
+  // painel, e alguém tinha que lembrar de promover depois. Entre uma coisa
+  // e outra a pessoa entra, lê "Sem acesso" e liga pedindo socorro.
+  function blocoNovoAcesso() {
+    return h('div', { class: 'cfg-nota' },
+      icons.info(),
+      h('div', { style: { flex: '1' } },
+        h('strong', {}, 'Dar acesso a alguém novo: reserve aqui, crie a senha no Supabase. '),
+        'Escreva o e-mail abaixo e escolha o acesso. Depois vá em ',
+        h('strong', {}, 'Supabase → Authentication → Users → Add user'),
+        ', informe o mesmo e-mail, defina uma senha provisória e deixe ',
+        h('strong', {}, '"Auto Confirm User"'),
+        ' marcado. No instante em que o login existir, a pessoa já entra com o acesso ' +
+        'reservado. Peça para ela trocar a senha no primeiro acesso, em Configurações.',
+        formReserva(),
+        listaReservas(),
+        perfis.length <= 2
+          ? h('div', { class: 'cfg-alerta', style: { marginTop: '10px' } },
+              `Hoje existem ${perfis.length} contas no sistema. ` +
+              'Se mais alguém vai trabalhar no credenciamento, cada pessoa precisa da sua. ' +
+              'Senha compartilhada tira a rastreabilidade de quem fez cada check-in.')
+          : null));
+  }
+
+  function formReserva() {
+    const caixa = h('div', {
+      style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'flex-end', marginTop: '12px' }
+    },
+      h('div', { class: 'field', style: { flex: '1 1 180px', margin: '0' } },
+        h('label', {}, 'Nome'),
+        h('input', { class: 'input', name: 'nome', placeholder: 'Jaqueline Borges' })),
+      h('div', { class: 'field', style: { flex: '1 1 220px', margin: '0' } },
+        h('label', {}, 'E-mail'),
+        h('input', { class: 'input', name: 'email', type: 'email', placeholder: 'pessoa@exemplo.com' })),
+      h('div', { class: 'field', style: { flex: '0 1 170px', margin: '0' } },
+        h('label', {}, 'Acesso'),
+        h('select', { class: 'input', name: 'papel' },
+          ...Object.entries(PAPEIS).map(([v, c]) => h('option', { value: v }, c.rot)))),
+      h('button', {
+        class: 'btn btn-secondary',
+        onclick: (e) => guardaReserva(caixa, e.currentTarget)
+      }, 'Reservar acesso'));
+    return caixa;
+  }
+
+  async function guardaReserva(caixa, btn) {
+    const v = (n) => caixa.querySelector(`[name="${n}"]`)?.value?.trim() || '';
+    const nome = v('nome'), email = v('email').toLowerCase(), papel = v('papel');
+    if (!email) { toast.danger('Escreva o e-mail.'); return; }
+    btn.disabled = true;
+    const { data, error } = await supabase.rpc('acesso_pre_autoriza',
+      { p_email: email, p_papel: papel, p_nome: nome || null });
+    btn.disabled = false;
+    const motivos = {
+      email: 'Esse e-mail não parece válido.',
+      papel: 'Esse acesso não existe.',
+      ja_tem_login: 'Essa pessoa já tem login. Ajuste o acesso dela na tabela acima.'
+    };
+    if (error || data?.erro) {
+      toast.danger(motivos[data?.erro] || 'Não deu: ' + (error?.message || 'erro'));
+      return;
+    }
+    reservas.unshift({ email, papel, nome: nome || null, criado_em: new Date().toISOString() });
+    toast.success(
+      `${email} está reservado como ${(PAPEIS[papel]?.rot || papel).toLowerCase()}. ` +
+        'Agora crie a senha no Supabase, em Authentication → Users.',
+      { ms: 9000 }
+    );
+    render();
+  }
+
+  function listaReservas() {
+    if (reservasErro) {
+      return h('div', { class: 'cfg-alerta', style: { marginTop: '10px' } },
+        'Não consegui ler os acessos reservados: ' + reservasErro +
+        '. Pode existir reserva que esta tela não está mostrando.');
+    }
+    if (!reservas.length) return null;
+    return h('div', { style: { marginTop: '12px' } },
+      h('div', { class: 'cfg-pode' }, 'Reservados, esperando o login ser criado no Supabase:'),
+      h('table', { class: 'table' },
+        h('tbody', {}, ...reservas.map((r) =>
+          h('tr', {},
+            h('td', {},
+              h('div', { class: 'row-name' }, r.nome || r.email.split('@')[0]),
+              h('div', { class: 'row-sub' }, r.email)),
+            h('td', {}, h('span', { class: 'status soon' }, PAPEIS[r.papel]?.rot || r.papel)),
+            h('td', { style: { textAlign: 'right' } },
+              h('button', {
+                class: 'btn btn-ghost btn-sm',
+                onclick: (e) => tiraReserva(r, e.currentTarget)
+              }, 'Remover')))))));
+  }
+
+  async function tiraReserva(r, btn) {
+    btn.disabled = true;
+    const { error } = await supabase.rpc('acesso_pre_autoriza_remove', { p_email: r.email });
+    btn.disabled = false;
+    if (error) { toast.danger('Não deu: ' + error.message); return; }
+    reservas = reservas.filter((x) => x.email !== r.email);
+    toast.success('Reserva removida.');
+    render();
+  }
+
+  // ── 1b. A própria senha ───────────────────────────────────────────────────
+  // Quem entra com senha provisória feita por outra pessoa precisa de um
+  // lugar para trocar. Sem isso, a senha do começo fica para sempre, e
+  // duas pessoas passam a saber a senha de uma.
+  function blocoSenha() {
+    let caixa;
+    caixa = h('div', { class: 'cfg-nota' },
+      icons.info(),
+      h('div', { style: { flex: '1' } },
+        h('strong', {}, 'Trocar a minha senha. '),
+        'Vale só para a sua conta (', eu?.email || '', '). ' +
+        'Mínimo de 8 caracteres. Você continua conectado depois de trocar.',
+        h('div', {
+          style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'flex-end', marginTop: '12px' }
+        },
+          h('div', { class: 'field', style: { flex: '1 1 200px', margin: '0' } },
+            h('label', {}, 'Nova senha'),
+            h('input', { class: 'input', name: 'senha1', type: 'password', autocomplete: 'new-password' })),
+          h('div', { class: 'field', style: { flex: '1 1 200px', margin: '0' } },
+            h('label', {}, 'Repita a nova senha'),
+            h('input', { class: 'input', name: 'senha2', type: 'password', autocomplete: 'new-password' })),
+          h('button', {
+            class: 'btn btn-secondary',
+            onclick: (e) => trocaSenha(caixa, e.currentTarget)
+          }, 'Trocar senha'))));
+    return caixa;
+  }
+
+  async function trocaSenha(caixa, btn) {
+    const v = (n) => caixa.querySelector(`[name="${n}"]`)?.value || '';
+    const s1 = v('senha1'), s2 = v('senha2');
+    if (s1.length < 8) { toast.danger('A senha precisa ter pelo menos 8 caracteres.'); return; }
+    if (s1 !== s2) { toast.danger('As duas senhas não são iguais.'); return; }
+    btn.disabled = true;
+    const { error } = await supabase.auth.updateUser({ password: s1 });
+    btn.disabled = false;
+    if (error) { toast.danger('Não deu: ' + error.message); return; }
+    caixa.querySelector('[name="senha1"]').value = '';
+    caixa.querySelector('[name="senha2"]').value = '';
+    toast.success('Senha trocada. Use a nova no próximo login.', { ms: 7000 });
   }
 
   function linhaPerfil(p, admins) {
@@ -221,6 +367,19 @@ export async function pageConfiguracoes(view) {
   }
 
   render();
+}
+
+// Acessos reservados que ainda não viraram login. Erro aqui não pode virar
+// "nenhuma reserva": esta é a tela onde se confere quem vai poder entrar.
+let reservasErro = null;
+async function carregaReservas() {
+  const { data, error } = await supabase
+    .from('acessos_pre_autorizados')
+    .select('email, papel, nome, criado_em')
+    .is('usado_em', null)
+    .order('criado_em', { ascending: false });
+  reservasErro = error ? (error.message || 'erro') : null;
+  return data ?? [];
 }
 
 // Conta de onde os participantes vieram. Nada aqui é chute: sai da coluna
