@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Avaliação · Nutrição Brasil 2026</title>
+<style>
+  html, body { margin:0; height:100%; background:#0d0618; color:#c9bcde;
+               font:16px/1.7 Helvetica, Arial, sans-serif; }
+  .meio { min-height:100%; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .cx { max-width:420px; text-align:center; }
+  .tit { font-size:19px; font-weight:800; color:#fff; margin-bottom:10px; }
+  a { color:#80c0ff; }
+  .anel { width:26px; height:26px; margin:0 auto 20px; border-radius:50%;
+          border:3px solid #3a2a52; border-top-color:#8b5fbf; animation:gira .8s linear infinite; }
+  @keyframes gira { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion:reduce) { .anel { animation:none; } }
+</style>
+</head>
+<body>
+<div class="meio">
+  <div class="cx">
+    <div class="anel"></div>
+    <div class="tit">Abrindo a avaliação…</div>
+    <div id="saida">Se não abrir sozinho em alguns segundos, <a id="manual" href="https://www.nutricaobrasil.com.br">toque aqui</a>.</div>
+  </div>
+</div>
+<script>
+// =====================================================================
+// PONTE DA AVALIAÇÃO · NB2026
+//
+// O Google Forms não devolve quem respondeu, então o botão do e-mail passa
+// por aqui: registramos o clique e mandamos a pessoa para o formulário.
+//
+// A ordem importa. Primeiro descobrimos o destino pelo PREFIXO do código,
+// que já diz a peça, e só depois avisamos o servidor. Assim, se o registro
+// falhar (rede ruim, função fora do ar), a pessoa ainda chega no formulário
+// certo. Perde-se a contagem, nunca a resposta.
+// =====================================================================
+(function () {
+  var FUNCAO = 'https://tjrarpnqoemdhxjjbtgk.supabase.co/functions/v1/av';
+  var SITE = 'https://www.nutricaobrasil.com.br';
+  var FORMS = {
+    P: 'https://forms.gle/Ji7UWCDTcnd3LmiJ8',  // Plenária Principal
+    E: 'https://forms.gle/knMRjLSz3pXEqkbr9',  // Nutrição Esportiva
+    U: 'https://forms.gle/WC3SeQMBDMGrTdFo7',  // NB Universitário
+    R: 'https://forms.gle/GJWkbPKMKfSYUG5t6'   // NB Run
+  };
+
+  var q = new URLSearchParams(location.search);
+  var sair = (q.get('u') || '').trim().toUpperCase();
+  if (sair) {
+    location.replace(FUNCAO + '?u=' + encodeURIComponent(sair));
+    return;
+  }
+
+  var cod = (q.get('c') || '').trim().toUpperCase();
+  var destino = FORMS[cod.charAt(0)] || SITE;
+  document.getElementById('manual').href = destino;
+
+  if (cod) {
+    var url = FUNCAO + '?c=' + encodeURIComponent(cod);
+    try {
+      // sendBeacon sobrevive à navegação: é feito para exatamente isto.
+      if (!(navigator.sendBeacon && navigator.sendBeacon(url))) {
+        fetch(url, { method: 'POST', keepalive: true, mode: 'no-cors' });
+      }
+    } catch (e) {
+      try { fetch(url, { method: 'POST', keepalive: true, mode: 'no-cors' }); } catch (e2) { /* segue */ }
+    }
+  }
+
+  // replace, não href: o botão voltar do celular precisa levar de volta ao
+  // e-mail, não a esta página, que mandaria a pessoa para o formulário de novo.
+  setTimeout(function () { location.replace(destino); }, 120);
+})();
+</script>
+</body>
+</html>
