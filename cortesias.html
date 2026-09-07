@@ -31,7 +31,7 @@ body{
 .marca{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;
   letter-spacing:-.03em;text-align:center;margin-bottom:6px}
 .marca b{color:var(--roxo);font-weight:700}
-.sub-marca{text-align:center;color:var(--t3);font-size:13px;margin-bottom:26px}
+.sub-marca{text-align:center;color:var(--t3);font-size:13px;margin-bottom:26px;min-height:20px}
 
 .cartao{background:var(--card);border:1px solid var(--linha);border-radius:var(--r);
   padding:24px 22px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
@@ -81,6 +81,9 @@ input::placeholder{color:#5d4f77}
 .mod-nome{font-weight:600;font-size:15px}
 .mod.bloq{opacity:.45;cursor:not-allowed}
 .mod.bloq:hover{border-color:var(--linha2)}
+.so-um{border:1px solid var(--linha2);border-radius:var(--r-sm);padding:13px 14px;
+  background:var(--roxo-soft);font-weight:600;font-size:15px}
+.so-um::before{content:'✓ ';color:var(--ok)}
 
 .aviso{border-radius:var(--r-sm);padding:12px 14px;font-size:13.5px;line-height:1.5;margin:14px 0}
 .aviso.erro{background:var(--rui-soft);border:1px solid #5b2020;color:#ffb3b3}
@@ -143,7 +146,10 @@ input::placeholder{color:#5d4f77}
 <body>
 <div class="wrap">
   <div class="marca">nutrição<b>brasil</b></div>
-  <div class="sub-marca">Brasília · 27 a 29 de agosto de 2026</div>
+  <!-- Cidade e data saem do evento do código, não daqui. Escrito fixo, o
+       convidado de Belém lia "Brasília · 27 a 29 de agosto" na tela em
+       que confirma a própria presença. -->
+  <div class="sub-marca" id="sub-marca"></div>
   <div class="cartao" id="app"><div class="carregando">Carregando…</div></div>
   <div class="rodape">
     Dúvidas sobre a sua cortesia? Fale com a empresa que enviou o código.
@@ -159,6 +165,7 @@ import { leLista } from './admin/src/core/cortesias-lista.js';
 
 const FN = SUPABASE_URL + '/functions/v1/cortesia-inscreve';
 const app = document.getElementById('app');
+const subMarca = document.getElementById('sub-marca');
 
 const ESTADOS = ['Acre (AC)','Alagoas (AL)','Amapá (AP)','Amazonas (AM)','Bahia (BA)','Ceará (CE)',
 'Distrito Federal (DF)','Espírito Santo (ES)','Goiás (GO)','Maranhão (MA)','Mato Grosso (MT)',
@@ -167,6 +174,11 @@ const ESTADOS = ['Acre (AC)','Alagoas (AL)','Amapá (AP)','Amazonas (AM)','Bahia
 'Rio Grande do Sul (RS)','Rondônia (RO)','Roraima (RR)','Santa Catarina (SC)','São Paulo (SP)',
 'Sergipe (SE)','Tocantins (TO)'];
 const FORMACOES = ['Nutrição','Medicina','Psicologia','Educação Física','Estudante','Outros'];
+
+// Modelo em Excel pronto só existe para as trilhas de Brasília. Em evento
+// de sala única as colunas são outras, e mandar a pessoa baixar a planilha
+// errada custa uma lista inteira refeita.
+const MODULOS_DO_XLSX = ['Plenária Principal', 'Nutrição Esportiva', 'NB Universitário'];
 
 // Motivo em código vira frase que a pessoa entende — e que diz o que fazer.
 const MOTIVO = {
@@ -198,12 +210,35 @@ async function chama(corpo) {
 // ── estado ───────────────────────────────────────────────────────────
 let E = { codigo: '', dados: null, marcados: new Set() };
 
+// ── o evento do código ───────────────────────────────────────────────
+const mods = (d) => (d && d.modulos) || [];
+// Sala única: não há o que escolher, e toda a tela muda por causa disso.
+const salaUnica = (d) => mods(d).length === 1;
+
+// "Belém · 19 de setembro de 2026". Sem a data, só a cidade; sem as duas,
+// nada — melhor a linha vazia do que uma cidade errada.
+function pintaSubMarca(d) {
+  const partes = [d?.cidade, d?.quando].filter(Boolean);
+  subMarca.textContent = partes.join(' · ');
+}
+
+// "em Belém, no dia 19 de setembro" ou "em Brasília, de 27 a 29 de agosto".
+// Um dia só e um intervalo pedem preposições diferentes: "no dia 27 a 29"
+// é a frase que denuncia que o texto foi montado por máquina.
+function ondeQuando(d) {
+  const onde = d?.cidade ? 'em ' + d.cidade : '';
+  const intervalo = /^\d+\s+a\s+\d+\s/.test(String(d?.quando || ''));
+  const quando = d?.quando ? (intervalo ? 'de ' : 'no dia ') + d.quando : '';
+  return [onde, quando].filter(Boolean).join(', ');
+}
+
 // ── 1. pedir o código ────────────────────────────────────────────────
 function telaCodigo(erro) {
+  pintaSubMarca(null);
   app.innerHTML = `
     <h1>Sua cortesia no Nutrição Brasil</h1>
     <p class="lead">Digite o código que a empresa te enviou. Ele libera a inscrição
-    sem custo nos módulos disponíveis.</p>
+    sem custo.</p>
     ${erro ? `<div class="aviso erro">${esc(erro)}</div>` : ''}
     <div class="campo">
       <label for="cod">Código da cortesia</label>
@@ -255,15 +290,19 @@ function faixa(d) {
 
 function telaEscolha() {
   const d = E.dados;
+  pintaSubMarca(d);
+  const um = salaUnica(d);
   app.innerHTML = `
     ${faixa(d)}
-    <h1>Cortesia no Nutrição Brasil</h1>
-    <p class="lead">Inscrição sem custo no maior evento de nutrição do país,
-    em Brasília, de 27 a 29 de agosto.</p>
+    <h1>Cortesia no ${esc(d.evento || 'Nutrição Brasil')}</h1>
+    <p class="lead">Inscrição sem custo ${esc(ondeQuando(d))}${d.local ? ', no ' + esc(d.local) : ''}.</p>
 
     <ul class="passos">
-      <li><span class="passo-n">1</span><div>Escolha <b>quais módulos</b> vai assistir.
-        Cada módulo usa uma cortesia da ${esc(d.empresa)}.</div></li>
+      ${um
+        ? `<li><span class="passo-n">1</span><div>Confirme que a vaga é sua.
+             Ela usa <b>uma cortesia</b> da ${esc(d.empresa)}.</div></li>`
+        : `<li><span class="passo-n">1</span><div>Escolha <b>quais módulos</b> vai assistir.
+             Cada módulo usa uma cortesia da ${esc(d.empresa)}.</div></li>`}
       <li><span class="passo-n">2</span><div>Preencha os dados — leva um minuto.</div></li>
       <li><span class="passo-n">3</span><div>A confirmação chega no <b>seu WhatsApp</b>,
         com data, local e as instruções do credenciamento.</div></li>
@@ -296,6 +335,13 @@ function telaEscolha() {
 // ── 2. ficha + módulos ───────────────────────────────────────────────
 function telaFormulario(erro) {
   const d = E.dados;
+  pintaSubMarca(d);
+  const um = salaUnica(d);
+  // Com um ingresso só, marcar não é escolha: já vai marcado, e a tela
+  // mostra o que a pessoa está garantindo em vez de pedir um clique que
+  // não decide nada.
+  if (um) E.marcados = new Set([mods(d)[0]]);
+
   app.innerHTML = `
     ${faixa(d)}
     <h1>Complete sua inscrição</h1>
@@ -322,25 +368,30 @@ function telaFormulario(erro) {
         ${FORMACOES.map((f) => `<option>${esc(f)}</option>`).join('')}</select></div>
 
     <div class="campo">
-      <label>Quais módulos você vai assistir</label>
-      <div class="dica" style="margin:0 0 9px">Cada módulo escolhido usa uma cortesia da ${esc(d.empresa)}.</div>
-      <div class="mods">
-        ${(d.modulos || []).map((m, i) => `
-          <label class="mod" data-mod="${esc(m)}">
-            <input type="checkbox" id="m${i}" value="${esc(m)}">
-            <span class="mod-nome">${esc(m)}</span>
-          </label>`).join('')}
-      </div>
-      <div class="dica" id="conta"></div>
+      ${um
+        ? `<label>Sua inscrição</label>
+           <div class="so-um">${esc(mods(d)[0])}</div>
+           <div class="dica">Usa uma cortesia da ${esc(d.empresa)}.</div>`
+        : `<label>Quais módulos você vai assistir</label>
+           <div class="dica" style="margin:0 0 9px">Cada módulo escolhido usa uma cortesia da ${esc(d.empresa)}.</div>
+           <div class="mods">
+             ${mods(d).map((m, i) => `
+               <label class="mod" data-mod="${esc(m)}">
+                 <input type="checkbox" id="m${i}" value="${esc(m)}">
+                 <span class="mod-nome">${esc(m)}</span>
+               </label>`).join('')}
+           </div>
+           <div class="dica" id="conta"></div>`}
     </div>
 
-    <button class="btn" id="enviar" disabled>Confirmar inscrição</button>
+    <button class="btn" id="enviar" ${um ? '' : 'disabled'}>Confirmar inscrição</button>
     <button class="btn btn-fantasma" id="voltar">Voltar</button>`;
 
   const conta = document.getElementById('conta');
   const enviar = document.getElementById('enviar');
 
   function atualiza() {
+    if (um) return;
     const n = E.marcados.size;
     enviar.disabled = n === 0;
     if (!n) { conta.textContent = 'Escolha pelo menos um módulo.'; conta.style.color = ''; return; }
@@ -411,7 +462,7 @@ function telaFormulario(erro) {
     if (!r?.criados?.length) {
       const jaTem = (r.recusados || []).some((x) => x.motivo === 'ja_inscrito');
       telaFormulario(jaTem
-        ? 'Você já está inscrito nesse(s) módulo(s). Nenhuma cortesia foi usada.'
+        ? 'Você já está inscrito. Nenhuma cortesia foi usada.'
         : 'Não consegui confirmar. Confira os dados e tente de novo.');
       return;
     }
@@ -437,6 +488,13 @@ let LISTA = null;
 
 function telaLista(erro) {
   const d = E.dados;
+  pintaSubMarca(d);
+  const um = salaUnica(d);
+  // O .xlsx é um arquivo pronto no servidor, com as colunas de Brasília.
+  // Em qualquer outro evento ele é a planilha errada, então some.
+  const temXlsx = mods(d).length === MODULOS_DO_XLSX.length &&
+    mods(d).every((m) => MODULOS_DO_XLSX.includes(m));
+
   app.innerHTML = `
     ${faixa(d)}
     <h1>Cadastrar a lista</h1>
@@ -446,12 +504,14 @@ function telaLista(erro) {
 
     <label>1. Baixe o modelo</label>
     <div class="baixar">
-      <a href="/modelo-cortesias.xlsx" download>Modelo em Excel</a>
+      ${temXlsx ? '<a href="/modelo-cortesias.xlsx" download>Modelo em Excel</a>' : ''}
       <a href="#" id="mod-csv">Modelo em CSV</a>
     </div>
     <div class="dica" style="margin:-12px 0 18px">
-      No Excel, Estado e Profissão são listas — clique na célula e escolha.
-      Marque <b>X</b> em cada módulo que a pessoa vai assistir: cada X usa uma cortesia.
+      ${um
+        ? 'Uma linha por convidado. Cada linha usa uma cortesia da sua cota.'
+        : (temXlsx ? 'No Excel, Estado e Profissão são listas — clique na célula e escolha. ' : '') +
+          'Marque <b>X</b> em cada módulo que a pessoa vai assistir: cada X usa uma cortesia.'}
     </div>
 
     <label>2. Suba a lista preenchida</label>
@@ -479,10 +539,11 @@ function telaLista(erro) {
   document.getElementById('mod-csv').onclick = (e) => {
     e.preventDefault();
     const csv = [
-      'primeiro nome;ultimo nome;e-mail;celular;estado;profissao;' + (d.modulos || []).join(';'),
-      'Marina;Lopes;marina@empresa.com;(61) 98138-2900;Distrito Federal (DF);Nutrição;X;X;'
+      'primeiro nome;ultimo nome;e-mail;celular;estado;profissao;' + mods(d).join(';'),
+      'Marina;Lopes;marina@empresa.com;(61) 98138-2900;Distrito Federal (DF);Nutrição;' +
+        mods(d).map(() => 'X').join(';')
     ].join('\n');
-    const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url; a.download = 'modelo-cortesias.csv';
     document.body.appendChild(a); a.click(); a.remove();
@@ -500,7 +561,7 @@ async function recebe(f) {
   }
   saida.innerHTML = '<div class="carregando">Lendo a planilha…</div>';
   try {
-    const r = leLista(await leArquivo(f));
+    const r = leLista(await leArquivo(f), mods(E.dados));
     if (r.erro) throw new Error(r.erro);
     if (!r.total) throw new Error('A planilha está sem nenhuma pessoa preenchida.');
     LISTA = r;
@@ -518,7 +579,7 @@ function desenhaPrevia(nomeArquivo) {
     <div class="resumo">${r.validas} pessoa(s) entram · usam ${r.custoTotal} cortesia(s)
       <span>· restam ${d.restantes}${r.comProblema ? ` · ${r.comProblema} com problema` : ''}</span></div>
     ${!cabe ? `<div class="aviso erro">A lista usa ${r.custoTotal} cortesias e restam ${d.restantes}.
-      Tire pessoas da planilha ou desmarque módulos e suba de novo.</div>` : ''}
+      Tire pessoas da planilha e suba de novo.</div>` : ''}
     <div class="previa">
       <table>
         <thead><tr><th>Pessoa</th><th style="width:58px">Usa</th><th style="width:38%">Situação</th></tr></thead>
@@ -588,7 +649,7 @@ function telaListaPronta(res) {
             <td style="text-align:right">${esc(c.modulo)}</td></tr>`).join('')}</tbody></table>
     </div>
     ${jaTinham.length ? `<div class="aviso alerta">${jaTinham.length} já estavam inscritos
-      no módulo pedido — nenhuma cortesia foi usada por isso.</div>` : ''}
+      — nenhuma cortesia foi usada por isso.</div>` : ''}
     <button class="btn btn-fantasma" id="mais">Cadastrar outra lista</button>`;
   document.getElementById('mais').onclick = async () => {
     const atual = await chama({ acao: 'abre', codigo: E.codigo });
@@ -599,16 +660,17 @@ function telaListaPronta(res) {
 
 // ── 4. pronto (uma pessoa) ───────────────────────────────────────────
 function telaPronto(r, pessoa) {
-  const mods = (r.criados || []).map((c) => c.modulo);
+  const d = E.dados;
+  const lista = (r.criados || []).map((c) => c.modulo);
   const recusados = (r.recusados || []).filter((x) => x.motivo === 'ja_inscrito');
   app.innerHTML = `
     <div class="centro">
       <div class="selo">✓</div>
       <h1>Inscrição confirmada</h1>
-      <p class="lead">Você está garantido no Nutrição Brasil 2026, em Brasília,
-      de 27 a 29 de agosto.</p>
+      <p class="lead">Você está garantido no ${esc(d?.evento || 'Nutrição Brasil')},
+      ${esc(ondeQuando(d))}${d?.local ? ', no ' + esc(d.local) : ''}.</p>
     </div>
-    <ul class="lista-mod">${mods.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>
+    <ul class="lista-mod">${lista.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>
     ${recusados.length ? `<div class="aviso alerta">Você já estava inscrito em
       ${esc(recusados.map((x) => x.modulo).join(', '))} — nenhuma cortesia foi usada por isso.</div>` : ''}
     <div class="aviso bom">
