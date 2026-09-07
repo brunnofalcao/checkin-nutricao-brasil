@@ -5,6 +5,10 @@
 // qual o código que ela distribui, até quando vale, e a lista de quem já
 // entrou. Pausar fica ao lado do código de propósito — quando o comercial
 // desconfia de vazamento, o botão precisa estar onde ele já está olhando.
+//
+// Os módulos NÃO são fixos. Brasília é congresso com trilhas paralelas e
+// a cortesia é por trilha; imersão é sala única e a cortesia é por pessoa.
+// Quem manda é o evento, lido do banco quando a tela abre.
 // =====================================================================
 import { h, setContent } from '../core/dom.js';
 import { openModal } from '../ui/modal.js';
@@ -30,20 +34,26 @@ export function linkCortesia(codigo) {
   return `${BASE}?c=${encodeURIComponent(codigo || '')}`;
 }
 
-export function mensagemCortesia(x, { evento, prazo }) {
+export function mensagemCortesia(x, { evento, prazo, modulos }) {
+  const mods = (modulos && modulos.length) ? modulos : MODULOS;
+  const salaUnica = mods.length === 1;
   const l = [
     'Oi! Aqui é do *Nutrição Brasil*.',
     '',
     `A *${x.empresa}* tem *${x.cortesias_total} cortesias* para distribuir` +
       `${evento ? ' no ' + evento : ''}.`,
     '',
-    'Cada convidado se inscreve sozinho por este link, escolhendo os módulos que vai assistir:',
+    salaUnica
+      ? 'Cada convidado se inscreve sozinho por este link:'
+      : 'Cada convidado se inscreve sozinho por este link, escolhendo os módulos que vai assistir:',
     '',
     `🔗 ${linkCortesia(x.cortesias_codigo)}`,
     `🔑 Código: *${x.cortesias_codigo}*`,
     '',
-    '*Importante:* a cortesia é por módulo. Se a pessoa marcar dois módulos, ' +
-      'usa duas cortesias da sua cota.'
+    salaUnica
+      ? '*Importante:* cada convidado usa uma cortesia da sua cota.'
+      : '*Importante:* a cortesia é por módulo. Se a pessoa marcar dois módulos, ' +
+        'usa duas cortesias da sua cota.'
   ];
   if (prazo) l.push('', `As cortesias valem até *${prazo}* — ou até a cota acabar, o que vier primeiro.`);
   l.push('', 'Você recebe um WhatsApp a cada cortesia usada, com o nome de quem entrou.',
@@ -59,6 +69,22 @@ function copia(txt, msg) {
 
 const fmtData = (d) => (d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—');
 
+// Os ingressos que a cortesia desta empresa pode gerar. Vem do evento, e
+// não de uma lista escrita aqui: com a lista fixa, o convidado de Belém
+// era inscrito numa trilha de Brasília.
+async function modulosDoEvento(exhibitorId) {
+  try {
+    const { data: emp } = await supabase.from('exhibitors')
+      .select('event_id').eq('id', exhibitorId).maybeSingle();
+    if (!emp?.event_id) return MODULOS;
+    const { data, error } = await supabase.rpc('cortesia_modulos', { p_event_id: emp.event_id });
+    if (error || !data?.length) return MODULOS;
+    return data;
+  } catch (e) {
+    return MODULOS;
+  }
+}
+
 // abreCortesias({ empresa, evento, prazoPadrao, aoTerminar })
 export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', aoTerminar } = {}) {
   let cTotal, cCodigo, cPrazo, cPausa;
@@ -67,6 +93,8 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
   let salvando = false;
   let entradaArquivo, avisoArquivo, previaImport;
   let listaLida = null;
+  let MODS = MODULOS;          // trocado assim que o banco responder
+  let blocoLink;
 
   const restantes = () => Math.max(0, (x.cortesias_total || 0) - usos.length);
 
@@ -75,10 +103,11 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
   // aceita as duas formas.
   function baixaModelo() {
     const csv = [
-      'primeiro nome;ultimo nome;e-mail;celular;estado;profissao;' + MODULOS.join(';'),
-      'Marina;Lopes;marina@empresa.com;(61) 98138-2900;Distrito Federal (DF);Nutrição;X;X;'
+      'primeiro nome;ultimo nome;e-mail;celular;estado;profissao;' + MODS.join(';'),
+      'Marina;Lopes;marina@empresa.com;(61) 98138-2900;Distrito Federal (DF);Nutrição;' +
+        MODS.map(() => 'X').join(';')
     ].join('\n');
-    const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
     const a = h('a', { href: url, download: `cortesias-${(x.empresa || 'empresa').toLowerCase().replace(/\s+/g, '-')}.csv` });
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
@@ -93,7 +122,7 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
     }
     setContent(avisoArquivo, h('span', { class: 'muted' }, 'Lendo ' + f.name + '…'));
     try {
-      const r = leLista(await leArquivo(f));
+      const r = leLista(await leArquivo(f), MODS);
       if (r.erro) throw new Error(r.erro);
       listaLida = r;
       setContent(avisoArquivo,
@@ -349,16 +378,35 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
 
   const usadas = () => usos.length;
 
+  // O texto de cima e a mensagem pronta mudam com o número de módulos.
+  // Em sala única, falar em "escolher módulos" faz o patrocinador procurar
+  // uma escolha que não existe na tela do convidado.
+  function pintaLinha() {
+    if (!blocoLink || !x.cortesias_codigo) return;
+    setContent(blocoLink,
+      h('label', { class: 'campo-rot' }, 'Link para o patrocinador divulgar'),
+      h('div', { class: 'exp-link-box mono' }, linkCortesia(x.cortesias_codigo)),
+      h('div', { class: 'lote-acoes' },
+        h('button', { class: 'btn btn-secondary btn-sm',
+          onclick: () => copia(
+            mensagemCortesia(x, { evento, prazo: fmtData(x.cortesias_prazo), modulos: MODS }),
+            'Mensagem copiada.') }, 'Copiar mensagem pronta'),
+        h('button', { class: 'btn btn-ghost btn-sm',
+          onclick: () => copia(linkCortesia(x.cortesias_codigo), 'Link copiado.') }, 'Copiar link'),
+        h('button', { class: 'btn btn-ghost btn-sm',
+          onclick: () => copia(x.cortesias_codigo, 'Código copiado.') }, 'Copiar código')));
+  }
+
   const modal = openModal({
     title: 'Cortesias · ' + (x.empresa || 'empresa'),
     body: () => {
       const wrap = h('div', { class: 'expo-nova' });
       corpoLista = h('div', { class: 'ct-lista' });
+      const explica = h('p', { class: 'page-sub', style: { margin: '0 0 18px' } },
+        'A cada uso, o responsável da empresa recebe um WhatsApp com o nome de quem entrou.');
 
       wrap.append(
-        h('p', { class: 'page-sub', style: { margin: '0 0 18px' } },
-          'A cortesia é por módulo: quem marcar dois módulos consome duas da cota. ' +
-          'A cada uso, o responsável da empresa recebe um WhatsApp com o nome de quem entrou.'),
+        explica,
 
         h('div', { class: 'nv-linha' },
           h('div', { class: 'campo' },
@@ -398,19 +446,7 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
             h('div', { class: 'row-sub' },
               'Para na hora, sem mexer em quem já se inscreveu. Use se desconfiar que o código vazou.'))),
 
-        x.cortesias_codigo
-          ? h('div', {},
-              h('label', { class: 'campo-rot' }, 'Link para o patrocinador divulgar'),
-              h('div', { class: 'exp-link-box mono' }, linkCortesia(x.cortesias_codigo)),
-              h('div', { class: 'lote-acoes' },
-                h('button', { class: 'btn btn-secondary btn-sm',
-                  onclick: () => copia(mensagemCortesia(x, { evento, prazo: fmtData(x.cortesias_prazo) }),
-                    'Mensagem copiada.') }, 'Copiar mensagem pronta'),
-                h('button', { class: 'btn btn-ghost btn-sm',
-                  onclick: () => copia(linkCortesia(x.cortesias_codigo), 'Link copiado.') }, 'Copiar link'),
-                h('button', { class: 'btn btn-ghost btn-sm',
-                  onclick: () => copia(x.cortesias_codigo, 'Código copiado.') }, 'Copiar código')))
-          : null,
+        blocoLink = h('div', {}),
 
         // Cadastrar pela planilha do patrocinador. Só faz sentido depois
         // que existe código e cota — antes disso não há de onde descontar.
@@ -440,7 +476,21 @@ export function abreCortesias({ empresa: x, evento, prazoPadrao = '2026-08-26', 
         corpoLista
       );
 
+      pintaLinha();
       carregaUsos();
+
+      // Os módulos chegam depois, do banco. Até lá a tela já está de pé
+      // com os de Brasília: nada trava esperando a resposta.
+      modulosDoEvento(x.id).then((mods) => {
+        MODS = mods;
+        setContent(explica, mods.length === 1
+          ? 'Cada convidado usa uma cortesia da cota. ' +
+            'A cada uso, o responsável da empresa recebe um WhatsApp com o nome de quem entrou.'
+          : 'A cortesia é por módulo: quem marcar dois módulos consome duas da cota. ' +
+            'A cada uso, o responsável da empresa recebe um WhatsApp com o nome de quem entrou.');
+        pintaLinha();
+      });
+
       return wrap;
     },
     actions: [
