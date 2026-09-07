@@ -34,6 +34,11 @@ export const ESTADOS = [
 
 export const FORMACOES = ['Nutrição', 'Medicina', 'Psicologia', 'Educação Física', 'Estudante', 'Outros'];
 
+// Os módulos de Brasília. Ficam como último recurso: em congresso com
+// trilhas paralelas é isto que a planilha traz. Cada evento manda os
+// seus, porque uma imersão tem sala única e nome de ingresso próprio —
+// ler "Plenária Principal" numa planilha de Belém é inscrever a pessoa
+// num módulo que não existe lá.
 export const MODULOS = ['Plenária Principal', 'Nutrição Esportiva', 'NB Universitário'];
 
 // "São Paulo (SP)" → "sao paulo sp". Serve para comparar o que a pessoa
@@ -116,24 +121,24 @@ const SINONIMOS = {
   formacao: ['profissao', 'formacao', 'qual sua formacao', 'area', 'qual a sua formacao']
 };
 
-function qualColuna(titulo) {
+function qualColuna(titulo, modulos) {
   const k = chave(titulo);
   if (!k) return null;
   for (const [campo, nomes] of Object.entries(SINONIMOS)) {
     if (nomes.some((n) => chave(n) === k)) return campo;
   }
-  const mod = MODULOS.find((m) => chave(m) === k);
+  const mod = (modulos || MODULOS).find((m) => chave(m) === k);
   if (mod) return 'modulo:' + mod;
   return null;
 }
 
 // A linha de cabeçalho é a que reconhece pelo menos e-mail e um nome.
 // Varre as 15 primeiras porque o modelo tem bloco de instrução em cima.
-export function achaCabecalho(linhas) {
+export function achaCabecalho(linhas, modulos) {
   for (let i = 0; i < Math.min(linhas.length, 15); i++) {
     const mapa = {};
     (linhas[i] || []).forEach((cel, col) => {
-      const campo = qualColuna(cel);
+      const campo = qualColuna(cel, modulos);
       if (campo && mapa[campo] === undefined) mapa[campo] = col;
     });
     const temNome = mapa.primeiro_nome !== undefined || mapa.ultimo_nome !== undefined;
@@ -145,8 +150,12 @@ export function achaCabecalho(linhas) {
 // ── leitura ──────────────────────────────────────────────────────────
 // Devolve uma linha por PESSOA, com os módulos marcados e o que estiver
 // errado. Quem chama decide o que fazer; esta camada não julga cota.
-export function leLista(linhas) {
-  const cab = achaCabecalho(linhas);
+//
+// `modulos` são os do evento daquela empresa. Sem ele o leitor cai nos de
+// Brasília, que é o que existia antes desta função aceitar o argumento.
+export function leLista(linhas, modulos) {
+  const mods = (modulos && modulos.length) ? modulos : MODULOS;
+  const cab = achaCabecalho(linhas, mods);
   if (!cab) {
     return {
       erro: 'Não achei o cabeçalho da planilha. Use o modelo — ele tem as colunas com os nomes certos.',
@@ -155,7 +164,7 @@ export function leLista(linhas) {
   }
 
   const { mapa } = cab;
-  const colsModulo = MODULOS
+  const colsModulo = mods
     .map((m) => ({ modulo: m, col: mapa['modulo:' + m] }))
     .filter((x) => x.col !== undefined);
 
@@ -179,9 +188,16 @@ export function leLista(linhas) {
       colsModulo.some((c) => cel(c.col));
     if (!temAlgo) continue;
 
-    const modulos = colsModulo
+    let modulosMarcados = colsModulo
       .filter((c) => /^(x|sim|s|1|✓|✔)$/i.test(cel(c.col)))
       .map((c) => c.modulo);
+
+    // Evento de sala única: não existe o que escolher. Exigir um X numa
+    // coluna que só tem um valor possível é fazer o patrocinador errar
+    // uma planilha inteira por uma célula em branco.
+    if (!modulosMarcados.length && mods.length === 1 && !colsModulo.length) {
+      modulosMarcados = [mods[0]];
+    }
 
     const fone = normalizaFone(foneBruto);
     const estado = normalizaEstado(estadoBruto);
@@ -197,7 +213,7 @@ export function leLista(linhas) {
     // "celular inválido" manda conferir o que já está lá.
     if (!foneBruto) problemas.push('sem celular');
     else if (!fone) problemas.push(`celular "${foneBruto}" não é um número válido`);
-    if (!modulos.length) problemas.push('nenhum módulo marcado');
+    if (!modulosMarcados.length) problemas.push('nenhum módulo marcado');
 
     // Estado e profissão não impedem a inscrição — impedem a ficha
     // completa no RD. Vira aviso, não bloqueio: melhor a pessoa entrar no
@@ -223,8 +239,8 @@ export function leLista(linhas) {
       estado_bruto: estadoBruto,
       formacao,
       formacao_bruta: formacaoBruta,
-      modulos,
-      custo: modulos.length,                // cortesias que esta linha consome
+      modulos: modulosMarcados,
+      custo: modulosMarcados.length,        // cortesias que esta linha consome
       problemas,
       avisos,
       ok: problemas.length === 0
