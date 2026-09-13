@@ -357,7 +357,7 @@ async function loadFamilia(eventId) {
 
   const { data, error } = await sb
     .from("participants")
-    .select("id, name, code, lote, checked, checked_at, event_id, source")
+    .select("id, name, code, lote, checked, checked_at, event_id, source, situacao")
     .in("event_id", irmaos);
   if (error) { console.warn("família:", error.message); return; }
 
@@ -445,6 +445,49 @@ async function loadExhibitors(eventId) {
 // await — numa queda de Wi-Fi o operador via ✓, a pessoa entrava e o
 // registro se perdia sem ninguém notar.
 // =============================================================
+// Inscrição inativa: reembolso, chargeback ou parcelamento interrompido.
+// A pessoa continua na lista de propósito — some dali seria pior, porque
+// ela aparece na porta e ninguém sabe quem é. O que não pode é credenciar.
+function inscricaoInativa(p) {
+  return !!p && String(p.situacao || "ativa") !== "ativa";
+}
+
+// Trava a tela em azul. Nada de vermelho: quem está na frente do balcão vê
+// o aparelho, e ninguém precisa ser exposto por causa de uma pendência de
+// pagamento. O operador entende na hora, o cliente não é constrangido.
+function travaApoio(p) {
+  haptic("warning");
+  const nome = esc(p.name || "");
+  const cod = esc(p.code || "");
+  const antiga = document.querySelector(".trava-apoio");
+  if (antiga) antiga.remove();
+
+  const el = document.createElement("div");
+  el.className = "trava-apoio";
+  el.innerHTML = `
+    <div class="ta-caixa" role="alertdialog" aria-modal="true" aria-labelledby="taTit">
+      <div class="ta-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </div>
+      <div class="ta-rot">Não credenciar</div>
+      <div class="ta-t" id="taTit">${nome}</div>
+      <div class="ta-cod">${cod}</div>
+      <div class="ta-s">Procurar apoio do credenciamento.</div>
+      <button class="ta-btn" type="button">Entendi</button>
+    </div>
+  `;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("on"));
+
+  const fecha = () => { el.classList.remove("on"); setTimeout(() => el.remove(), 180); };
+  el.querySelector(".ta-btn").addEventListener("click", fecha);
+  el.addEventListener("click", (ev) => { if (ev.target === el) fecha(); });
+  document.addEventListener("keydown", function sai(ev) {
+    if (ev.key === "Escape") { fecha(); document.removeEventListener("keydown", sai); }
+  });
+  setTimeout(() => { const b = el.querySelector(".ta-btn"); if (b) b.focus(); }, 60);
+}
+
 async function toggleCheckIn(participantId) {
   const p = state.participants.find(x => x.id === participantId);
   if (!p) return;
@@ -452,6 +495,12 @@ async function toggleCheckIn(participantId) {
   if (!isEditable(state.currentEvent)) {
     toast(motivoBloqueio(state.currentEvent), "error");
     haptic("error");
+    return;
+  }
+
+  // Desfazer um check-in antigo continua liberado; o que trava é credenciar.
+  if (!p.checked && inscricaoInativa(p)) {
+    travaApoio(p);
     return;
   }
 
@@ -466,6 +515,9 @@ async function toggleCheckIn(participantId) {
 // e o aviso do leitor já diz o que aconteceu, melhor do que o toast diria.
 // A lista é redesenhada uma vez só, quando o leitor fecha.
 async function marcaPresenca(p, novoChecked, { silencioso = false } = {}) {
+  // Última barreira: nenhum caminho credencia inscrição inativa.
+  if (novoChecked && inscricaoInativa(p)) { travaApoio(p); return; }
+
   const agora = new Date().toISOString();
   const participantId = p.id;
 
@@ -611,6 +663,20 @@ async function credenciaPorCodigo(bruto) {
   // O que entregar. Só aparece quando o crachá é de outra lista, senão vira
   // ruído repetindo o óbvio na aba certa.
   const etiqueta = deOutraLista ? ` · ${deOutraLista}` : "";
+
+  // Inscrição inativa: não credencia e prende a tela até o operador
+  // confirmar que leu. Azul, nunca vermelho, e sem dizer o motivo no
+  // aparelho que está virado para a fila.
+  if (!p.checked && inscricaoInativa(p)) {
+    haptic("warning");
+    return {
+      tipo: "apoio",
+      travar: true,
+      titulo: `${nome}${etiqueta}`,
+      sub: "Não credenciar. Procurar apoio do credenciamento.",
+      conta: credenciadosNoLeitor
+    };
+  }
 
   // Já passou: avisa e NÃO desfaz. Ler o mesmo crachá de novo é o erro mais
   // comum da fila, e desfazer um check-in por causa dele é o pior resultado
@@ -1609,6 +1675,7 @@ function renderCheckinList() {
   }
 
   list.innerHTML = arr.map((p, i) => {
+    const inativa = inscricaoInativa(p);
     const rp = isRace ? raceProfileOf(p) : null;
     const raceChips = rp ? `
           <div class="row-meta race-meta">
@@ -1619,10 +1686,12 @@ function renderCheckinList() {
             ${rp.bib_number ? `<span class="race-chip bib">#${esc(rp.bib_number)}</span>` : ''}
           </div>` : '';
     return `
-    <div class="row ${p.checked ? 'checked' : ''} ${p._pendente ? 'pendente-envio' : ''}" data-id="${p.id}" style="animation-delay:${Math.min(i * 15, 200)}ms">
-      <div class="row-action" data-action="toggle">
+    <div class="row ${p.checked ? 'checked' : ''} ${p._pendente ? 'pendente-envio' : ''} ${inativa ? 'inativa' : ''}" data-id="${p.id}" style="animation-delay:${Math.min(i * 15, 200)}ms">
+      <div class="row-action${inativa && !p.checked ? ' acao-apoio' : ''}" data-action="toggle">
         <div class="row-action-inner">
-          ${p.checked
+          ${inativa && !p.checked
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Apoio</span>'
+            : p.checked
             ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>Desfazer</span>'
             : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${isRace ? 'Entregar kit' : 'Check-in'}</span>`}
         </div>
@@ -1630,7 +1699,7 @@ function renderCheckinList() {
       <div class="row-content">
         <div class="row-main">
           <div class="row-name">${esc(p.name)}</div>
-          ${raceChips || (p.lote ? `<div class="row-meta"><span class="lot-tag">${esc(p.lote)}</span></div>` : '')}
+          ${inativa ? '<div class="row-meta"><span class="inativa-tag">Apoio no credenciamento</span></div>' : (raceChips || (p.lote ? `<div class="row-meta"><span class="lot-tag">${esc(p.lote)}</span></div>` : ''))}
           <div class="row-code">${esc(p.code || "")}${p.checked ? ` · ${fmtTime(p.checked_at)}` : ''}${p._pendente ? ' · <span class="pend-tag">no aparelho</span>' : ''}</div>
         </div>
         <div class="row-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
