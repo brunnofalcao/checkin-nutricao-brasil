@@ -92,13 +92,23 @@ function montaTela() {
 
 function mostraAviso(el, r) {
   const cx = el.querySelector('.leitor-aviso');
-  const cor = { ok: 'ok', repetido: 'rep', erro: 'erro' }[r.tipo] || 'erro';
-  cx.className = `leitor-aviso ${cor} on`;
+  const cor = { ok: 'ok', repetido: 'rep', erro: 'erro', apoio: 'apoio' }[r.tipo] || 'erro';
+  const ico = r.tipo === 'ok' ? '✓' : r.tipo === 'repetido' ? '!' : r.tipo === 'apoio' ? 'i' : '×';
+  cx.className = `leitor-aviso ${cor} on${r.travar ? ' travado' : ''}`;
   cx.innerHTML = `
-    <div class="la-ico">${r.tipo === 'ok' ? '✓' : r.tipo === 'repetido' ? '!' : '×'}</div>
+    <div class="la-ico">${ico}</div>
     <div><div class="la-t">${r.titulo}</div>${r.sub ? `<div class="la-s">${r.sub}</div>` : ''}</div>
+    ${r.travar ? '<button class="la-btn" type="button">Entendi</button>' : ''}
   `;
   clearTimeout(cx._t);
+  // Aviso travado não some sozinho: some quando o operador confirma que
+  // leu. Um recado de 1,5 segundo no meio da fila passa despercebido, e
+  // este é justamente o que não pode passar.
+  if (r.travar) {
+    const bt = cx.querySelector('.la-btn');
+    if (bt) bt.addEventListener('click', () => cx.classList.remove('on'));
+    return;
+  }
   cx._t = setTimeout(() => cx.classList.remove('on'), TEMPO_DO_AVISO);
 }
 
@@ -114,7 +124,7 @@ function telaDeErro(el, titulo, texto) {
 // ABRE
 //
 // aoLer(codigo) devolve — ou promete — um objeto:
-//   { tipo: 'ok' | 'repetido' | 'erro', titulo, sub, conta }
+//   { tipo: 'ok' | 'repetido' | 'erro' | 'apoio', titulo, sub, conta, travar }
 // `conta` é o total credenciado na sessão, só para o contador do topo.
 // -------------------------------------------------------------
 export async function abreLeitor({ aoLer, aoFechar, aoDigitar }) {
