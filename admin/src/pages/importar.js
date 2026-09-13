@@ -30,6 +30,22 @@ const CAMPOS = [
 
 const LOTE = 200; // linhas por requisição
 
+// Modelo de planilha. Existe porque "suba uma lista" só é uma instrução
+// clara para quem já sabe o formato. Quem nunca subiu abre a tela, olha a
+// área de arrastar e volta para perguntar quais colunas mandar.
+const MODELO_CAB = 'nome;email;telefone;lote;observacao';
+
+const PROMPT_GPT =
+  'Use o arquivo modelo em anexo como padrão de formato. Pegue a lista de pessoas ' +
+  'que estou subindo e devolva um novo CSV no mesmo formato, com as colunas ' +
+  '"nome", "email", "telefone", "lote" e "observacao", separadas por ponto e vírgula. ' +
+  'Escreva o nome completo com acentuação normal, em maiúsculas e minúsculas, ' +
+  'nunca tudo em caixa alta. Formate os telefones como DDD + número, só dígitos, ' +
+  'sem espaço, parêntese ou traço (exemplo: 61988887777). Deixe a célula vazia ' +
+  'quando a informação não existir, nunca escreva "não informado". Remova as linhas ' +
+  'sem nome e as pessoas repetidas pelo e-mail ou pelo telefone. ' +
+  'Me devolva o arquivo CSV pronto para download.';
+
 // Monta as linhas prontas para inserir e classifica cada uma.
 export function preparaLinhas(matriz, mapa, temCabecalho, jaNoEvento) {
   const corpo = temCabecalho ? matriz.slice(1) : matriz;
@@ -248,6 +264,81 @@ export function abreImportar({ evento, participantes = [], aoImportar } = {}) {
         : null);
   }
 
+  // Os lotes que já existem neste evento. A pessoa que preenche a planilha
+  // precisa escrever o lote com as mesmas palavras: é o lote que liga o
+  // inscrito ao módulo do certificado. Errou o nome, fica sem certificado.
+  function lotesDoEvento() {
+    const conta = new Map();
+    for (const p of participantes) {
+      const l = String(p?.lote || '').trim();
+      if (l) conta.set(l, (conta.get(l) || 0) + 1);
+    }
+    return [...conta.entries()].sort((a, b) => b[1] - a[1]).map(([l]) => l);
+  }
+
+  function baixaModelo() {
+    // Ponto e vírgula é o separador do arquivo: se existir dentro do nome do
+    // lote, a linha do modelo nasceria quebrada em duas colunas.
+    const limpa = (t) => String(t || '').replace(/;/g, ',');
+    const lotes = lotesDoEvento();
+    const a1 = limpa(lotes[0]);
+    const a2 = limpa(lotes[1] || lotes[0]);
+    const linhas = [
+      MODELO_CAB,
+      `Maria Souza da Silva;maria.souza@exemplo.com;61988887777;${a1};cortesia`,
+      `João Pereira Lima;joao.lima@exemplo.com;11977776666;${a2};imprensa`,
+      `Ana Carolina Duarte;ana.duarte@exemplo.com;47966665555;;convidada do patrocinador`
+    ];
+    // O BOM é o que faz o Excel abrir "Plenária" em vez de "PlenÃ¡ria".
+    const blob = new Blob(['\ufeff' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'modelo-lista-' + (evento?.slug || 'evento') + '.csv';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast.success('Modelo baixado. As colunas são separadas por ponto e vírgula.');
+  }
+
+  function copiaPrompt() {
+    navigator.clipboard.writeText(PROMPT_GPT)
+      .then(() => toast.success('Comando copiado. Cole no ChatGPT junto com os dois arquivos.'))
+      .catch(() => toast.danger('Não consegui copiar.'));
+  }
+
+  function painelAjuda() {
+    const lotes = lotesDoEvento();
+    return h('div', { class: 'imp-ajuda-corpo', style: { display: 'none', marginTop: '10px' } },
+      h('table', { class: 'table' },
+        h('thead', {}, h('tr', {},
+          h('th', { style: { width: '30%' } }, 'Coluna'),
+          h('th', {}, 'O que vai nela'))),
+        h('tbody', {},
+          linhaAjuda('nome', 'Nome completo, do jeito que sai no crachá e no certificado. Obrigatória.'),
+          linhaAjuda('email', 'Por onde sai o certificado. Sem e-mail, precisa ter telefone.'),
+          linhaAjuda('telefone', 'DDD + número, só dígitos. Ex.: 61988887777.'),
+          linhaAjuda('lote', lotes.length
+            ? 'Liga a pessoa ao módulo do certificado. Escreva igual ao que já existe neste evento: ' +
+              lotes.join(' · ') + '.'
+            : 'Liga a pessoa ao módulo do certificado. Este evento ainda não tem lote nenhum cadastrado.'),
+          linhaAjuda('observacao', 'Uso interno. Ex.: cortesia, imprensa, convidado do patrocinador.'))),
+      h('div', { class: 'pn-dica', style: { marginTop: '10px' } },
+        'Nenhuma coluna precisa estar em ordem, e sobra de coluna não atrapalha: ' +
+        'o que não interessa você deixa em "ignorar" na tela seguinte.'),
+      h('div', { class: 'cr-rot', style: { marginTop: '14px' } }, 'A lista veio fora do formato?'),
+      h('div', { class: 'pn-dica' },
+        'Não arrume na mão. Baixe o modelo, abra o ChatGPT, suba os dois arquivos ' +
+        '(o modelo e a sua lista) e use este comando:'),
+      h('div', { class: 'help-prompt', style: { marginTop: '8px' } }, PROMPT_GPT),
+      h('button', { class: 'btn btn-ghost btn-sm', type: 'button', style: { marginTop: '8px' }, onclick: copiaPrompt },
+        'Copiar comando'));
+  }
+
+  function linhaAjuda(coluna, texto) {
+    return h('tr', {},
+      h('td', {}, h('strong', { class: 'mono' }, coluna)),
+      h('td', { class: 'muted' }, texto));
+  }
+
   function entrada() {
     const zona = h('div', { class: 'upload-drop imp-drop', tabindex: '0', role: 'button' },
       h('div', { class: 'upload-drop-title' }, 'Arraste o CSV aqui ou clique para escolher'),
@@ -289,8 +380,22 @@ export function abreImportar({ evento, participantes = [], aoImportar } = {}) {
       if (f) le(f);
     };
 
+    const ajuda = painelAjuda();
+
     return h('div', {},
       zona, arquivo,
+      h('div', { class: 'csv-help-row' },
+        h('button', { class: 'csv-help-link', type: 'button', onclick: baixaModelo },
+          '⬇ Baixar planilha modelo'),
+        h('button', {
+          class: 'csv-help-link', type: 'button',
+          onclick: (e) => {
+            const aberto = ajuda.style.display !== 'none';
+            ajuda.style.display = aberto ? 'none' : '';
+            e.currentTarget.textContent = aberto ? '❓ Como preparar a lista' : '✕ Fechar a ajuda';
+          }
+        }, '❓ Como preparar a lista')),
+      ajuda,
       h('div', { class: 'imp-ou' }, 'ou cole as linhas'),
       h('textarea', {
         class: 'input lote-area',
