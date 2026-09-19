@@ -290,11 +290,22 @@ const FN_PDF = SUPABASE_URL + '/functions/v1/cert-pdf';
 const CDN = 'https://res.cloudinary.com/dlzrfhwin/image/upload/';
 const MARCA = CDN + 'v1775583229/nb_logotipo_hor_05_wqsydv.png';
 const GALERIA = 'https://banlek.com/album/266c57-nutricao-brasil-2026';
-const ART = {
+// Arte padrão. A de verdade vem do evento, em S.dados.artes, porque cada
+// cidade tem os seus patrocinadores. Isto aqui é só a rede de segurança.
+const ART_PADRAO = {
   a4:    { limpo:'nb2026/cert_pdf_v2.png' },
   feed:  { limpo:'nb2026/cert_feed_v2.png',  over:'nb2026/cert_feed_over_v2.png' },
   story: { limpo:'nb2026/cert_story_v2.png', over:'nb2026/cert_story_over_v2.png' }
 };
+function artes(){
+  const a = (S && S.dados && S.dados.artes) ? S.dados.artes : null;
+  if (!a || !a.pdf) return ART_PADRAO;
+  return {
+    a4:    { limpo: a.pdf + '.png' },
+    feed:  { limpo: a.feed + '.png',  over: (a.feed_over  || '') + '.png' },
+    story: { limpo: a.story + '.png', over: (a.story_over || '') + '.png' }
+  };
+}
 
 const FORMATOS = {
   a4:    { W:2480, H:1754, cx:1239.5, fio:821,
@@ -319,13 +330,19 @@ function face(p, s){ return p + ' ' + s + 'px Poppins, sans-serif'; }
 function wid(t, p, s){ med.font = face(p, s); return med.measureText(t).width; }
 
 /* ── frase ─────────────────────────────────────────────────── */
+// A cidade vem do evento, não do código. Brasília, Belém, Goiânia e Porto
+// Alegre usam a mesma página; cada uma imprime o seu lugar.
+function localDoCertificado(){
+  const cru = (S && S.dados && S.dados.local) ? String(S.dados.local) : 'Brasília - DF';
+  return cru.replace(/\s*[-–]\s*/, NB + '–' + NB).replace(/ /g, NB);
+}
 function frase(m, extenso){
   const data  = (extenso ? m.extenso : m.curta).replace(/ /g, NB);
   const verbo = m.dias > 1 ? 'realizado nos dias ' : 'realizado no dia ';
   return [
     ['Participou do ', 0], ['Nutrição'+NB+'Brasil'+NB+'2026', 1], [' no módulo de ', 0],
     [String(m.nome).replace(/ /g, NB), 1], [', ' + verbo, 0], [data, 1],
-    [', em Brasília'+NB+'–'+NB+'DF, perfazendo um total de ', 0], [String(m.horas), 1], [' horas-aula.', 0]
+    [', em ' + localDoCertificado() + ', perfazendo um total de ', 0], [String(m.horas), 1], [' horas-aula.', 0]
   ];
 }
 function palavras(runs){
@@ -702,6 +719,24 @@ function vaiPara(token){
     (location.pathname.endsWith('.html') ? location.pathname.split('/').pop() : '') +
     '?t=' + encodeURIComponent(token);
 }
+// Quem foi a mais de uma edição escolhe de qual quer o certificado.
+function escolheEdicao(lista){
+  const a = $('aviso');
+  a.classList.remove('ok');
+  a.textContent = 'Você participou de mais de uma edição. Qual certificado você quer?';
+  const cx = document.createElement('div');
+  cx.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px';
+  lista.forEach(function(op){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = op.rotulo || op.evento || 'Abrir';
+    b.style.cssText = 'padding:9px 16px;border-radius:9px;border:1px solid var(--line);' +
+                      'background:transparent;color:inherit;font:inherit;cursor:pointer';
+    b.addEventListener('click', function(){ vaiPara(op.token); });
+    cx.appendChild(b);
+  });
+  a.appendChild(cx);
+}
 function diz(txt, ok){
   const a = $('aviso'); a.textContent = txt || ''; a.classList.toggle('ok', !!ok);
 }
@@ -736,6 +771,8 @@ async function abrePorCodigo(){
     });
     const d = await r.json();
     if (d && d.achou && d.token){ vaiPara(d.token); return; }
+    // Mesma pessoa em mais de uma edição: em vez de barrar, pergunta qual.
+    if (d && d.varios && d.varios.length){ escolheEdicao(d.varios); return; }
     if (d && d.ambiguo){
       diz('Esse número aparece em mais de uma inscrição. Digite o e-mail para eu saber qual é a sua.');
     } else if (ehEmail){
@@ -770,10 +807,11 @@ async function buscaArtes(){
       new Promise(r => setTimeout(r, 6000))
     ]);
 
+    const A = artes();
     const [a4, fL, fO, sL, sO] = await Promise.all([
-      carrega(CDN + ART.a4.limpo),
-      carrega(CDN + ART.feed.limpo),  carrega(CDN + ART.feed.over),
-      carrega(CDN + ART.story.limpo), carrega(CDN + ART.story.over)
+      carrega(CDN + A.a4.limpo),
+      carrega(CDN + A.feed.limpo),  carrega(CDN + A.feed.over),
+      carrega(CDN + A.story.limpo), carrega(CDN + A.story.over)
     ]);
     imgs.a4 = a4; imgs.feed = fL; imgs.story = sL;
     // Baixar a arte final exige CORS liberado no CDN por causa do toBlob.
