@@ -11,7 +11,11 @@ const NAV = [
       { path: '/', icon: 'home', label: 'Início' },
       { path: '/eventos', icon: 'calendar', label: 'Eventos' },
       { path: '/expositores', icon: 'briefcase', label: 'Exposição' },
-      { path: '/pessoas', icon: 'people', label: 'Pessoas' }
+      { path: '/pessoas', icon: 'people', label: 'Pessoas' },
+      // Evento de aplicacao (gratuito, vaga limitada) nao vende ingresso:
+      // recebe aplicacao e alguem decide. Ate existir este item, a tela
+      // vivia num endereco solto com a chave na URL.
+      { path: '/triagem', icon: 'check', label: 'Triagem' }
     ]
   },
   {

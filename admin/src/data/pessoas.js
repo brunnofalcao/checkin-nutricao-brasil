@@ -12,7 +12,11 @@
 import { supabase } from './supabase.js';
 
 const COLS =
-  'id,event_id,name,email,phone,code,lote,checked,checked_at,source,created_at,cert_token,notes,tags';
+  'id,event_id,name,email,phone,code,lote,checked,checked_at,source,created_at,'
+  // classificacao so existe em evento de aplicacao (gratuito, com
+  // triagem). Sem ela aqui, a ficha da pessoa mostrava "origem
+  // aplicacao" e nada sobre ter sido aprovada ou nao.
+  + 'classificacao,cert_token,notes,tags';
 
 // Teto de segurança. Se bater, a tela avisa em vez de mentir um número.
 export const TETO_BASE = 8000;

@@ -10,6 +10,7 @@ import { pageCertificates } from './pages/certificates.js';
 import { pageCertEntrega } from './pages/cert-entrega.js';
 import { pageExpositores } from './pages/expositores.js';
 import { pagePessoas } from './pages/pessoas.js';
+import { pageTriagem } from './pages/triagem.js';
 import { pageConfiguracoes } from './pages/configuracoes.js';
 import { pageDisparos } from './pages/disparos.js';
 import { pageTemplates } from './pages/templates.js';
@@ -52,6 +53,7 @@ async function bootstrap() {
   registra('/certificados/:id', pageCertificates);
   registra('/expositores', pageExpositores);
   registra('/pessoas', pagePessoas);
+  registra('/triagem', pageTriagem);
   registra('/configuracoes', pageConfiguracoes);
   registra('/disparos', pageDisparos);
   registra('/templates', pageTemplates);

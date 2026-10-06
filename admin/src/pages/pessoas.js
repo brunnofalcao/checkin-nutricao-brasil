@@ -35,6 +35,28 @@ const TIPO_ROTULO = {
 };
 const PAGINA = 50;
 
+// Como a inscrição entrou. O valor cru aparecia na ficha da pessoa
+// ("origem aplicacao", "origem ticketsports") — nome de sistema no meio de
+// uma ficha que a equipe lê no telefone com a pessoa do outro lado.
+const ORIGEM_ROTULO = {
+  hotmart: 'Hotmart',
+  ticketsports: 'Ticket Sports',
+  aplicacao: 'aplicação pelo formulário (RD)',
+  visitante: 'cadastro de visitante',
+  expositor: 'equipe de expositor',
+  cortesia: 'cortesia',
+  manual: 'cadastro manual',
+  teste: 'teste'
+};
+
+// Decisão da triagem. Só evento de aplicação tem isto preenchido; nos
+// outros a linha simplesmente não aparece.
+const CLASSE_ROTULO = {
+  convidado: 'aprovada como convidado',
+  premium: 'aprovada como premium',
+  lead: 'não selecionada nesta edição'
+};
+
 export async function pagePessoas(view) {
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
 
@@ -509,7 +531,8 @@ export async function pagePessoas(view) {
               ev?.event_type && ev.event_type !== 'congress' ? TIPO_ROTULO[ev.event_type] : null,
               i.lote ? (/^lote/i.test(i.lote) ? i.lote : 'lote ' + i.lote) : null,
               i.code ? 'cód ' + i.code : null,
-              'origem ' + (i.source || 'manual')
+              'origem ' + (ORIGEM_ROTULO[i.source] || i.source || 'manual'),
+              i.classificacao ? (CLASSE_ROTULO[i.classificacao] || i.classificacao) : null
             ]
               .filter(Boolean)
               .join(' · ')

@@ -2817,3 +2817,23 @@
 .exp-eq-acoes { align-items: center; }
 .exp-eq-selo { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 4px; }
 .exp-eq-selo .row-sub { font-size: 11.5px; }
+
+/* ── Eventos: grupo e passado ──────────────────────────────────────────
+   O calendário passou a separar o que ainda vai acontecer do que já
+   aconteceu. O passado continua clicável e continua contando nos
+   filtros; só para de competir pela atenção com a próxima cidade. */
+.table tbody tr.ev-grupo { cursor: default; }
+.table tbody tr.ev-grupo:hover { background: transparent; }
+.table tbody tr.ev-grupo td {
+  padding: 14px 16px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.table tbody tr.ev-passado td { color: var(--ink-mute); }
+.table tbody tr.ev-passado .row-name { color: var(--ink-soft); }
+.table tbody tr.ev-passado .progress-fill { opacity: 0.5; }

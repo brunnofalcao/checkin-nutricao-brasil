@@ -34,6 +34,16 @@ export async function pageEventDetail(view, { params }) {
 
   const isRace = event.event_type === 'race';
 
+  // Evento de aplicação não tem inscrito: tem gente que aplicou e espera
+  // decisão. Chamar isso de "inscrito" na tela faz a equipe tratar fila de
+  // triagem como lista de confirmados.
+  const isAplicacao = event.exige_aprovacao === true;
+  const COMO_CHAMAR = isRace
+    ? { plural: 'Corredores', singular: 'Corredor', um: 'corredor', muitos: 'corredores' }
+    : isAplicacao
+      ? { plural: 'Aplicações', singular: 'Aplicação', um: 'aplicação', muitos: 'aplicações' }
+      : { plural: 'Inscritos', singular: 'Inscrito', um: 'inscrito', muitos: 'inscritos' };
+
   let allParticipants = [];
   let raceMap = {};          // participant_id -> race_profile (só evento corrida)
   let raceStock = {};        // tamanho -> qtd comprada (só evento corrida)
@@ -172,7 +182,7 @@ export async function pageEventDetail(view, { params }) {
         ),
         h('div', { class: 'evd-stats' },
           h('div', {},
-            h('div', { class: 'evd-stat-label' }, isRace ? 'Corredores' : 'Inscritos'),
+            h('div', { class: 'evd-stat-label' }, COMO_CHAMAR.plural),
             h('div', { class: 'evd-stat-value mono' }, String(c.todos))
           ),
           h('div', {},
@@ -564,7 +574,7 @@ export async function pageEventDetail(view, { params }) {
     setContent(body,
       h('table', { class: 'table' },
         h('thead', {}, h('tr', {},
-          h('th', { style: { width: '32%' } }, isRace ? 'Corredor' : 'Inscrito'),
+          h('th', { style: { width: '32%' } }, COMO_CHAMAR.singular),
           h('th', {}, 'Telefone'),
           h('th', {}, isRace ? 'Corrida' : 'Lote'),
           h('th', {}, 'Origem'),
@@ -581,7 +591,7 @@ export async function pageEventDetail(view, { params }) {
             }, 'Carregar mais')
           )
         : h('div', { class: 'table-pager' },
-            h('span', {}, `${filtered.length} ${filtered.length === 1 ? 'inscrito' : 'inscritos'}`)
+            h('span', {}, `${filtered.length} ${filtered.length === 1 ? COMO_CHAMAR.um : COMO_CHAMAR.muitos}`)
           )
     );
   }
@@ -629,7 +639,7 @@ export async function pageEventDetail(view, { params }) {
   function openParticipant(p) {
     const rp = isRace ? raceMap[p.id] : null;
     openModal({
-      title: p.name || (isRace ? 'Corredor' : 'Inscrito'),
+      title: p.name || COMO_CHAMAR.singular,
       body: h('div', {},
         rp ? h('div', { class: 'race-chips', style: { marginBottom: '12px' } },
           rp.distance ? h('span', { class: 'race-chip dist' }, distanceLabel(rp.distance)) : null,
@@ -641,6 +651,7 @@ export async function pageEventDetail(view, { params }) {
         infoRow('Código', p.code),
         isRace ? null : infoRow('Lote', p.lote),
         infoRow('Origem', p.source || 'manual'),
+        infoRow('Triagem', p.classificacao || null),
         infoRow(isRace ? 'Kit' : 'Check-in', p.checked ? `${isRace ? 'Retirado' : 'Sim'} · ${fmtRelative(p.checked_at)}` : 'Pendente'),
         rp ? infoRow('Nº de peito', rp.bib_number) : null,
         rp ? infoRow('Nº do chip', rp.chip_number) : null,
@@ -717,15 +728,30 @@ function tabBtn(label, active, onClick, accent) {
   }, label);
 }
 
+// A origem de cada inscrição, do jeito que a equipe fala.
+//
+// O mapa cobria cinco valores e TODO o resto caía em map.manual — ou seja,
+// a tela escrevia "Manual" para visitante de expo, cortesia, equipe de
+// expositor e aplicação de evento gratuito. Mil e seiscentas inscrições
+// com a origem errada, e origem errada é o tipo de dado que ninguém
+// confere porque a tela parece confiante.
+//
+// Valor desconhecido agora aparece como ele é. Nome cru é feio; nome
+// errado é mentira.
 function sourcePill(source) {
   const map = {
     hotmart:      { cls: 'hotmart', label: 'Hotmart' },
     ticketsports: { cls: 'api',     label: 'TicketSports' },
     import:       { cls: 'import',  label: 'CSV' },
     manual:       { cls: 'manual',  label: 'Manual' },
-    api:          { cls: 'api',     label: 'API' }
+    api:          { cls: 'api',     label: 'API' },
+    aplicacao:    { cls: 'api',     label: 'Aplicação' },
+    visitante:    { cls: 'import',  label: 'Visitante' },
+    cortesia:     { cls: 'import',  label: 'Cortesia' },
+    expositor:    { cls: 'import',  label: 'Expositor' },
+    teste:        { cls: 'manual',  label: 'Teste' }
   };
-  const cfg = map[source] || map.manual;
+  const cfg = map[source] || { cls: 'manual', label: source || 'sem origem' };
   return h('span', { class: `source-pill ${cfg.cls}` }, cfg.label);
 }
 
