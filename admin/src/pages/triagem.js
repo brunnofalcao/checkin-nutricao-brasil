@@ -39,7 +39,7 @@ import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { supabase } from '../data/supabase.js';
 import { toast } from '../ui/toast.js';
-import { telaDeErro } from '../ui/estado.js';
+import { telaDeErro, esqueletoDeLista } from '../ui/estado.js';
 import { fmtRelative, fmtDate, telefoneBonito } from '../core/utils.js';
 import { openModal } from '../ui/modal.js';
 
@@ -90,7 +90,7 @@ function seguidoresBonito(n) {
 
 export async function pageTriagem(view, ctx = {}) {
   const slug = ctx?.query?.evento || EVENTO_PADRAO;
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
 
   let dados;
   try {
@@ -175,7 +175,8 @@ export async function pageTriagem(view, ctx = {}) {
         estat('Aplicações', lista.length, 'recebidas pelo formulário'),
         estat('Sem classificar', pendentes,
           pendentes ? 'ninguém foi avisado ainda' : 'fila zerada',
-          pendentes ? 'alerta' : ''),
+          // Pendencia (esperando decisao sua), nao ressalva.
+          pendentes ? 'atn-pendente' : ''),
         estat('Aprovados', aprovados, `${convidados} convidado · ${premium} premium`, 'destaque'),
         estat('Leads', leads, 'ficam na base para a próxima'),
         teto
@@ -288,7 +289,14 @@ export async function pageTriagem(view, ctx = {}) {
     const classe = i.classificacao || null;
     const cfg = classe ? POR_CHAVE[classe] : null;
 
-    return h('tr', {},
+    // Aprovado sem telefone utilizavel e o unico caso em que o sistema
+    // falhou com alguem: a pessoa foi aceita e o ingresso nao tem por
+    // onde chegar. Marca a linha; as outras ficam limpas de proposito,
+    // porque marca em tudo nao marca nada.
+    const ficouSemIngresso =
+      (classe === 'convidado' || classe === 'premium') && i.sem_telefone;
+
+    return h('tr', { class: ficouSemIngresso ? 'atn-falhou' : '' },
       h('td', {},
         h('div', { class: 'row-name' }, i.nome || 'Sem nome'),
         i.profissao
@@ -299,8 +307,9 @@ export async function pageTriagem(view, ctx = {}) {
       h('td', {},
         h('div', { style: { fontSize: '13px' } }, i.email || '—'),
         i.sem_telefone
-          ? h('div', { class: 'row-sub', style: { color: 'var(--amber)' } },
-              'telefone recusado' + (i.telefone_bruto ? ' · ' + i.telefone_bruto : ''))
+          ? h('div', { class: 'row-sub' },
+              h('span', { class: 'atn-marca ' + (ficouSemIngresso ? 'atn-falhou' : 'atn-atencao') },
+                'telefone recusado' + (i.telefone_bruto ? ' · ' + i.telefone_bruto : '')))
           : h('div', { class: 'row-sub mono' }, telefoneBonito(i.phone))
       ),
       h('td', {},

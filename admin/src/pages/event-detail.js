@@ -14,11 +14,12 @@ import { abreCrachas } from './crachas.js';
 import { abreImportar } from './importar.js';
 import { agrupaPessoas, eventosComCertificado } from '../data/pessoas.js';
 import { listModulos, agrupaPorModulo } from '../data/modulos.js';
+import { esqueletoDeLista } from '../ui/estado.js';
 
 const PAGE_SIZE = 100;
 
 export async function pageEventDetail(view, { params }) {
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
 
   const eventId = params.id;
   const event = await getEvent(eventId);
@@ -488,7 +489,7 @@ export async function pageEventDetail(view, { params }) {
   }
 
   function render() {
-    setContent(view, header(), actions(), h('div', { class: 'table-card', id: 'evd-table' }));
+    setContent(view, header(), actions(), h('div', { class: 'table-card compacta', id: 'evd-table' }));
     renderTable();
   }
 

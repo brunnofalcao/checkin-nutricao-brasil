@@ -20,7 +20,7 @@ import { abreNovaEmpresa } from './expo-nova.js';
 import { telefoneBonito } from '../core/utils.js';
 import { abreCrachas } from './crachas.js';
 import { abreCortesias } from './expo-cortesias.js';
-import { telaDeErro } from '../ui/estado.js';
+import { telaDeErro, esqueletoDeLista } from '../ui/estado.js';
 
 const BASE_FORM = 'https://checkin.nutricaobrasil.com.br/expositor-cadastro-time?e=';
 // O manual NÃO leva o código na URL — a página pede que a pessoa digite.
@@ -68,7 +68,7 @@ async function carrega(eventId) {
 
 // ── página ───────────────────────────────────────────────────────────
 export async function pageExpositores(view) {
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
   const { data, error } = await supabase
     .from('events').select('id, name, event_type, slug, event_date, date_start')
     .eq('event_type', 'exhibitor').order('event_date');
@@ -92,7 +92,7 @@ export async function pageExpositores(view) {
 
 async function recarrega(view) {
   E.view = view;
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
   try { await carrega(E.eventId); } catch (e) { setContent(view, aviso(e.message || e)); return; }
   pinta(view);
 }

@@ -26,6 +26,7 @@ import {
   TETO_BASE
 } from '../data/pessoas.js';
 import { abreAdicionarPessoa } from './pessoa-nova.js';
+import { esqueletoDeLista } from '../ui/estado.js';
 
 const TIPO_ROTULO = {
   congress: 'Congresso',
@@ -58,7 +59,7 @@ const CLASSE_ROTULO = {
 };
 
 export async function pagePessoas(view) {
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
 
   let eventos = [];
   let inscricoes = [];
@@ -734,7 +735,7 @@ export async function pagePessoas(view) {
     setContent(
       view,
       h('div', { id: 'pes-topo' }, cabecalho()),
-      h('div', { class: 'table-card' }, barra(), h('div', { id: 'pes-corpo' }))
+      h('div', { class: 'table-card compacta' }, barra(), h('div', { id: 'pes-corpo' }))
     );
     renderCorpo();
   }

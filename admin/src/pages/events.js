@@ -26,6 +26,7 @@ import { listEvents } from '../data/events.js';
 import { navigate } from '../core/router.js';
 import { fmtDate } from '../core/utils.js';
 import { abreNovoEvento } from './evento-novo.js';
+import { esqueletoDeLista } from '../ui/estado.js';
 
 // Rótulo bonito por família. Família que não estiver aqui aparece com o
 // próprio slug — melhor um nome feio do que um evento invisível.
@@ -75,7 +76,7 @@ function distancia(ev, hoje) {
 }
 
 export async function pageEvents(view) {
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
 
   const events = await listEvents();
   const hoje = inicioDeHoje();
@@ -125,7 +126,7 @@ export async function pageEvents(view) {
       // O cabeçalho de grupo só aparece quando há os dois: com uma lista
       // só, ele é uma linha a mais dizendo o que já está evidente.
       if (passados.length) corpo.push(grupo(`Próximos · ${proximos.length}`));
-      proximos.forEach((e) => corpo.push(renderRow(e, false)));
+      proximos.forEach((e, i) => corpo.push(renderRow(e, false, i === 0)));
     }
     if (passados.length) {
       if (proximos.length) corpo.push(grupo(`Já aconteceram · ${passados.length}`));
@@ -203,14 +204,15 @@ export async function pageEvents(view) {
     return h('tr', { class: 'ev-grupo' }, h('td', { colspan: '6' }, rotulo));
   }
 
-  function renderRow(ev, passou) {
+  function renderRow(ev, passou, eOProximo) {
     const pct = ev.total_inscritos
       ? Math.round(((ev.total_checkins || 0) / ev.total_inscritos) * 100)
       : 0;
     const dist = distancia(ev, hoje);
 
     return h('tr', {
-        class: passou ? 'ev-passado' : '',
+        // A lista inteira e importante; uma linha e a que decide a semana.
+        class: passou ? 'ev-passado' : (eOProximo ? 'ev-proximo' : ''),
         onclick: () => navigate(`/eventos/${ev.id}`)
       },
       h('td', {},
@@ -227,7 +229,7 @@ export async function pageEvents(view) {
       ),
       h('td', {}, ev.location || ev.venue || h('span', { style: { color: 'var(--ink-mute)' } }, 'A confirmar')),
       h('td', {}, progressMini(ev.total_inscritos || 0, capacity(ev))),
-      h('td', { class: 'mono' },
+      h('td', { class: 'mono num' },
         passou && ev.total_inscritos
           ? `${ev.total_checkins || 0} · ${pct}%`
           : '—'

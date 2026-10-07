@@ -10,6 +10,7 @@ import {
 import { toast } from '../ui/toast.js';
 import { navigate } from '../core/router.js';
 import { fmtDate } from '../core/utils.js';
+import { esqueletoDeLista } from '../ui/estado.js';
 
 const SAMPLE_NAME = 'Brunno Falcão';
 
@@ -25,7 +26,7 @@ export async function pageCertificates(view, { params }) {
 // LISTA DE EVENTOS
 // =====================================================================
 async function pageList(view) {
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
   const events = await listEvents();
   setContent(view,
     h('div', { class: 'page-head' },
@@ -96,7 +97,7 @@ function rowFor(ev) {
 // EDITOR DO CERTIFICADO
 // =====================================================================
 async function pageEditor(view, eventId) {
-  setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
+  esqueletoDeLista(view);
   const event = await getEvent(eventId);
   if (!event) {
     setContent(view, h('div', { class: 'empty' },

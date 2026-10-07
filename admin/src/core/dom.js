@@ -32,7 +32,38 @@ export function h(tag, attrs = {}, ...children) {
   }
 
   appendChildren(el, children);
+  // Abaixo de 860px toda tabela vira cartao e a celula fica sem o nome da
+  // coluna: "18,4 mil seguidores" sozinho nao diz que coluna e. O CSS
+  // escreve o rotulo a partir de data-rot; aqui so copiamos o cabecalho.
+  // Feito aqui, e nao em cada pagina, porque as 21 tabelas do painel
+  // montam thead e tbody na mesma chamada de h('table', ...).
+  if (el.tagName === 'TABLE') rotulaColunas(el);
   return el;
+}
+
+// Copia o texto de cada <th> para o data-rot do <td> de mesmo indice.
+// Nao sobrescreve data-rot escrito a mao (a Exposicao ja tinha o dela) e
+// nunca derruba a tela: rotulo e enfeite.
+export function rotulaColunas(tabela) {
+  try {
+    const cabeca = tabela.tHead && tabela.tHead.rows[0];
+    if (!cabeca) return;
+    const rotulos = Array.from(cabeca.cells, (th) => (th.textContent || '').trim());
+    for (const corpo of tabela.tBodies) {
+      for (const linha of corpo.rows) {
+        // Linha de grupo e um td com colspan: nao pertence a coluna nenhuma.
+        if (linha.cells.length < 2) continue;
+        for (let i = 1; i < linha.cells.length; i++) {
+          const celula = linha.cells[i];
+          if (rotulos[i] && !celula.hasAttribute('data-rot')) {
+            celula.setAttribute('data-rot', rotulos[i]);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('rotulaColunas', e);
+  }
 }
 
 function appendChildren(el, children) {

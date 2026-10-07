@@ -46,7 +46,7 @@ export function telaDeErro(view, erro, tentar, titulo) {
   // junta os fatos e conta que o problema é a conexão, não o sistema.
   marcaFalhaDeRede(erro);
   setContent(view,
-    h('div', { class: 'empty' },
+    h('div', { class: 'empty erro' },
       h('div', { class: 'empty-icon' }, icons.alert ? icons.alert() : '!'),
       h('div', { class: 'empty-title' }, titulo || 'Não consegui carregar'),
       h('div', { class: 'empty-body' }, motivoLegivel(erro)),
@@ -62,11 +62,32 @@ export function telaVazia(view, titulo, corpo, acao) {
       acao ? h('button', { class: 'btn btn-primary', onclick: acao.onClick }, acao.label) : null));
 }
 
+// Enquanto a lista carrega, o giro no meio da tela não diz nada e some
+// dando um pulo de layout quando a tabela entra. O esqueleto ocupa o
+// espaço certo desde o primeiro quadro: a página não salta e dá para ler
+// que o que vem é uma lista.
+export function esqueletoDeLista(view, linhas = 6) {
+  const barra = (classe) => h('div', { class: 'esqueleto ' + classe });
+  setContent(view,
+    h('div', { class: 'page-head' },
+      h('div', {}, barra('media'), barra('curta sub'))),
+    h('div', { class: 'table-card' },
+      h('div', { class: 'table-toolbar' }, barra('curta')),
+      h('table', { class: 'table' },
+        h('tbody', {},
+          ...Array.from({ length: linhas }, () =>
+            h('tr', { class: 'esqueleto-tr' },
+              h('td', {}, barra('media'), barra('curta sub')),
+              h('td', {}, barra('curta')),
+              h('td', {}, h('div', { class: 'esqueleto selo' }))))))));
+}
+
 // Quem digita uma rota que o papel dela não alcança hoje cai num 404
 // genérico e conclui que a página sumiu. Dizer a verdade evita o chamado.
 export function telaSemPermissao(view, perfil) {
   setContent(view,
-    h('div', { class: 'empty' },
+    h('div', { class: 'empty sem-permissao' },
+      h('div', { class: 'empty-icon' }, icons.lock ? icons.lock() : '!'),
       h('div', { class: 'empty-title' }, 'Você não tem acesso a esta área'),
       h('div', { class: 'empty-body' },
         `Sua conta${perfil?.email ? ' (' + perfil.email + ')' : ''} não alcança esta parte do painel. ` +
