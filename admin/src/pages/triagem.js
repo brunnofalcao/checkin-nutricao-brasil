@@ -13,18 +13,21 @@
 //   Premium    entra no evento e no tour, recebe o ingresso black
 //   Lead       não entra nesta edição, fica na base para a próxima
 //
+// O CRITÉRIO É PERFIL, NÃO ORDEM DE CHEGADA
+// Quem é a pessoa (profissão) e que alcance ela tem (Instagram). Por isso
+// o @ é link clicável e não texto solto: decidir 86 aplicações copiando e
+// colando @ no navegador não é triagem, é garimpo. A contagem de
+// seguidores vem do cache em instagram_perfis, alimentado pela function
+// insta-seguidores — e quando não existe, a coluna diz que não existe, em
+// vez de mostrar zero. Zero seguidores e "não consegui saber" levam a
+// decisões opostas.
+//
 // POR QUE NÃO FALA COM O BANCO DIRETO
 // Classificar não é só gravar uma coluna: grava, troca a tag no RD
 // Station e registra a conversão que dispara o e-mail de lá. Isso mora na
 // edge function `triagem`, que tem a chave do RD. Chamar o banco direto
 // daqui gravaria a classificação e deixaria o RD para trás — a pessoa
 // aprovada no painel e ainda marcada como lead na automação.
-//
-// A function aceita a sessão de quem está logado (Authorization: Bearer)
-// e confere profiles.role = 'admin' do outro lado. Foi o que permitiu
-// trazer a tela para dentro do painel: a versão anterior vivia num
-// endereço com ?k=<chave> na URL, e chave em link é chave vazada —
-// ia para o histórico do navegador e para qualquer print de tela.
 //
 // O AVISO DO TOPO É A PARTE MAIS IMPORTANTE DA TELA
 // Classificar como convidado NÃO manda mensagem por si. Quem manda é o
@@ -40,11 +43,9 @@ import { telaDeErro } from '../ui/estado.js';
 import { fmtRelative, fmtDate, telefoneBonito } from '../core/utils.js';
 import { openModal } from '../ui/modal.js';
 
-// Evento padrão da tela. Fica aqui e não no código da function porque a
-// tela aceita ?evento=<slug> na URL: quando o segundo evento de aplicação
-// existir, ele abre sem mexer em nada.
 const EVENTO_PADRAO = 'health-influence-day-2026';
 const API = window.__ENV.SUPABASE_URL + '/functions/v1/triagem';
+const API_INSTA = window.__ENV.SUPABASE_URL + '/functions/v1/insta-seguidores';
 
 const CLASSES = [
   { key: 'convidado', rot: 'Convidado', cls: 'live' },
@@ -75,6 +76,18 @@ async function chama(url, opcoes = {}) {
   return corpo;
 }
 
+// 12,3 mil · 1,2 mi. Número cheio em coluna de tabela rouba a atenção de
+// quem está comparando alcance entre dez linhas.
+function seguidoresBonito(n) {
+  if (n === null || n === undefined) return null;
+  if (n < 1000) return String(n);
+  if (n < 1000000) {
+    const m = n / 1000;
+    return (m < 100 ? m.toFixed(1).replace('.', ',') : Math.round(m)) + ' mil';
+  }
+  return (n / 1000000).toFixed(1).replace('.', ',') + ' mi';
+}
+
 export async function pageTriagem(view, ctx = {}) {
   const slug = ctx?.query?.evento || EVENTO_PADRAO;
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
@@ -92,6 +105,7 @@ export async function pageTriagem(view, ctx = {}) {
 
   let filtro = 'pendentes';
   let busca = '';
+  let ordem = 'recentes';   // recentes | alcance
 
   function conta(classe) {
     return lista.filter((i) => (i.classificacao || null) === classe).length;
@@ -104,9 +118,10 @@ export async function pageTriagem(view, ctx = {}) {
     const leads = conta('lead');
     const aprovados = convidados + premium;
     const teto = ev?.capacity || 0;
+    const comSeguidores = lista.filter((i) => i.instagram_seguidores != null).length;
 
     const termo = busca.trim().toLowerCase();
-    const filtrada = lista.filter((i) => {
+    let filtrada = lista.filter((i) => {
       const classe = i.classificacao || null;
       const passaFiltro =
         filtro === 'todas' ||
@@ -114,9 +129,22 @@ export async function pageTriagem(view, ctx = {}) {
         filtro === classe;
       if (!passaFiltro) return false;
       if (!termo) return true;
-      return [i.nome, i.email, i.instagram, i.estado, i.phone]
+      return [i.nome, i.email, i.instagram, i.profissao, i.estado, i.phone]
         .some((v) => String(v || '').toLowerCase().includes(termo));
     });
+
+    // Ordenar por alcance é o que transforma a lista em fila de decisão:
+    // quem tem mais público primeiro. Sem seguidores conhecidos vai para o
+    // fim — não para o topo com zero, que seria mentira.
+    if (ordem === 'alcance') {
+      filtrada = filtrada.slice().sort((a, b) => {
+        const sa = a.instagram_seguidores, sb = b.instagram_seguidores;
+        if (sa == null && sb == null) return 0;
+        if (sa == null) return 1;
+        if (sb == null) return -1;
+        return sb - sa;
+      });
+    }
 
     setContent(
       view,
@@ -130,6 +158,10 @@ export async function pageTriagem(view, ctx = {}) {
               : 'Aplicações recebidas pelo formulário.')
         ),
         h('div', { class: 'page-actions' },
+          h('button', {
+            class: 'btn btn-secondary',
+            onclick: (e) => atualizaSeguidores(e.currentTarget)
+          }, 'Buscar seguidores'),
           h('button', {
             class: 'btn btn-secondary',
             onclick: () => pageTriagem(view, ctx)
@@ -157,7 +189,7 @@ export async function pageTriagem(view, ctx = {}) {
             icons.search(),
             h('input', {
               type: 'text',
-              placeholder: 'Buscar por nome, e-mail, @ ou estado...',
+              placeholder: 'Buscar por nome, profissão, @, e-mail ou estado...',
               value: busca,
               oninput: (e) => { busca = e.target.value; render(); }
             })
@@ -171,6 +203,23 @@ export async function pageTriagem(view, ctx = {}) {
           )
         ),
 
+        h('div', { class: 'table-toolbar', style: { borderTop: 'none', paddingTop: '0' } },
+          h('div', { class: 'exp-chips' },
+            h('button', {
+              class: 'exp-chip' + (ordem === 'recentes' ? ' on' : ''),
+              onclick: () => { ordem = 'recentes'; render(); }
+            }, 'Mais recentes'),
+            h('button', {
+              class: 'exp-chip' + (ordem === 'alcance' ? ' on' : ''),
+              onclick: () => { ordem = 'alcance'; render(); }
+            }, 'Maior alcance')
+          ),
+          h('div', { style: { marginLeft: 'auto', fontSize: '12px', color: 'var(--ink-mute)' } },
+            comSeguidores
+              ? `seguidores conhecidos de ${comSeguidores} de ${lista.length}`
+              : 'seguidores ainda não coletados')
+        ),
+
         filtrada.length === 0
           ? h('div', { class: 'loading-row' },
               termo
@@ -181,11 +230,12 @@ export async function pageTriagem(view, ctx = {}) {
           : h('table', { class: 'table' },
               h('thead', {},
                 h('tr', {},
-                  h('th', { style: { width: '26%' } }, 'Quem aplicou'),
+                  h('th', { style: { width: '22%' } }, 'Quem aplicou'),
+                  h('th', {}, 'Instagram'),
                   h('th', {}, 'Contato'),
                   h('th', {}, 'Perfil'),
                   h('th', {}, 'Situação'),
-                  h('th', { style: { width: '26%' } }, 'Decisão')
+                  h('th', { style: { width: '22%' } }, 'Decisão')
                 )
               ),
               h('tbody', {}, ...filtrada.map(linha))
@@ -208,6 +258,32 @@ export async function pageTriagem(view, ctx = {}) {
     }, rot, h('span', { class: 'exp-chip-n' }, String(n)));
   }
 
+  // A célula do Instagram. Três estados possíveis, e cada um significa
+  // uma coisa diferente na hora de decidir:
+  //   handle + número   conta profissional, alcance conhecido
+  //   handle sem número conta pessoal ou ainda não coletada
+  //   sem handle        a pessoa não digitou um @ utilizável
+  function celulaInstagram(i) {
+    if (!i.instagram_handle) {
+      return h('div', {},
+        h('div', { class: 'row-sub' }, i.instagram || '—'),
+        h('div', { class: 'row-sub', style: { color: 'var(--ink-mute)' } }, 'sem @ utilizável'));
+    }
+    const seg = seguidoresBonito(i.instagram_seguidores);
+    return h('div', {},
+      h('a', {
+        href: 'https://instagram.com/' + i.instagram_handle,
+        target: '_blank',
+        rel: 'noopener',
+        style: { fontSize: '13px', fontWeight: '600', color: 'var(--violet)', textDecoration: 'none' }
+      }, '@' + i.instagram_handle, h('span', { 'aria-hidden': 'true' }, ' ↗')),
+      seg
+        ? h('div', { class: 'row-sub mono', style: { fontWeight: '600' } }, seg + ' seguidores')
+        : h('div', { class: 'row-sub', style: { color: 'var(--ink-mute)' } },
+            i.instagram_erro ? 'alcance não disponível' : 'alcance não coletado')
+    );
+  }
+
   function linha(i) {
     const classe = i.classificacao || null;
     const cfg = classe ? POR_CHAVE[classe] : null;
@@ -215,8 +291,11 @@ export async function pageTriagem(view, ctx = {}) {
     return h('tr', {},
       h('td', {},
         h('div', { class: 'row-name' }, i.nome || 'Sem nome'),
-        i.instagram ? h('div', { class: 'row-sub' }, i.instagram) : null
+        i.profissao
+          ? h('div', { class: 'row-sub' }, i.profissao)
+          : h('div', { class: 'row-sub', style: { color: 'var(--ink-mute)' } }, 'profissão não informada')
       ),
+      h('td', {}, celulaInstagram(i)),
       h('td', {},
         h('div', { style: { fontSize: '13px' } }, i.email || '—'),
         i.sem_telefone
@@ -258,11 +337,36 @@ export async function pageTriagem(view, ctx = {}) {
     );
   }
 
+  // Trazer os seguidores é uma ida à API da Meta por perfil. Em lote, com
+  // teto, e só de quem ainda não foi conferido — a cota da Graph API é
+  // finita e perfil conferido esta semana não muda de ordem de grandeza.
+  async function atualizaSeguidores(botao) {
+    const rotulo = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = 'Buscando...';
+    try {
+      const r = await chama(`${API_INSTA}?limite=100`);
+      toast.success(
+        `${r.processados} perfis conferidos · ${r.com_seguidores} com alcance conhecido` +
+        (r.sem_dado ? ` · ${r.sem_dado} sem dado (conta pessoal ou @ errado)` : '')
+      );
+      pageTriagem(view, ctx);
+    } catch (e) {
+      const m = String(e.message || e);
+      if (/credenciais/i.test(m)) {
+        toast.warn('Falta ligar a conta do Instagram da Science Play. A triagem funciona sem isso; só o número de seguidores fica vazio.');
+      } else {
+        toast.danger('Não consegui buscar os seguidores: ' + m);
+      }
+      botao.disabled = false;
+      botao.textContent = rotulo;
+    }
+  }
+
   // Trocar a classificação de quem já recebeu o ingresso não é a mesma
-  // coisa que classificar quem está esperando: a mensagem já saiu, e no
-  // caso do premium o ingresso que está no celular da pessoa muda de cor.
-  // Então pergunta antes — e só nesse caso, para não encher de modal a
-  // triagem normal, que é clique em sequência.
+  // coisa que classificar quem está esperando: a mensagem já saiu. Então
+  // pergunta antes — e só nesse caso, para não encher de modal a triagem
+  // normal, que é clique em sequência.
   function decide(item, classe, botao) {
     const atual = item.classificacao || null;
     if (atual && (item.ja_recebeu_whatsapp || item.checked)) {
@@ -274,8 +378,8 @@ export async function pageTriagem(view, ctx = {}) {
             classe === 'lead'
               ? 'Marcar como Lead não cancela o ingresso que já está no celular dela. ' +
                 'Se a pessoa não pode mais entrar, avise na portaria também.'
-              : 'O ingresso dela passa a valer na nova categoria. ' +
-                'Quem já salvou o cartão precisa abrir o link de novo para atualizar.')
+              : 'A classificação muda aqui e no RD, mas o sistema NÃO manda mensagem de novo — ' +
+                'o ingresso que está no celular dela continua sendo o antigo.')
         ),
         actions: [
           { label: 'Deixar como está', kind: 'btn-secondary', onClick: (fecha) => fecha() },
