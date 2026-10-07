@@ -1,33 +1,64 @@
 /* =============================================================
-   DESIGN SYSTEM · Nutrição Brasil
-   Fonte única da verdade: brandbook oficial (Julho 2026).
-   Dois temas com os mesmos nomes de token — nenhuma outra folha
-   de estilo precisa saber qual está ativo.
+   DESIGN SYSTEM · Nutrição Brasil · redesign out/2026
+   Fonte única da verdade. Dois temas com os mesmos nomes de token —
+   nenhuma outra folha de estilo sabe qual está ativo.
 
-   Tema: <html data-tema="escuro"> ou "claro". Sem atributo, segue
-   a preferência do sistema operacional.
+   Tema: <html data-tema="escuro"> ou "claro". Sem atributo, segue o
+   sistema operacional (modo automático).
 
-   Contraste medido (WCAG 2.2):
-     escuro  ink 19.9 · ink-soft 11.1 · ink-mute 5.1 · violet 7.3 · cyan 10.3
-     claro   ink 18.6 · ink-soft 9.7  · ink-mute 5.5 · violet 8.9 · cyan 5.7
-   Nenhum par de texto abaixo de 4.5.
+   Fundo do tema escuro: grafite neutro. O roxo saiu do fundo e ficou
+   só no acento — ação primária, item de menu ativo, link.
+
+   Contraste medido (WCAG 2.2) contra --surface · --bg-2 (o pior par):
+     escuro  ink 14.9·15.6  ink-soft 8.7·9.2  ink-mute 6.3·6.6  ink-dim 5.0·5.2
+             violet 6.4·6.8  cyan 9.3·9.8  green 7.8·8.2  amber 9.6·10.1  red 6.9·7.3
+             on-fill/violet-fill 6.5  on-fill/red-fill 6.9  green/green-soft 7.0
+             amber/amber-soft 8.4  red/red-soft 6.4  violet/violet-soft 6.0
+     claro   ink 17.3·14.8  ink-soft 8.6·7.3  ink-mute 5.9·5.1  ink-dim 5.1·4.5
+             violet 8.8·7.6  cyan 6.3·5.4  green 5.9·5.1  amber 6.3·5.4  red 6.5·5.6
+             on-fill/violet-fill 8.8  on-fill/red-fill 6.5  green/green-soft 5.2
+             amber/amber-soft 5.7  red/red-soft 5.6  violet/violet-soft 7.8
+   Nenhum par de texto abaixo de 4.5. Tabela completa em ENTREGA.md.
    ============================================================= */
 
 :root {
-  /* ----- Tipografia ----- */
-  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* ----- Tipografia: três famílias, três papéis ----- */
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif; /* título de página, número grande */
+  --font-body: 'DM Sans', system-ui, sans-serif;                 /* corpo, rótulo, botão */
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;        /* número em coluna, código, telefone, data */
 
-  /* ----- Escala ----- */
+  /* ----- Escala tipográfica nomeada (use só ela) -----
+     t-1 rótulo uppercase, selo, pílula      t-2 subtítulo de linha, meta
+     t-3 controle, botão, tabela compacta    t-4 corpo, célula
+     t-5 título de card                      t-6 título de seção e de modal
+     t-7 título de página                    t-8 número de destaque
+     t-9 contagem do evento âncora */
+  --t-1: 11px; --t-2: 12px; --t-3: 13px; --t-4: 14px; --t-5: 16px;
+  --t-6: 20px; --t-7: 26px; --t-8: 34px; --t-9: 48px;
+
+  /* Altura de linha: menor em dado, maior em texto corrido. */
+  --lh-dado: 1.15; --lh-ui: 1.35; --lh-texto: 1.55;
+  --track-rot: .08em;     /* rótulo uppercase */
+  --track-tit: -.02em;    /* título display */
+  --tnum: 'tnum' 1, 'lnum' 1;  /* numeral tabular: tudo que alinha em coluna */
+
+  /* ----- Espaço (4px). Valor solto é bug. ----- */
   --s-1: 4px;   --s-2: 8px;   --s-3: 12px;  --s-4: 16px;
   --s-5: 24px;  --s-6: 32px;  --s-7: 48px;  --s-8: 64px;
 
-  --r-sm: 8px;  --r: 12px;    --r-lg: 16px; --r-pill: 999px;
+  /* ----- Raio ----- */
+  --r-sm: 6px;  --r: 10px;    --r-lg: 14px; --r-pill: 999px;
+
+  /* ----- Alturas de controle ----- */
+  --ctl-sm: 30px;   /* botão pequeno em linha de tabela */
+  --ctl: 36px;      /* botão, busca, seleção em barra de ferramentas */
+  --ctl-lg: 40px;   /* campo de formulário */
+  --alvo: 44px;     /* alvo mínimo de toque no celular */
 
   /* ----- Breakpoints (referência; media queries usam o valor) -----
      mobile <560 · tablet 560-859 · notebook 860-1279 · desktop 1280-1679 · amplo 1680+ */
 
+  /* ----- Movimento: 120ms controle, 200ms camada ----- */
   --dur-1: .12s; --dur-2: .2s; --ease: cubic-bezier(.4, 0, .2, 1);
 }
 
@@ -36,124 +67,136 @@
 [data-tema='escuro'] {
   color-scheme: dark;
 
-  --bg: #0d0618;
-  --bg-2: #150b26;
-  --surface: #1a0f2e;
-  --surface-hover: #241540;
-  --surface-2: #241540;
+  /* Fundo em camadas: profundidade vem dos degraus, não de sombra. */
+  --bg: #0e0e11;
+  --bg-2: #141418;
+  --surface: #19191e;
+  --surface-hover: #1e1e24;
+  --surface-2: #202027;
 
-  --line: #3a2a52;
-  --line-strong: #4b3868;
+  --line: #26262e;
+  --line-strong: #35353f;
   --line-focus: #a78bfa;
 
-  --ink: #ffffff;
+  --ink: #ececf1;
   --ink-strong: #ffffff;
-  --ink-soft: #c9bcde;
-  --ink-mute: #8a7aa5;
-  --ink-dim: #6b5c85;
+  --ink-soft: #b6b6c2;
+  --ink-mute: #9a9aa9;
+  --ink-dim: #87879b;
 
-  --violet: #a78bfa;          /* texto e ícone */
+  /* Um acento. */
+  --violet: #a78bfa;             /* texto, ícone, link, item ativo */
   --violet-hover: #c4b5fd;
-  --violet-fill: #6b2d8b;     /* fundo de botão primário */
-  --violet-fill-hover: #7d3aa0;
-  --violet-soft: #241540;
-  --violet-border: #4b3868;
+  --violet-fill: #6d3bd4;        /* fundo de botão primário */
+  --violet-fill-hover: #7c4ee0;
+  --violet-soft: #231c35;        /* fundo de seleção leve */
+  --violet-border: #3d3159;
 
-  --cyan: #80c0ff;
+  --cyan: #7cc4ff;               /* identidade da corrida (NB Run) */
   --gold: #ffc800;
 
-  --green: #5ab78e;
-  --green-soft: #14301f;
-  --amber: #ffc800;
-  --amber-soft: #33260a;
-  --red: #ff6b6b;
-  --red-soft: #331515;
+  /* Semântica = estado do mundo, nunca ênfase. */
+  --green: #5cc08f;  --green-soft: #13271c;
+  --amber: #f3b53f;  --amber-soft: #2d2412;
+  --red: #ff7a7a;    --red-soft: #33191b;
+  --red-fill: #c53a42;           /* fundo de botão destrutivo */
 
-  --on-fill: #ffffff;         /* texto sobre violet-fill */
-  --on-gold: #16101f;         /* texto sobre gold */
-  --on-amber: #1a1005;        /* texto sobre amber */
+  /* Texto sobre preenchimento colorido */
+  --on-fill: #ffffff;            /* sobre violet-fill e red-fill */
+  --on-gold: #16101f;
+  --on-amber: #1a1005;
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-2: 0 8px 24px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
-  --scrim: rgba(6, 2, 12, .82);
+  /* Camada de atenção — três níveis, só três */
+  --atn-pend: #a78bfa;   --atn-pend-soft: #231c35;   /* esperando decisão humana */
+  --atn-aten: #f3b53f;   --atn-aten-soft: #2d2412;   /* funcionou, com ressalva */
+  --atn-falha: #ff7a7a;  --atn-falha-soft: #33191b;  /* não funcionou, alguém ficou sem */
+
+  /* Sombra só para o que flutua: modal, menu, gaveta. */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .5);
+  --shadow-2: 0 12px 32px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .35);
+  --scrim: rgba(4, 4, 6, .72);
 }
 
 /* ═══════════════════════ TEMA CLARO ═══════════════════════ */
 [data-tema='claro'] {
   color-scheme: light;
 
-  --bg: #f7f5fa;
-  --bg-2: #eeeaf4;
+  --bg: #f6f6f8;
+  --bg-2: #ededf0;
   --surface: #ffffff;
-  --surface-hover: #faf8fd;
-  --surface-2: #f3effa;
+  --surface-hover: #f8f8fa;
+  --surface-2: #f3f3f6;
 
-  --line: #e4dced;
-  --line-strong: #cec2dd;
+  --line: #e4e4ea;
+  --line-strong: #cdcdd7;
   --line-focus: #6b2d8b;
 
-  --ink: #16101f;
-  --ink-strong: #0a0610;
-  --ink-soft: #4a3f5c;
-  --ink-mute: #6f6383;
-  --ink-dim: #9a90ab;
+  --ink: #1a1a22;
+  --ink-strong: #0b0b10;
+  --ink-soft: #4b4b58;
+  --ink-mute: #62627a;
+  --ink-dim: #67677d;
 
   --violet: #6b2d8b;
   --violet-hover: #5a2475;
   --violet-fill: #6b2d8b;
   --violet-fill-hover: #5a2475;
-  --violet-soft: #f4edf9;
-  --violet-border: #ddd0e9;
+  --violet-soft: #f3eef8;
+  --violet-border: #dccfe8;
 
-  --cyan: #0b6d9e;
-  --gold: #8a6300;
+  --cyan: #0a6694;
+  --gold: #7d5a00;
 
-  --green: #1a7a52;
-  --green-soft: #e7f4ee;
-  --amber: #8a6300;
-  --amber-soft: #fdf3df;
-  --red: #b4232b;
-  --red-soft: #fceaea;
+  --green: #17724c;  --green-soft: #e6f4ec;
+  --amber: #7d5a00;  --amber-soft: #fdf3dc;
+  --red: #b4232b;    --red-soft: #fdeaea;
+  --red-fill: #b4232b;
 
   --on-fill: #ffffff;
-  --on-gold: #16101f;
+  --on-gold: #ffffff;
   --on-amber: #ffffff;
 
-  --shadow-1: 0 1px 2px rgba(22, 16, 31, .05);
-  --shadow-2: 0 6px 20px rgba(22, 16, 31, .08), 0 1px 3px rgba(22, 16, 31, .05);
-  --scrim: rgba(22, 16, 31, .5);
+  --atn-pend: #6b2d8b;   --atn-pend-soft: #f3eef8;
+  --atn-aten: #7d5a00;   --atn-aten-soft: #fdf3dc;
+  --atn-falha: #b4232b;  --atn-falha-soft: #fdeaea;
+
+  --shadow-1: 0 1px 2px rgba(22, 22, 34, .06);
+  --shadow-2: 0 12px 32px rgba(22, 22, 34, .12), 0 2px 6px rgba(22, 22, 34, .06);
+  --scrim: rgba(22, 22, 34, .5);
 }
 
-/* Sem escolha salva, segue o sistema. */
+/* Sem escolha salva, segue o sistema. (Mesmos valores do tema claro.) */
 @media (prefers-color-scheme: light) {
   :root:not([data-tema]) {
     color-scheme: light;
-    --bg: #f7f5fa; --bg-2: #eeeaf4; --surface: #ffffff;
-    --surface-hover: #faf8fd; --surface-2: #f3effa;
-    --line: #e4dced; --line-strong: #cec2dd; --line-focus: #6b2d8b;
-    --ink: #16101f; --ink-strong: #0a0610; --ink-soft: #4a3f5c;
-    --ink-mute: #6f6383; --ink-dim: #9a90ab;
+    --bg: #f6f6f8; --bg-2: #ededf0; --surface: #ffffff;
+    --surface-hover: #f8f8fa; --surface-2: #f3f3f6;
+    --line: #e4e4ea; --line-strong: #cdcdd7; --line-focus: #6b2d8b;
+    --ink: #1a1a22; --ink-strong: #0b0b10; --ink-soft: #4b4b58;
+    --ink-mute: #62627a; --ink-dim: #67677d;
     --violet: #6b2d8b; --violet-hover: #5a2475;
     --violet-fill: #6b2d8b; --violet-fill-hover: #5a2475;
-    --violet-soft: #f4edf9; --violet-border: #ddd0e9;
-    --cyan: #0b6d9e; --gold: #8a6300;
-    --green: #1a7a52; --green-soft: #e7f4ee;
-    --amber: #8a6300; --amber-soft: #fdf3df;
-    --red: #b4232b; --red-soft: #fceaea;
-    --on-amber: #ffffff;
-    --shadow-1: 0 1px 2px rgba(22, 16, 31, .05);
-    --shadow-2: 0 6px 20px rgba(22, 16, 31, .08), 0 1px 3px rgba(22, 16, 31, .05);
-    --scrim: rgba(22, 16, 31, .5);
+    --violet-soft: #f3eef8; --violet-border: #dccfe8;
+    --cyan: #0a6694; --gold: #7d5a00;
+    --green: #17724c; --green-soft: #e6f4ec;
+    --amber: #7d5a00; --amber-soft: #fdf3dc;
+    --red: #b4232b; --red-soft: #fdeaea; --red-fill: #b4232b;
+    --on-fill: #ffffff; --on-gold: #ffffff; --on-amber: #ffffff;
+    --atn-pend: #6b2d8b; --atn-pend-soft: #f3eef8;
+    --atn-aten: #7d5a00; --atn-aten-soft: #fdf3dc;
+    --atn-falha: #b4232b; --atn-falha-soft: #fdeaea;
+    --shadow-1: 0 1px 2px rgba(22, 22, 34, .06);
+    --shadow-2: 0 12px 32px rgba(22, 22, 34, .12), 0 2px 6px rgba(22, 22, 34, .06);
+    --scrim: rgba(22, 22, 34, .5);
   }
 }
 
 /* A troca de tema não deve piscar nem animar cor por 300ms. */
 html.trocando-tema *,
 html.trocando-tema *::before,
-html.trocando-tema *::after {
-  transition: none !important;
-}
+html.trocando-tema *::after { transition: none !important; }
 
+/* ═══════════════════════ BASE ═══════════════════════ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 
@@ -161,28 +204,29 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--t-4);
+  line-height: var(--lh-texto);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern' 1, 'liga' 1;
 }
+
+h1, h2, h3, h4 { text-wrap: balance; }
+p { text-wrap: pretty; }
 
 ::selection { background: var(--violet-soft); color: var(--violet); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: var(--line-strong);
-  border-radius: 5px;
-  border: 2px solid var(--bg);
-}
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 5px; border: 2px solid var(--bg); }
 
 input, select, textarea, button { font: inherit; color: inherit; }
 input, select, textarea { background: none; border: none; outline: none; }
 button { background: none; border: none; cursor: pointer; }
-a { color: inherit; text-decoration: none; }
+a { color: var(--violet); text-decoration: none; }
+a:hover { color: var(--violet-hover); }
 
-/* Foco visível e consistente — requisito de acessibilidade, não enfeite. */
+/* Foco visível e consistente — contorno de 2px, afastado 2px. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--line-focus);
   outline-offset: 2px;
@@ -198,7 +242,7 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
-.mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
+.mono { font-family: var(--font-mono); font-feature-settings: var(--tnum); }
 .muted { color: var(--ink-mute); }
 .text-soft { color: var(--ink-soft); }
 
