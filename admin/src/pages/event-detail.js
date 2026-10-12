@@ -5,7 +5,7 @@ import { getEvent, updateEvent } from '../data/events.js';
 import { listAllParticipants } from '../data/participants.js';
 import { listRaceProfiles, distanceLabel, shirtLabel } from '../data/race.js';
 import { listRaceStock, saveRaceStock, buildStockRows, SHIRT_SIZES } from '../data/race-stock.js';
-import { fmtDate, fmtRelative, debounce } from '../core/utils.js';
+import { fmtDate, fmtRelative, debounce, telefoneBonito, linkWhatsapp } from '../core/utils.js';
 import { toast } from '../ui/toast.js';
 import { openModal } from '../ui/modal.js';
 import { navigate } from '../core/router.js';
@@ -579,6 +579,7 @@ export async function pageEventDetail(view, { params }) {
           h('th', {}, 'Telefone'),
           h('th', {}, isRace ? 'Corrida' : 'Lote'),
           h('th', {}, 'Origem'),
+          temTriagem() ? h('th', {}, 'RSVP') : null,
           h('th', {}, isRace ? 'Kit' : 'Check-in')
         )),
         h('tbody', {}, ...visible.map(rowFor))
@@ -605,20 +606,78 @@ export async function pageEventDetail(view, { params }) {
         onclick: () => openParticipant(p)
       },
       h('td', {},
-        h('div', { class: 'row-name', style: isCanceled ? { color: 'var(--ink-mute)', textDecoration: 'line-through' } : {} }, p.name || '—'),
+        h('div', { class: 'row-name-wrap' },
+          h('div', { class: 'row-name', style: isCanceled ? { color: 'var(--ink-mute)', textDecoration: 'line-through' } : {} }, p.name || '—'),
+          seloClasse(p)
+        ),
         p.email ? h('div', { class: 'row-sub' }, p.email) : null
       ),
-      h('td', { class: 'mono' }, p.phone || '—'),
+      h('td', {}, celulaTelefone(p)),
       isRace
         ? h('td', {}, rp ? raceChips(rp, p) : h('span', { class: 'muted' }, 'Sem perfil'))
         : h('td', {}, p.lote || '—'),
       h('td', {}, sourcePill(p.source)),
+      temTriagem() ? h('td', {}, seloRsvp(p)) : null,
       h('td', {},
         p.checked
           ? h('span', { class: 'status live' }, fmtRelative(p.checked_at))
           : h('span', { class: 'status done' }, 'Pendente')
       )
     );
+  }
+
+  // Evento com triagem e o que tem gente classificada. Goiania e Porto
+  // Alegre vendem ingresso e nao tem aplicacao: nesses, a coluna de RSVP
+  // seria uma coluna de travessoes.
+  let _temTriagem = null;
+  function temTriagem() {
+    if (_temTriagem === null) {
+      _temTriagem = participants.some((p) => p.classificacao);
+    }
+    return _temTriagem;
+  }
+
+  // Premium, Convidado ou Lead, com as mesmas cores da tela de Triagem.
+  // Duas telas que mostram a mesma coisa de cor diferente ensinam errado.
+  const SELO_CLASSE = {
+    premium:   { rot: 'Premium',   cls: 'soon' },
+    convidado: { rot: 'Convidado', cls: 'live' },
+    lead:      { rot: 'Lead',      cls: 'done' }
+  };
+  function seloClasse(p) {
+    const c = SELO_CLASSE[p.classificacao];
+    return c ? h('span', { class: 'status ' + c.cls }, c.rot) : null;
+  }
+
+  // Tres estados, nao dois: quem confirmou, quem avisou que nao vai, e
+  // quem simplesmente nao respondeu. Juntar os dois ultimos esconderia
+  // justamente quem ja liberou a vaga.
+  function seloRsvp(p) {
+    if (!p.classificacao) return h('span', { class: 'muted' }, '—');
+    if (p.rsvp_resposta === 'nao') {
+      return h('span', { class: 'tag-rsvp nao', title: fmtRelative(p.rsvp_em) }, 'Não vai');
+    }
+    if (p.rsvp_em) {
+      return h('span', { class: 'tag-rsvp ok', title: fmtRelative(p.rsvp_em) }, 'RSVP OK');
+    }
+    return h('span', { class: 'tag-rsvp falta' }, 'Sem RSVP');
+  }
+
+  // O telefone vira conversa: um toque abre o WhatsApp da pessoa.
+  // stopPropagation porque a linha inteira abre a ficha no clique — sem
+  // ele, abrir o WhatsApp abriria a ficha por baixo.
+  function celulaTelefone(p) {
+    const url = linkWhatsapp(p.phone);
+    const texto = p.phone ? telefoneBonito(p.phone) : '—';
+    if (!url) return h('span', { class: 'mono' }, texto);
+    return h('a', {
+      class: 'tel-wa mono',
+      href: url,
+      target: '_blank',
+      rel: 'noopener',
+      title: 'Abrir conversa no WhatsApp',
+      onclick: (e) => e.stopPropagation()
+    }, texto, h('span', { class: 'tel-wa-ico', 'aria-hidden': 'true' }, '↗'));
   }
 
   // Chips do corredor: distância · camiseta · Nutri · nº de peito.
@@ -653,6 +712,12 @@ export async function pageEventDetail(view, { params }) {
         isRace ? null : infoRow('Lote', p.lote),
         infoRow('Origem', p.source || 'manual'),
         infoRow('Triagem', p.classificacao || null),
+        p.classificacao
+          ? infoRow('RSVP', p.rsvp_em
+              ? (p.rsvp_resposta === 'nao' ? 'Não poderá comparecer' : 'Confirmado') +
+                ' · ' + fmtRelative(p.rsvp_em)
+              : 'Sem resposta')
+          : null,
         infoRow(isRace ? 'Kit' : 'Check-in', p.checked ? `${isRace ? 'Retirado' : 'Sim'} · ${fmtRelative(p.checked_at)}` : 'Pendente'),
         rp ? infoRow('Nº de peito', rp.bib_number) : null,
         rp ? infoRow('Nº do chip', rp.chip_number) : null,

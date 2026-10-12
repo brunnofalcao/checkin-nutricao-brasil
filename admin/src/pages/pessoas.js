@@ -13,7 +13,7 @@ import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { openModal } from '../ui/modal.js';
 import { toast } from '../ui/toast.js';
-import { fmtRelative, fmtDateTime, debounce, normalizePhone, telefoneBonito } from '../core/utils.js';
+import { fmtRelative, fmtDateTime, debounce, normalizePhone, telefoneBonito, linkWhatsapp } from '../core/utils.js';
 import { listEvents } from '../data/events.js';
 import { checkinParticipant, uncheckinParticipant } from '../data/participants.js';
 import {
@@ -410,7 +410,7 @@ export async function pagePessoas(view) {
         h(
           'div',
           { class: 'pes-contato mono' },
-          pe.phone ? telefoneBonito(pe.phone) : h('span', { class: 'muted' }, 'sem WhatsApp')
+          telefoneClicavel(pe.phone)
         )
       ),
       h('td', {}, h('div', { class: 'pes-evs' }, ...chips)),
@@ -741,4 +741,18 @@ export async function pagePessoas(view) {
   }
 
   render();
+}
+
+// O numero vira conversa no WhatsApp. Fora do componente porque nao depende
+// de estado nenhum. Numero que nao da para discar continua texto.
+function telefoneClicavel(phone) {
+  if (!phone) return h('span', { class: 'muted' }, 'sem WhatsApp');
+  const url = linkWhatsapp(phone);
+  if (!url) return telefoneBonito(phone);
+  return h('a', {
+    class: 'tel-wa mono',
+    href: url, target: '_blank', rel: 'noopener',
+    title: 'Abrir conversa no WhatsApp',
+    onclick: (e) => e.stopPropagation()
+  }, telefoneBonito(phone), h('span', { class: 'tel-wa-ico', 'aria-hidden': 'true' }, '↗'));
 }

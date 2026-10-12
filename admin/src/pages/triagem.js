@@ -40,7 +40,7 @@ import { icons } from '../ui/icons.js';
 import { supabase } from '../data/supabase.js';
 import { toast } from '../ui/toast.js';
 import { telaDeErro, esqueletoDeLista } from '../ui/estado.js';
-import { fmtRelative, fmtDate, telefoneBonito } from '../core/utils.js';
+import { fmtRelative, fmtDate, telefoneBonito, linkWhatsapp } from '../core/utils.js';
 import { openModal } from '../ui/modal.js';
 
 const EVENTO_PADRAO = 'health-influence-day-2026';
@@ -310,7 +310,7 @@ export async function pageTriagem(view, ctx = {}) {
           ? h('div', { class: 'row-sub' },
               h('span', { class: 'atn-marca ' + (ficouSemIngresso ? 'atn-falhou' : 'atn-atencao') },
                 'telefone recusado' + (i.telefone_bruto ? ' · ' + i.telefone_bruto : '')))
-          : h('div', { class: 'row-sub mono' }, telefoneBonito(i.phone))
+          : h('div', { class: 'row-sub' }, telefoneClicavel(i.phone))
       ),
       h('td', {},
         h('div', { style: { fontSize: '13px' } }, i.faturamento || '—'),
@@ -474,4 +474,17 @@ function bannerDoEnvio(envio) {
         'ingresso em até dois minutos. Lead não recebe nada.')
     )
   );
+}
+
+// Mesmo gesto da tela de Pessoas e do Evento: o numero abre o WhatsApp.
+function telefoneClicavel(phone) {
+  const url = linkWhatsapp(phone);
+  const texto = phone ? telefoneBonito(phone) : '—';
+  if (!url) return h('span', { class: 'mono' }, texto);
+  return h('a', {
+    class: 'tel-wa mono',
+    href: url, target: '_blank', rel: 'noopener',
+    title: 'Abrir conversa no WhatsApp',
+    onclick: (e) => e.stopPropagation()
+  }, texto, h('span', { class: 'tel-wa-ico', 'aria-hidden': 'true' }, '↗'));
 }

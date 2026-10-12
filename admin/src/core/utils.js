@@ -78,6 +78,16 @@ export function firstName(s) {
 // Deixa o telefone legível sem mexer no dado guardado. Vive aqui porque o
 // mesmo número aparece na lista de pessoas, no painel do expositor e no
 // atendimento — três cópias da mesma regra é uma a mais para divergir.
+// Link de conversa no WhatsApp. Devolve null quando o numero nao da para
+// discar: numero curto, vazio ou so lixo. Quem chama decide o que mostrar
+// nesse caso, em vez de entregar um link que abre o WhatsApp no vazio.
+export function linkWhatsapp(raw) {
+  const d = normalizePhone(raw);
+  // 12 = 55 + DDD + 8 digitos (fixo antigo). Abaixo disso nao e telefone.
+  if (!d || d.length < 12) return null;
+  return 'https://wa.me/' + d;
+}
+
 export function telefoneBonito(raw) {
   const d = String(raw ?? '').replace(/\D+/g, '');
   const s = d.startsWith('55') && d.length >= 12 ? d.slice(2) : d;

@@ -2102,3 +2102,36 @@
   .table tbody tr.ev-proximo { border-color: var(--violet); }
   .table tbody tr.ev-proximo > td:first-child { box-shadow: none; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   EVENTO (detalhe) · selo de RSVP e telefone que vira conversa
+   ════════════════════════════════════════════════════════════ */
+
+.tag-rsvp {
+  display: inline-flex; align-items: center; gap: var(--s-1);
+  height: 22px; padding: 0 var(--s-2);
+  border-radius: var(--r-pill);
+  font-size: var(--t-1); font-weight: 600;
+  letter-spacing: var(--track-rot); white-space: nowrap;
+}
+.tag-rsvp::before { content: '●'; font-size: 8px; line-height: 1; }
+
+/* Confirmou: verde, e o verde aqui significa "pode contar com ela". */
+.tag-rsvp.ok    { background: var(--green-soft); color: var(--green); }
+/* Avisou que não vai: vermelho. Não é falha, é vaga liberada — mas
+   precisa saltar, porque muda a conta de quem estará na sala. */
+.tag-rsvp.nao   { background: var(--red-soft);   color: var(--red); }
+/* Não respondeu: âmbar. É pendência, e é quem a régua de 72h cobra. */
+.tag-rsvp.falta { background: var(--amber-soft); color: var(--amber); }
+
+/* Telefone clicável. Só vira link quando o número dá para discar. */
+.tel-wa {
+  color: var(--ink-soft); text-decoration: none;
+  font-feature-settings: var(--tnum);
+  display: inline-flex; align-items: center; gap: var(--s-1);
+}
+.tel-wa:hover { color: var(--green); text-decoration: underline; }
+/* A seta fica sempre visível, em meio-tom. Escondida até o hover, ninguém
+   descobre que o número abre conversa — e no celular não existe hover. */
+.tel-wa-ico { font-size: 10px; opacity: .45; transition: opacity var(--dur-1) var(--ease); }
+.tel-wa:hover .tel-wa-ico { opacity: 1; }
