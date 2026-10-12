@@ -499,6 +499,7 @@ export async function pageEventDetail(view, { params }) {
 
     const c = counts();
     const lotes = lotesDisponiveis();
+    _temTriagem = allParticipants.some((p) => p.classificacao);
 
     setContent(container,
       h('div', { class: 'table-toolbar' },
@@ -629,11 +630,10 @@ export async function pageEventDetail(view, { params }) {
   // Evento com triagem e o que tem gente classificada. Goiania e Porto
   // Alegre vendem ingresso e nao tem aplicacao: nesses, a coluna de RSVP
   // seria uma coluna de travessoes.
-  let _temTriagem = null;
+  // Recalculado no inicio de cada renderTable. Cache que nunca expira
+  // mentiria depois de uma importacao que traz os primeiros classificados.
+  let _temTriagem = false;
   function temTriagem() {
-    if (_temTriagem === null) {
-      _temTriagem = participants.some((p) => p.classificacao);
-    }
     return _temTriagem;
   }
 
