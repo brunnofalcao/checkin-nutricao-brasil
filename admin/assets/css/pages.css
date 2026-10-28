@@ -2135,3 +2135,12 @@
    descobre que o número abre conversa — e no celular não existe hover. */
 .tel-wa-ico { font-size: 10px; opacity: .45; transition: opacity var(--dur-1) var(--ease); }
 .tel-wa:hover .tel-wa-ico { opacity: 1; }
+
+/* Aviso dentro de modal de confirmacao: a acao segue possivel, mas tem
+   uma consequencia que quem clica precisa ler antes. */
+.aviso-inline {
+  background: var(--amber-soft); color: var(--amber);
+  border-radius: var(--r); padding: var(--s-2) var(--s-3);
+  font-size: var(--t-2); line-height: var(--lh-ui);
+  margin-bottom: var(--s-3);
+}

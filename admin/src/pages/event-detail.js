@@ -15,6 +15,7 @@ import { abreImportar } from './importar.js';
 import { agrupaPessoas, eventosComCertificado } from '../data/pessoas.js';
 import { listModulos, agrupaPorModulo } from '../data/modulos.js';
 import { esqueletoDeLista } from '../ui/estado.js';
+import { supabase } from '../data/supabase.js';
 
 const PAGE_SIZE = 100;
 
@@ -34,6 +35,11 @@ export async function pageEventDetail(view, { params }) {
   }
 
   const isRace = event.event_type === 'race';
+
+  // Evento filho do HID: quem assiste pela internet. Aqui aparece o botao
+  // de promover para o presencial, e so aqui: promover alguem de outro
+  // evento nao quer dizer nada.
+  const isHidOnline = event.slug === 'health-influence-day-2026-online';
 
   // Evento de aplicação não tem inscrito: tem gente que aplicou e espera
   // decisão. Chamar isso de "inscrito" na tela faz a equipe tratar fila de
@@ -727,8 +733,85 @@ export async function pageEventDetail(view, { params }) {
         p.whatsapp_sent_at ? infoRow('WhatsApp enviado', fmtRelative(p.whatsapp_sent_at)) : null,
         p.whatsapp_error ? infoRow('Erro WhatsApp', p.whatsapp_error) : null
       ),
-      actions: [{ label: 'Fechar', kind: 'btn-secondary', onClick: (close) => close() }]
+      actions: [
+        isHidOnline
+          ? { label: 'Promover para presencial', kind: 'btn-primary',
+              onClick: (close) => { close(); confirmaUpgrade(p); } }
+          : null,
+        { label: 'Fechar', kind: 'btn-secondary', onClick: (close) => close() }
+      ].filter(Boolean)
     });
+  }
+
+  // Promover do online para o presencial.
+  //
+  // Dois passos de proposito, cada um reaproveitando o caminho que ja
+  // existe: a RPC move a pessoa de evento, e a edge function 'triagem'
+  // classifica. E a triagem que troca a tag no RD (hid-online sai) e que
+  // coloca a pessoa na fila do ingresso. Duplicar isso aqui seria criar
+  // um segundo fluxo de presencial para manter.
+  //
+  // Nao e silencioso: o cron hid-envia roda de 2 em 2 minutos e o
+  // ingresso sai sozinho logo depois. Por isso a confirmacao diz o que
+  // vai acontecer, e nao so "tem certeza?".
+  function confirmaUpgrade(p) {
+    let classe = 'convidado';
+    openModal({
+      title: 'Promover para o presencial',
+      body: h('div', {},
+        h('p', { class: 'muted', style: { marginBottom: '14px', lineHeight: '1.6' } },
+          h('strong', {}, p.name || 'Esta pessoa'),
+          ' sai do online e passa a ocupar um lugar na sala. Em poucos minutos ' +
+          'recebe o WhatsApp com o ingresso e entra na régua de confirmação de presença.'),
+        coalesceTel(p)
+          ? null
+          : h('p', { class: 'aviso-inline' },
+              'Esta pessoa não tem telefone válido no cadastro. O ingresso não vai sair por WhatsApp.'),
+        h('label', { class: 'campo-rot' }, 'Entra como'),
+        h('select', {
+          class: 'evd-select', style: { width: '100%' },
+          onchange: (e) => { classe = e.target.value; }
+        },
+          h('option', { value: 'convidado' }, 'Convidado'),
+          h('option', { value: 'premium' }, 'Premium')
+        )
+      ),
+      actions: [
+        { label: 'Cancelar', kind: 'btn-secondary', onClick: (close) => close() },
+        { label: 'Promover', kind: 'btn-primary', onClick: async (close) => {
+            try {
+              const { data: mov, error: e1 } = await supabase
+                .rpc('hid_upgrade_presencial', { p_participant_id: p.id });
+              if (e1) throw new Error(e1.message);
+              if (mov?.erro) throw new Error(mov.erro);
+
+              const { data: sess } = await supabase.auth.getSession();
+              const token = sess?.session?.access_token;
+              if (!token) throw new Error('sua sessão expirou, entre de novo');
+
+              const res = await fetch(
+                `${window.__ENV.SUPABASE_URL}/functions/v1/triagem`,
+                { method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+                  body: JSON.stringify({ id: p.id, classificacao: classe }) });
+              const corpo = await res.json().catch(() => ({}));
+              if (!res.ok || corpo?.erro) throw new Error(corpo?.erro || `servidor respondeu ${res.status}`);
+
+              close();
+              toast.success(`${p.name} agora é ${classe} no presencial`);
+              allParticipants = await listAllParticipants(eventId);
+              render();
+            } catch (err) {
+              toast.danger('Não deu para promover: ' + err.message);
+            }
+          } }
+      ]
+    });
+  }
+
+  // Declaracao, nao const: e chamada la em cima dentro de confirmaUpgrade.
+  function coalesceTel(p) {
+    return String(p?.phone || '').replace(/\D/g, '').length >= 12;
   }
 
   render();
