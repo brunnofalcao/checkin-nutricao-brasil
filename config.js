@@ -1,5 +1,5 @@
 // =============================================================
-// CONFIG · Sistema de Check-in Nutrição Brasil
+// CONFIG · Sistema de credenciamento Science Play
 // =============================================================
 
 export const SUPABASE_URL = "https://tjrarpnqoemdhxjjbtgk.supabase.co";
@@ -9,5 +9,7 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Não precisa mexer abaixo
 // =============================================================
 export const APP_VERSION = "1.0.0";
-export const APP_NAME = "Check-in · Nutrição Brasil";
-export const NB_LOGO = "https://res.cloudinary.com/dlzrfhwin/image/upload/v1775583229/nb_logotipo_hor_05_wqsydv.png";
+export const APP_NAME = "Check-in · Science Play";
+// A plataforma é da Science Play; Nutrição Brasil é um evento dentro dela.
+export const SP_LOGO = "https://res.cloudinary.com/dlzrfhwin/image/upload/e_trim/c_scale,w_760/f_png/Logo_Science_Play_Oficial_Roxo_rtttpq.png";
+export const SP_LOGO_BRANCA = "https://res.cloudinary.com/dlzrfhwin/image/upload/e_trim/c_scale,w_760/f_png/Logo_Science_Play_Oficial_Branca_d9gtae.png";

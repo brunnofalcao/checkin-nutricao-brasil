@@ -559,3 +559,18 @@ select.input { cursor: pointer; }
   #toast-stack { left: var(--s-3); right: var(--s-3); bottom: var(--s-3); }
   .toast { max-width: none; }
 }
+
+
+/* Link de recuperação de senha, abaixo do botão Entrar. */
+.login-recuperar {
+  display: block;
+  text-align: center;
+  margin-top: var(--s-3);
+  font-size: var(--t-3);
+  font-weight: 500;
+  color: var(--ink-mute);
+  text-decoration: none;
+  min-height: var(--alvo);
+  line-height: var(--alvo);
+}
+.login-recuperar:hover { color: var(--violet); }

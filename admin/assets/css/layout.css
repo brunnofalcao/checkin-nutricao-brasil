@@ -306,3 +306,44 @@
   .subnav { padding: 0 var(--s-4); }
   .subnav-aba { height: var(--alvo); }
 }
+
+/* ── Área segura do iPhone ──────────────────────────────────────────────
+   Quando o painel é adicionado à tela de início, ele roda em tela cheia e
+   o relógio e a bateria do sistema ficam POR CIMA do conteúdo. Sem isto, o
+   título da topbar nasce embaixo do relógio. Vale para qualquer largura:
+   iPad em tela cheia tem o mesmo recorte. */
+.topbar {
+  height: calc(52px + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: max(var(--s-6), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--s-6), env(safe-area-inset-right, 0px));
+}
+.sidebar {
+  padding-top: calc(var(--s-4) + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom, 0px));
+  padding-left: max(var(--s-3), env(safe-area-inset-left, 0px));
+}
+.content {
+  padding-bottom: calc(var(--s-8) + env(safe-area-inset-bottom, 0px));
+  padding-left: max(var(--s-6), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--s-6), env(safe-area-inset-right, 0px));
+}
+@media (max-width: 859px) {
+  .topbar {
+    height: calc(52px + env(safe-area-inset-top, 0px));
+    padding-left: max(var(--s-4), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--s-4), env(safe-area-inset-right, 0px));
+  }
+  .content {
+    padding-left: max(var(--s-4), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--s-4), env(safe-area-inset-right, 0px));
+    padding-bottom: calc(var(--s-7) + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 559px) {
+  .content {
+    padding-left: max(var(--s-3), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--s-3), env(safe-area-inset-right, 0px));
+    padding-bottom: calc(var(--s-6) + env(safe-area-inset-bottom, 0px));
+  }
+}

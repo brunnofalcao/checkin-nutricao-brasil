@@ -1965,3 +1965,27 @@ body:has(.rede-bar:not([hidden])) #list { padding-bottom: 68px; }
   font-family: inherit;
 }
 .la-btn:active { transform: scale(.98); }
+
+/* ── Marca Science Play ───────────────────────────────────────────────
+   A logo roxa é feita para fundo claro. No tema escuro ela some, então a
+   versão negativa entra pela própria imagem (content troca o conteúdo do
+   <img>, não o fundo). */
+[data-tema="escuro"] .login-logo,
+[data-tema="escuro"] .eh-logo { content: url("https://res.cloudinary.com/dlzrfhwin/image/upload/e_trim/c_scale,w_760/f_png/Logo_Science_Play_Oficial_Branca_d9gtae.png"); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .login-logo,
+  :root:not([data-tema="claro"]) .eh-logo { content: url("https://res.cloudinary.com/dlzrfhwin/image/upload/e_trim/c_scale,w_760/f_png/Logo_Science_Play_Oficial_Branca_d9gtae.png"); }
+}
+
+.login-recuperar {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-mute, #6b6480);
+  text-decoration: none;
+  min-height: 44px;
+  line-height: 44px;
+}
+.login-recuperar:hover { color: var(--violet, #652e78); }

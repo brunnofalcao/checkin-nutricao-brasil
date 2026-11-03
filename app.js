@@ -4,7 +4,7 @@
 // v2.1 — bloqueio de edição fora da janela de 7 dias
 // =============================================================
 
-import { SUPABASE_URL, SUPABASE_ANON_KEY, NB_LOGO } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, SP_LOGO } from "./config.js";
 
 // ----- Init Supabase -----
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -162,24 +162,39 @@ function fimDoEvento(event) {
   return Number.isFinite(t) ? t : null;
 }
 
+// Em que fase o evento esta HOJE. Sai da data, nao do status: status e campo
+// manual e ninguem lembra de virar depois que o evento acaba — foi assim que
+// Brasilia de agosto continuou aparecendo como "acontecendo agora" em
+// novembro. O status so decide quando o evento nao tem data cadastrada, e
+// "encerrado" continua valendo como encerramento antecipado na mao.
+function faseEvento(event) {
+  if (!event) return "passado";
+  const inicio = inicioDoEvento(event);
+  if (inicio === null) {
+    return event.status === "encerrado" ? "passado"
+         : event.status === "ativo" ? "agora" : "proximo";
+  }
+  const fim = fimDoEvento(event) ?? inicio;
+  const agora = Date.now();
+  if (agora > fim) return "passado";
+  if (event.status === "encerrado") return "passado";
+  return agora >= inicio ? "agora" : "proximo";
+}
+
 function isEditable(event) {
   if (!event) return false;
   if (state.editOverride) return true;   // desbloqueio manual pelo admin
-  if (event.status === "ativo") return true;
 
   const inicio = inicioDoEvento(event);
-  const fim = fimDoEvento(event);
+  // Sem data cadastrada nao da para calcular janela nenhuma: vale o status.
+  if (inicio === null) return event.status === "ativo";
+
+  const fim = fimDoEvento(event) ?? inicio;
   const agora = Date.now();
-
-  if (event.status === "embreve") {
-    // sem data cadastrada não dá para calcular a abertura: segue fechado
-    if (inicio === null) return false;
-    return agora >= inicio - ABRE_ANTES && agora <= (fim ?? inicio) + JANELA_DEPOIS;
-  }
-
-  // encerrado
-  if (fim === null) return true;
-  return agora >= (inicio ?? fim) - ABRE_ANTES && agora <= fim + JANELA_DEPOIS;
+  // Uma janela so, para qualquer status: abre 2 dias antes, fecha 7 depois.
+  // O status "ativo" deixou de abrir para sempre — era o que mantinha evento
+  // de agosto editavel em novembro.
+  return agora >= inicio - ABRE_ANTES && agora <= fim + JANELA_DEPOIS;
 }
 
 // A mesma trava tem duas causas opostas, e dizer a errada faz o atendente
@@ -991,7 +1006,7 @@ function renderLogin() {
     <div class="container">
       <div class="login-screen">
         <div class="login-card">
-          <img class="login-logo" src="${NB_LOGO}" alt="Nutrição Brasil">
+          <img class="login-logo" src="${SP_LOGO}" alt="Science Play">
           <div class="login-title">Credenciamento</div>
           <div class="login-sub">Acesso restrito · Equipe</div>
           <form class="login-form" id="loginForm">
@@ -1008,6 +1023,7 @@ function renderLogin() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
               <span>Entrar</span>
             </button>
+            <a class="login-recuperar" href="/recuperar">Esqueci minha senha</a>
           </form>
         </div>
       </div>
@@ -1048,17 +1064,21 @@ function renderEvents() {
   const userInitials = admin ? "BF" : "CR";
 
   const visible = state.events; // todos os eventos visíveis para todos (operadora acessa em modo leitura)
-  const ativo = visible.filter(e => e.status === "ativo");
-  const embreve = visible.filter(e => e.status === "embreve");
-  const encerrado = visible.filter(e => e.status === "encerrado");
+  const porData = (a, b) => (inicioDoEvento(a) ?? 0) - (inicioDoEvento(b) ?? 0);
+  const ativo = visible.filter(e => faseEvento(e) === "agora").sort(porData);
+  const embreve = visible.filter(e => faseEvento(e) === "proximo").sort(porData);
+  // Encerrado em ordem inversa: o que acabou ontem interessa mais que 2024.
+  const encerrado = visible.filter(e => faseEvento(e) === "passado").sort((a, b) => porData(b, a));
 
   function card(e) {
+    const fase = faseEvento(e);
+    const aberto = isEditable(e);
     const db = fmtDateBlock(e.event_date);
     const pct = e.total_inscritos ? Math.round((e.total_checkins / e.total_inscritos) * 100) : 0;
     const showStats = (e.total_inscritos || 0) > 0;
-    const locked = e.status === "encerrado" && !isEditable(e);
+    const locked = fase === "passado" && !aberto;
     return `
-      <div class="event-card ${e.status === 'ativo' ? 'active-event' : ''} ${e.status === 'encerrado' ? 'encerrado' : ''} ${locked ? 'locked' : ''}" data-event-id="${e.id}">
+      <div class="event-card ${fase === 'agora' ? 'active-event' : ''} ${fase === 'passado' ? 'encerrado' : ''} ${locked ? 'locked' : ''}" data-event-id="${e.id}">
         <div class="event-body">
           <div class="event-date-block">
             <div class="event-date-month">${db.month}</div>
@@ -1106,7 +1126,7 @@ function renderEvents() {
             ` : ''}
           </div>
         </div>
-        ${e.status === 'ativo' ? `
+        ${(fase === 'agora' || aberto) ? `
           <div class="event-cta-row">
             <span>Abrir credenciamento</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -1145,7 +1165,7 @@ function renderEvents() {
       <div class="events-header">
         <div class="events-header-inner">
           <div class="eh-row1">
-            <div class="eh-brand"><img class="eh-logo" src="${NB_LOGO}" alt="Nutrição Brasil"></div>
+            <div class="eh-brand"><img class="eh-logo" src="${SP_LOGO}" alt="Science Play"></div>
             <div class="eh-user">
               <div class="eh-user-info"><div class="eh-user-name">${esc(userName)}</div><div class="eh-user-role">${userRole}</div></div>
               <div class="eh-avatar">${userInitials}</div>
@@ -1155,7 +1175,7 @@ function renderEvents() {
             </div>
           </div>
           <div class="eh-title">Eventos</div>
-          <div class="eh-sub">Nutrição Brasil · 2026</div>
+          <div class="eh-sub">Credenciamento de eventos</div>
         </div>
       </div>
       ${listHtml}
@@ -2858,7 +2878,7 @@ async function init() {
   if (SUPABASE_URL.includes("COLE_AQUI") || SUPABASE_ANON_KEY.includes("COLE_AQUI")) {
     $("app").innerHTML = `
       <div style="padding:40px 24px; text-align:center; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; max-width:480px; margin:0 auto;">
-        <img src="${NB_LOGO}" style="height:34px; margin-bottom:24px; opacity:0.6;">
+        <img src="${SP_LOGO}" style="height:34px; margin-bottom:24px; opacity:0.6;">
         <div style="font-family:'Bricolage Grotesque',serif; font-size:24px; font-weight:700; margin-bottom:12px; letter-spacing:-0.025em;">Configuração necessária</div>
         <div style="color:var(--ink-soft); font-size:14px; line-height:1.6; margin-bottom:20px;">
           O arquivo <code style="background:var(--surface); padding:2px 8px; border-radius:6px; font-family:monospace;">config.js</code> precisa ser preenchido com as credenciais do Supabase.

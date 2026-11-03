@@ -76,11 +76,12 @@ export function renderLogin(rootEl, onSuccess) {
         h(
           'div',
           { class: 'login-brand' },
-          'nutrição',
-          h('span', {}, 'brasil')
+          'science',
+          h('span', {}, 'play')
         ),
         h('div', { class: 'login-sub' }, 'Painel administrativo'),
-        form
+        form,
+        h('a', { class: 'login-recuperar', href: '/recuperar' }, 'Esqueci minha senha')
       )
     );
 

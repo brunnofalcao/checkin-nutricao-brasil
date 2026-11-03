@@ -126,8 +126,8 @@ function renderSidebar(profile) {
     h(
       'div',
       { class: 'brand' },
-      'nutrição',
-      h('span', {}, 'brasil')
+      'science',
+      h('span', {}, 'play')
     ),
     // Grupo sem nenhum item permitido some inteiro — cabeçalho de seção
     // vazio ("COMUNICAÇÃO" sem nada embaixo) parece bug, não permissão.
@@ -218,7 +218,7 @@ function renderTopbar() {
       { class: 'menu-toggle', title: 'Menu', onclick: toggleSidebar },
       icons.menu ? icons.menu() : burgerSvg()
     ),
-    h('div', { class: 'topbar-crumb' }, h('strong', {}, 'Painel Nutrição Brasil'))
+    h('div', { class: 'topbar-crumb' }, h('strong', {}, 'Painel Science Play'))
   );
 }
 
