@@ -246,31 +246,12 @@ h1{
   // e NB Run continuam com a marca propria, o resto do calendario Science
   // Play usa a marca da casa. Sem isto, um ingresso do Palestre-se ELITE
   // chega com a logomarca de outro evento.
-  var LOGO_NB = 'v1775583229/nb_logotipo_hor_05_wqsydv.png';
-  var LOGO_SP = 'Logo_Science_Play_Oficial_Branca_d9gtae.png';
-  var LOGO = LOGO_NB;
-
-  // Marca e cor POR EVENTO. O topo da pagina e sempre Science Play, que e a
-  // plataforma; o cartao carrega a marca do evento que a pessoa comprou.
-  // Sem isto, um ingresso do Palestre-se ELITE sai com a logomarca e o roxo
-  // do Nutricao Brasil, que e outro produto.
-  //
-  // Chave: pedaco do nome do evento, em minusculas e sem acento.
-  // marca: arquivo proprio (caminho do site) ou public_id do Cloudinary.
-  var MARCAS = [
-    { teste: /nutri[cç][aã]o\s*brasil|nb\s*run/i, marca: LOGO_NB, cloud: true },
-    { teste: /palestre/i,
-      marca: '/img/pse-elite-branca-480.png', cloud: false,
-      fundo: '#0b1430', claro: false,
-      marca_escura: '/img/pse-elite-navy-480.png' },
-    { teste: /health\s*influence/i, marca: LOGO_SP, cloud: true }
-  ];
-  function marcaDoEvento(nome) {
-    for (var i = 0; i < MARCAS.length; i++) {
-      if (MARCAS[i].teste.test(String(nome || ''))) return MARCAS[i];
-    }
-    return { marca: LOGO_SP, cloud: true };   // resto do calendario: a casa
-  }
+  // A marca do evento vem junto com os dados do passe (d.marca): e o mesmo
+  // arquivo que vai dentro do Apple Wallet. Enquanto a pagina tinha a lista
+  // dela, evento novo entrava com a logomarca do Nutricao Brasil ate alguem
+  // lembrar de editar este arquivo. Agora quem sabe a marca e quem emite o
+  // ingresso, e a pagina so desenha.
+  var LOGO_RESERVA = 'https://res.cloudinary.com/dlzrfhwin/image/upload/e_trim/c_fit,w_320,h_100/Logo_Science_Play_Oficial_Branca_d9gtae.png';
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -344,23 +325,14 @@ h1{
     .then(function (d) {
       if (d.erro) throw new Error('dados');
 
-      // A cor vem do tipo de ingresso, que foi desenhado para o Nutricao
-      // Brasil. Evento com identidade propria manda mais que o tipo.
-      var marcaEv = marcaDoEvento(d.evento);
-      var fundo = marcaEv.fundo || d.fundo;
+      var fundo = d.fundo;
       document.documentElement.style.setProperty('--fundo-cartao', fundo);
-      var claro = (marcaEv.fundo != null) ? !!marcaEv.claro : !!d.texto_escuro;
+      var claro = !!d.texto_escuro;                 // fundo claro pede tinta escura
       document.documentElement.style.setProperty('--texto-cartao', claro ? '#0D0618' : '#FFFFFF');
       // sombra na cor do tipo — o "premium" do cartão
       document.documentElement.style.setProperty('--sombra-cartao',
         '0 24px 44px -14px rgba(' + rgbDe(fundo) + ',.62), 0 4px 12px rgba(13,6,24,.10)');
-      var m = marcaDoEvento(d.evento);
-      if (m.cloud) {
-        $('cartao-logo').src = CL + (m.marca === LOGO_NB ? '' : '/e_trim') +
-          '/c_fit,w_320,h_100' + (claro ? '/e_colorize,co_rgb:1A0F2E' : '') + '/' + m.marca;
-      } else {
-        $('cartao-logo').src = (claro && m.marca_escura) ? m.marca_escura : m.marca;
-      }
+      $('cartao-logo').src = d.marca || LOGO_RESERVA;
       $('cartao-logo').alt = String(d.evento || '');
 
       // O cabeçalho vem da própria função agora (d.cabecalho). A lista fixa
