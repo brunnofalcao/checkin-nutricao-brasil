@@ -237,7 +237,7 @@ label.mini{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-
 
     <div class="grade" id="grade"></div>
 
-    <a class="fotos" id="fotos" href="https://banlek.com/album/266c57-nutricao-brasil-2026"
+    <a class="fotos" id="fotos" href="https://banlek.com/album/266c57-nutricao-brasil-2026" data-padrao="1"
        target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
       <div class="fotos-txt">
         <span class="selo-ft">Fotos oficiais</span>
@@ -289,7 +289,13 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const FN_PDF = SUPABASE_URL + '/functions/v1/cert-pdf';
 const CDN = 'https://res.cloudinary.com/dlzrfhwin/image/upload/';
 const MARCA = CDN + 'v1775583229/nb_logotipo_hor_05_wqsydv.png';
-const GALERIA = 'https://banlek.com/album/266c57-nutricao-brasil-2026';
+// O album de fotos vem do evento (events.foto_album), porque cada cidade
+// tem o seu. O endereco abaixo e so a rede de seguranca, para uma edicao
+// que ainda nao teve o album cadastrado.
+const GALERIA_PADRAO = 'https://banlek.com/album/266c57-nutricao-brasil-2026';
+function galeria(){
+  return (S && S.dados && S.dados.album) ? String(S.dados.album) : GALERIA_PADRAO;
+}
 // Arte padrão. A de verdade vem do evento, em S.dados.artes, porque cada
 // cidade tem os seus patrocinadores. Isto aqui é só a rede de segurança.
 const ART_PADRAO = {
@@ -585,7 +591,7 @@ function pintaGrade(){
     dica.innerHTML = 'Nas duas versões com a sua foto, escolha uma imagem sua no congresso. ' +
       'A arte escurece o fundo sozinha, então funciona bem até com foto clara, e você enquadra ' +
       'arrastando. A foto não sai do seu aparelho. ' +
-      '<a href="' + GALERIA + '" target="_blank" rel="noopener">Baixar as fotos do evento →</a>';
+      '<a href="' + galeria() + '" target="_blank" rel="noopener">Baixar as fotos do evento →</a>';
     g.appendChild(dica);
     return;
   }
@@ -626,7 +632,7 @@ function abreModal(o){
   $('mDesc').innerHTML = 'Escolha uma foto sua no congresso, enquadre e baixe. ' +
     'A arte escurece o fundo sozinha, então funciona bem até com foto clara. ' +
     'A imagem não sai do seu aparelho. ' +
-    '<a href="' + GALERIA + '" target="_blank" rel="noopener">Baixar as fotos do evento →</a>';
+    '<a href="' + galeria() + '" target="_blank" rel="noopener">Baixar as fotos do evento →</a>';
   $('modal').classList.remove('hide');
   pintaModal();
 }
@@ -854,6 +860,9 @@ document.getElementById('tk').addEventListener('keydown', e => { if (e.key === '
   // A partir daqui a inscrição existe. Nada que falhe adiante pode virar
   // "link não encontrado".
   $('marca').src = MARCA;
+  // O bloco de fotos nasce com o album padrao no HTML; aqui ele passa a
+  // apontar para o album da edicao que a pessoa participou.
+  if ($('fotos')) { $('fotos').href = galeria(); $('fotos').removeAttribute('data-padrao'); }
   $('kick').textContent = S.dados.evento;
   $('primeiro').textContent = String(S.dados.nome).split(' ')[0];
   pintaAbas(); pintaFicha(); pintaOficial(); pintaGrade();
