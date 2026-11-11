@@ -45,7 +45,7 @@ export async function pageConfiguracoes(view) {
     // O .catch(() => []) transformava falha de rede e recusa de permissão
     // em "nenhum acesso cadastrado" — a tela mais perigosa para se olhar e
     // acreditar, porque é onde se confere quem tem acesso ao sistema.
-    supabase.from('profiles').select('id, email, display_name, role, created_at')
+    supabase.from('profiles').select('id, email, display_name, role, created_at, telefone')
       .order('created_at')
       .then((r) => { if (r.error) throw r.error; return r.data ?? []; }),
     listEvents(),
@@ -83,8 +83,9 @@ export async function pageConfiguracoes(view) {
       h('div', { class: 'table-card' },
         h('table', { class: 'table' },
           h('thead', {}, h('tr', {},
-            h('th', { style: { width: '38%' } }, 'Pessoa'),
+            h('th', { style: { width: '32%' } }, 'Pessoa'),
             h('th', {}, 'Acesso'),
+            h('th', { style: { width: '190px' } }, 'WhatsApp'),
             h('th', {}, 'Desde'),
             h('th', { style: { width: '150px' } }, ''))),
           h('tbody', {}, ...perfis.map((p) => linhaPerfil(p, admins))))),
@@ -107,7 +108,9 @@ export async function pageConfiguracoes(view) {
         ', informe o mesmo e-mail, defina uma senha provisória e deixe ',
         h('strong', {}, '"Auto Confirm User"'),
         ' marcado. No instante em que o login existir, a pessoa já entra com o acesso ' +
-        'reservado. Peça para ela trocar a senha no primeiro acesso, em Configurações.',
+        'reservado. Peça para ela trocar a senha no primeiro acesso, em Configurações. ' +
+        'Preencha o WhatsApp: é por ele que chega o código de "Esqueci minha senha". ' +
+        'Sem número, ela depende de alguém para voltar a entrar.',
         formReserva(),
         listaReservas(),
         perfis.length <= 2
@@ -128,6 +131,13 @@ export async function pageConfiguracoes(view) {
       h('div', { class: 'field', style: { flex: '1 1 220px', margin: '0' } },
         h('label', {}, 'E-mail'),
         h('input', { class: 'input', name: 'email', type: 'email', placeholder: 'pessoa@exemplo.com' })),
+      h('div', { class: 'field', style: { flex: '1 1 170px', margin: '0' } },
+        h('label', {}, 'WhatsApp'),
+        h('input', {
+          class: 'input', name: 'telefone', type: 'tel',
+          placeholder: '(61) 99999-9999',
+          title: 'É para este número que vai o código quando ela esquecer a senha.'
+        })),
       h('div', { class: 'field', style: { flex: '0 1 170px', margin: '0' } },
         h('label', {}, 'Acesso'),
         h('select', { class: 'input', name: 'papel' },
@@ -142,15 +152,17 @@ export async function pageConfiguracoes(view) {
   async function guardaReserva(caixa, btn) {
     const v = (n) => caixa.querySelector(`[name="${n}"]`)?.value?.trim() || '';
     const nome = v('nome'), email = v('email').toLowerCase(), papel = v('papel');
+    const telefone = v('telefone');
     if (!email) { toast.danger('Escreva o e-mail.'); return; }
     btn.disabled = true;
     const { data, error } = await supabase.rpc('acesso_pre_autoriza',
-      { p_email: email, p_papel: papel, p_nome: nome || null });
+      { p_email: email, p_papel: papel, p_nome: nome || null, p_telefone: telefone || null });
     btn.disabled = false;
     const motivos = {
       email: 'Esse e-mail não parece válido.',
       papel: 'Esse acesso não existe.',
-      ja_tem_login: 'Essa pessoa já tem login. Ajuste o acesso dela na tabela acima.'
+      ja_tem_login: 'Essa pessoa já tem login. Ajuste o acesso dela na tabela acima.',
+      telefone: 'Número não confere. Escreva com DDD, como (61) 99999-9999.'
     };
     if (error || data?.erro) {
       toast.danger(motivos[data?.erro] || 'Não deu: ' + (error?.message || 'erro'));
@@ -255,6 +267,7 @@ export async function pageConfiguracoes(view) {
           class: 'status ' + (p.role === 'admin' ? 'soon' : p.role === 'expositores' ? 'live' : 'done')
         }, cfg.rot)),
         h('div', { class: 'cfg-pode' }, cfg.pode)),
+      celulaTelefone(p),
       h('td', { class: 'muted' }, fmtRelative(p.created_at)),
       h('td', {},
         souEu || ultimoAdmin
@@ -267,6 +280,66 @@ export async function pageConfiguracoes(view) {
             },
               ...Object.entries(PAPEIS).map(([v, c]) =>
                 h('option', { value: v, selected: v === p.role || null }, c.rot)))));
+  }
+
+  // O telefone não é enfeite de cadastro: é por ele que chega o código de
+  // seis dígitos quando a pessoa esquece a senha. Perfil sem número é
+  // perfil que, se perder a senha, depende de alguém mexer no banco.
+  function celulaTelefone(p) {
+    if (p.telefone) {
+      return h('td', {},
+        h('div', { class: 'row-name' }, formataTel(p.telefone)),
+        h('button', {
+          class: 'btn btn-ghost btn-sm',
+          style: { padding: '0', minHeight: 'auto' },
+          onclick: () => pedeTelefone(p)
+        }, 'trocar'));
+    }
+    return h('td', {},
+      h('button', {
+        class: 'btn btn-secondary btn-sm',
+        onclick: () => pedeTelefone(p)
+      }, 'Cadastrar'),
+      h('div', { class: 'cfg-pode' }, 'sem número: não recupera a senha sozinha'));
+  }
+
+  // (61) 99999-9999 a partir de 5561999999999.
+  function formataTel(t) {
+    const d = String(t || '').replace(/\D/g, '').replace(/^55/, '');
+    if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+    if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return t;
+  }
+
+  async function pedeTelefone(p) {
+    const quem = p.display_name || p.email?.split('@')[0] || 'esta pessoa';
+    const atual = p.telefone ? formataTel(p.telefone) : '';
+    const resp = window.prompt(
+      `WhatsApp de ${quem}.\n\n` +
+      'É para este número que vai o código de seis dígitos quando ela clicar ' +
+      'em "Esqueci minha senha". Com DDD.\n\n' +
+      'Deixe em branco para apagar o número.',
+      atual
+    );
+    if (resp === null) return;
+
+    const { data, error } = await supabase.rpc('perfil_define_telefone',
+      { p_id: p.id, p_telefone: resp.trim() });
+    if (error || data?.erro) {
+      toast.danger(
+        data?.erro === 'telefone'
+          ? 'Número não confere. Escreva com DDD, como (61) 99999-9999.'
+          : data?.erro === 'nao_existe'
+            ? 'Esse perfil não existe mais.'
+            : 'Não deu: ' + (error?.message || 'erro')
+      );
+      return;
+    }
+    p.telefone = data?.telefone || null;
+    toast.success(p.telefone
+      ? `WhatsApp de ${quem} salvo. Agora ela consegue recuperar a senha sozinha.`
+      : `Número de ${quem} apagado. Ela não recupera mais a senha sozinha.`);
+    render();
   }
 
   async function mudaPapel(p, papel, el) {
