@@ -1,0 +1,128 @@
+/* ═══════════════════════════════════════════════════════════════════
+   mobile.css · trava de largura no celular
+   Carregado POR ÚLTIMO, de propósito: tudo aqui é correção de borda e
+   precisa ganhar das folhas anteriores sem !important.
+
+   O esqueleto do painel já era responsivo antes deste arquivo: a barra
+   lateral vira gaveta abaixo de 860, o grid colapsa, a tabela vira
+   cartão e a safe area do iPhone é respeitada. O que faltava era outra
+   coisa — blocos que o CSS proibia de encolher ou de quebrar linha:
+
+     · 11 fileiras de ação com display:flex, sem flex-wrap, e ainda
+       marcadas com flex:none / flex-shrink:0 / white-space:nowrap;
+     · elementos com min-width de 190 a 260px dentro dessas fileiras.
+
+   Num iPhone sobram ~366px úteis. Dois desses lado a lado empurram a
+   página inteira para fora da tela, e aí TODO o conteúdo passa a rolar
+   para o lado — foi o que apareceu nos prints de 13/11/2026.
+
+   Nada aqui existe fora do @media: o desktop não é tocado.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 859px) {
+
+  /* ── 1. Rede de segurança de especificidade zero ───────────────────
+     :where() não soma especificidade, então qualquer regra real das
+     outras folhas continua ganhando. Serve só para o caso não previsto:
+     filho de flex/grid nasce com min-width:auto e se recusa a encolher
+     abaixo do próprio conteúdo. */
+  .content :where(div, section, header, footer, article, nav, ul, ol, p) {
+    min-width: 0;
+  }
+
+  /* Palavra sem espaço — e-mail longo, URL, código — não serra o cartão */
+  .content { overflow-wrap: break-word; }
+
+  /* ── 2. Fileiras de ação quebram em vez de empurrar a página ─────── */
+  .at-item-acoes,
+  .cert-bulk-actions,
+  .cert-head-actions,
+  .cert-row-actions,
+  .exp-acoes,
+  .exp-eq-acoes,
+  .exp-eq-botoes,
+  .kb-mud-acoes,
+  .tpl-actions,
+  .evd-head,
+  .table-toolbar,
+  .exp-faixa {
+    flex-wrap: wrap;
+    white-space: normal;
+    min-width: 0;
+  }
+
+  /* flex:none e flex-shrink:0 são o que impede o botão de ceder.
+     No celular eles cedem; a fileira quebra e nada sai da tela. */
+  .at-item-acoes,
+  .cert-bulk-actions,
+  .cert-head-actions,
+  .kb-mud-acoes {
+    flex: 0 1 auto;
+    margin-left: 0;
+  }
+
+  /* ── 3. Larguras mínimas que não cabem em 366px ──────────────────── */
+  .at-item-corpo,
+  .kb-mud-corpo,
+  .kb-sync-modo,
+  .tpl-search,
+  .exp-busca,
+  .exp-faixa-item,
+  .pes-sel,
+  .test-banner-row .test-input,
+  .test-banner-row .test-select {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Campo de busca e seletor ocupam a linha inteira: mais fácil de tocar
+     e não disputa espaço com o vizinho. */
+  .tpl-search,
+  .exp-busca,
+  .pes-sel,
+  .test-banner-row .test-input,
+  .test-banner-row .test-select {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+
+  /* ── 4. Nada maior que o conteúdo, em nenhum nível ───────────────── */
+  .content > *,
+  .card,
+  .table-card,
+  .cfg-nota,
+  .cfg-alerta {
+    max-width: 100%;
+  }
+
+  /* Imagem e iframe nunca estouram o cartão */
+  .content img,
+  .content svg,
+  .content iframe,
+  .content video { max-width: 100%; height: auto; }
+
+  /* Pré-formatado rola sozinho em vez de alargar a página */
+  .content pre,
+  .content code { max-width: 100%; overflow-x: auto; }
+
+  /* ── 5. Botão longo cabe na própria linha ────────────────────────── */
+  .btn { max-width: 100%; }
+}
+
+/* Telas bem estreitas (iPhone mini, Android pequeno): a fileira de ação
+   vira coluna, cada botão com a largura toda. Tocar fica mais seguro. */
+@media (max-width: 419px) {
+  .at-item-acoes,
+  .cert-head-actions,
+  .cert-bulk-actions,
+  .kb-mud-acoes,
+  .tpl-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .at-item-acoes > .btn,
+  .cert-head-actions > .btn,
+  .cert-bulk-actions > .btn,
+  .kb-mud-acoes > .btn,
+  .tpl-actions > .btn { width: 100%; }
+}
