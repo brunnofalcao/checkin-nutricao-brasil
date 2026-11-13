@@ -241,6 +241,14 @@ h1{
 <script>
 (function () {
   var FUNCAO = 'https://tjrarpnqoemdhxjjbtgk.supabase.co/functions/v1/wallet-passe';
+  // O botao do Google sai por uma funcao propria. No Google o nome do
+  // evento, o local, a data e o logotipo moram na CLASSE, e o wallet-passe
+  // aponta toda a familia Nutricao Brasil para a classe de Brasilia: quem
+  // salvava um ingresso de Porto Alegre no Android abria um cartao com o
+  // cabecalho de Brasilia. A wallet-google cria a classe do evento e, para
+  // Brasilia, HID e ELITE, devolve a chamada para o wallet-passe. A Apple
+  // nao passa por la: o .pkpass continua vindo de onde sempre veio.
+  var FUNCAO_GOOGLE = 'https://tjrarpnqoemdhxjjbtgk.supabase.co/functions/v1/wallet-google';
   var CL = 'https://res.cloudinary.com/dlzrfhwin/image/upload';
   // O topo da pagina e a plataforma; o cartao e o evento. Nutricao Brasil
   // e NB Run continuam com a marca propria, o resto do calendario Science
@@ -279,7 +287,9 @@ h1{
     return;
   }
 
-  var base = FUNCAO + '?e=' + encodeURIComponent(codigo) + '&t=' + encodeURIComponent(token);
+  var consulta = '?e=' + encodeURIComponent(codigo) + '&t=' + encodeURIComponent(token);
+  var base = FUNCAO + consulta;
+  var baseGoogle = FUNCAO_GOOGLE + consulta;
 
   // ---- que aparelho é ----
   var ua = navigator.userAgent || '';
@@ -302,9 +312,9 @@ h1{
   }
 
   var pApple  = placa('apple',  base, 'Adicionar à Apple Wallet');
-  var pGoogle = placa('google', base + '&f=google', 'Adicionar ao Google Wallet');
+  var pGoogle = placa('google', baseGoogle, 'Adicionar ao Google Wallet');
   var oApple  = outra(base, 'Tenho iPhone, adicionar à Apple Wallet');
-  var oGoogle = outra(base + '&f=google', 'Tenho Android, adicionar ao Google Wallet');
+  var oGoogle = outra(baseGoogle, 'Tenho Android, adicionar ao Google Wallet');
 
   function rgbDe(hex) {
     var h = String(hex || '').replace('#', '');
