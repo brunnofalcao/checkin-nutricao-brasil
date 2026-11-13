@@ -23,6 +23,10 @@ const TETO   = 20000;
 const estado = {
   eventos: [], eventId: null, modulos: [], pessoas: [],
   busca: '', filtro: 'todos', pagina: 300,
+  // Quando a tela e aberta de dentro de um evento, o evento vem travado:
+  // some o seletor e aparece a volta. Sem isso o time trocaria de evento
+  // sem perceber e enviaria o certificado errado.
+  travado: false, onBack: null,
   // O container da tela. Sem guardar aqui, qualquer ação disparada de uma
   // lista redesenhada (que não recebe `view`) recarregaria em cima de
   // `undefined` e derrubaria a página.
@@ -108,14 +112,25 @@ async function salvaModulos(eventId, linhas) {
 }
 
 // ── página ───────────────────────────────────────────────────────────
-export async function pageCertEntrega(view) {
+export async function pageCertEntrega(view, opts) {
+  const fixo = opts && opts.eventId ? String(opts.eventId) : null;
   estado.view = view;
+  estado.travado = !!fixo;
+  estado.onBack = (opts && opts.onBack) || null;
   setContent(view, h('div', { class: 'loading-row' }, h('span', { class: 'loader' })));
   try {
     estado.eventos = await carregaEventos();
   } catch (e) { setContent(view, avisoErro(e)); return; }
-  const pref = estado.eventos.find((e) => e.temModulos) || estado.eventos[0];
-  estado.eventId = estado.eventId || pref?.id || null;
+  if (fixo) {
+    // Entrou pelo evento: e aquele evento, nao o ultimo que alguem olhou.
+    estado.eventId = fixo;
+    estado.busca = '';
+    estado.filtro = 'todos';
+    estado.pagina = 300;
+  } else {
+    const pref = estado.eventos.find((e) => e.temModulos) || estado.eventos[0];
+    estado.eventId = estado.eventId || pref?.id || null;
+  }
   await recarrega(view);
 }
 
@@ -133,6 +148,11 @@ async function recarrega(view) {
   pinta(view);
 }
 
+function nomeDoEvento() {
+  const e = estado.eventos.find((x) => x.id === estado.eventId);
+  return e ? e.name : '';
+}
+
 function pinta(view) {
   const s = resumo();
 
@@ -141,17 +161,22 @@ function pinta(view) {
       h('div', {},
         h('div', { class: 'page-title' }, 'Entrega de certificados'),
         h('div', { class: 'page-sub' },
+          (nomeDoEvento() ? nomeDoEvento() + ' · ' : '') +
           'A lista completa do evento. Marque presença de quem ficou sem check-in, ' +
           'inclua quem não está aqui e envie o certificado pessoa a pessoa.')
       ),
       h('div', { class: 'evd-actions' },
-        h('select', {
-          class: 'input evd-select',
-          onChange: async (e) => { estado.eventId = e.target.value; estado.busca = ''; estado.filtro = 'todos'; await recarrega(view); }
-        }, ...estado.eventos.map((e) =>
-          h('option', { value: e.id, selected: e.id === estado.eventId },
-            e.name + (e.temModulos ? '' : ' · sem módulos')))
-        )
+        estado.travado
+          ? (estado.onBack
+              ? h('button', { class: 'btn btn-ghost', onClick: () => estado.onBack() }, '← Voltar ao evento')
+              : null)
+          : h('select', {
+              class: 'input evd-select',
+              onChange: async (e) => { estado.eventId = e.target.value; estado.busca = ''; estado.filtro = 'todos'; await recarrega(view); }
+            }, ...estado.eventos.map((e) =>
+              h('option', { value: e.id, selected: e.id === estado.eventId },
+                e.name + (e.temModulos ? '' : ' · sem módulos')))
+            )
       )
     ),
 

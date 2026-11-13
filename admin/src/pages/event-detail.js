@@ -1,4 +1,5 @@
 import { pageEventCertificates } from './event-certificates.js';
+import { pageCertEntrega } from './cert-entrega.js';
 import { h, setContent } from '../core/dom.js';
 import { icons } from '../ui/icons.js';
 import { getEvent, updateEvent } from '../data/events.js';
@@ -453,9 +454,15 @@ export async function pageEventDetail(view, { params }) {
         class: 'btn btn-secondary',
         onclick: () => navigate('/disparos')
       }, icons.send(), 'Disparar mensagem'),
-      h('button', { class: 'btn btn-secondary', onclick: () => pageEventCertificates(view, event, () => render()) },
-        icons.award(), 'Certificado'
-      ),
+      // Congresso usa o certificado por token: cada pessoa ja tem o link
+      // dela, o envio e um clique e nao depende de template nenhum.
+      // Corrida continua na tela antiga, que e onde moram as artes sociais.
+      h('button', {
+        class: 'btn btn-secondary',
+        onclick: () => (isRace
+          ? pageEventCertificates(view, event, () => render())
+          : pageCertEntrega(view, { eventId: event.id, onBack: () => render() }))
+      }, icons.award(), 'Certificado'),
       h('button', {
         class: 'btn btn-secondary',
         onclick: () => abreCrachas({ evento: event, participantes: allParticipants })
